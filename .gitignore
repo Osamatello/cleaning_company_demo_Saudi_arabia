@@ -1,0 +1,30 @@
+# dependencies
+/node_modules
+
+# Next.js build output and caches
+/.next/
+/out/
+/build
+*.tsbuildinfo
+next-env.d.ts
+
+# environment / deployment
+.env*
+.vercel
+
+# logs and OS files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
+Thumbs.db
+
+# local editor / tooling config
+/.claude/
+
+# development-only source material (the site serves its copies from /public/assets)
+/assets/
+/HERO video .mp4
+
+# stray empty file at the project root (the real module is components/hero/createHeroScene.ts)
+/createHeroScene.ts
