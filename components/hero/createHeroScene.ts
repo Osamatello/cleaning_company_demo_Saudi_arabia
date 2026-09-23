@@ -35,16 +35,12 @@ import { type RoadExtension, buildExtensionPath, buildStreetGeometry, distToStre
 // ---------------------------------------------------------------------------
 // GLB loading is cached per page so React StrictMode's double-mount (dev) and
 // remounts never download or parse the ~220 MB of models twice.
-type Entry = { promise: Promise<GLTF>; loaded: number; total: number };
+type Entry = { promise: Promise<GLTF> };
 const cache = new Map<string, Entry>();
 function loadGLB(url: string): Entry {
   let e = cache.get(url);
   if (!e) {
-    const entry: Entry = { promise: null as unknown as Promise<GLTF>, loaded: 0, total: 0 };
-    entry.promise = new GLTFLoader().loadAsync(url, (ev) => {
-      entry.loaded = ev.loaded;
-      if (ev.total) entry.total = ev.total;
-    });
+    const entry: Entry = { promise: new GLTFLoader().loadAsync(url) };
     // don't keep a failed download cached; the next mount retries it
     entry.promise.catch(() => cache.delete(url));
     cache.set(url, entry);
@@ -92,7 +88,7 @@ export type HeroScene = {
 
 export function createHeroScene(
   canvas: HTMLCanvasElement,
-  opts: { onProgress?: (fraction: number) => void; onReady?: () => void }
+  opts: { /** called once the first complete frame (all models, compiled shaders) is on the canvas */ onReady?: () => void }
 ): HeroScene {
   // No MSAA: with multi-million-triangle models it cost 25–30% of the frame. Edges are smoothed
   // by an FXAA pass on the final image instead (see present()).
@@ -215,8 +211,6 @@ export function createHeroScene(
     clean: loadGLB(ASSETS.cleanHouse),
     van: loadGLB(ASSETS.van),
   };
-  const knownSizes = { road: 30323564, dirty: 48089224, clean: 81163388, van: 58748304 };
-  const totalBytes = Object.values(knownSizes).reduce((a, b) => a + b, 0);
 
   let dirtyHouse: THREE.Object3D | null = null;
   let cleanHouse: THREE.Object3D | null = null;
@@ -224,18 +218,13 @@ export function createHeroScene(
   let rig: ReturnType<typeof rigVan> | null = null;
   let placeVanShadow: ((x: number, z: number, yaw: number, visible: boolean) => void) | null = null;
   let ready = false;
+  let announceReady = false;
   let disposed = false;
   const vanLights = { value: new THREE.Vector2(0, 0) };
 
 
-  const progressTimer = window.setInterval(() => {
-    const loaded = Object.values(entries).reduce((a, e) => a + e.loaded, 0);
-    opts.onProgress?.(Math.min(0.99, loaded / totalBytes));
-  }, 150);
-
   Promise.all([entries.road.promise, entries.dirty.promise, entries.clean.promise, entries.van.promise])
     .then(([roadG, dirtyG, cleanG, vanG]) => {
-      window.clearInterval(progressTimer);
       if (disposed) return;
 
       // Road: the model is flat; it is turned about its inner centre (see ROAD_ROTATION_DEG).
@@ -302,7 +291,6 @@ export function createHeroScene(
       ground.uWetRect.value.set(houseBox.min.x, houseBox.min.z, houseBox.max.x, houseBox.max.z);
 
       ready = true;
-      opts.onProgress?.(1);
       // Soft sun shadows are baked once, from both house states together (they share a footprint),
       // so the multi-million-triangle shadow pass never re-runs while scrolling.
       dirtyHouse.visible = true;
@@ -313,10 +301,9 @@ export function createHeroScene(
       cleanHouse.visible = false;
       applyScene(current, current, current, 0);
       needsRender = true;
-      opts.onReady?.();
+      announceReady = true; // revealed after the next full frame (FXAA and all) has been drawn
     })
     .catch((err) => {
-      window.clearInterval(progressTimer);
       console.error('Hero scene failed to load', err);
     });
 
@@ -463,13 +450,17 @@ export function createHeroScene(
       lastKey = key;
     }
     const continuous = moved || washing || vanSettling;
-    if (continuous || needsRender || idleDue) {
+    if (ready && (continuous || needsRender || idleDue)) {
       // only consecutive frames say anything about GPU load (idle frames are throttled on purpose)
       if (continuous && renderedLastFrame) adaptResolution(now);
       wind.uWind.value = clock.getElapsedTime();
       shared.uTime.value = wind.uWind.value;
       present();
       needsRender = false;
+      if (announceReady) {
+        announceReady = false;
+        opts.onReady?.();
+      }
       lastIdle = now;
       lastRenderAt = now;
       renderedLastFrame = continuous;
@@ -523,7 +514,6 @@ export function createHeroScene(
     },
     dispose: () => {
       disposed = true;
-      window.clearInterval(progressTimer);
       cancelAnimationFrame(raf);
       scene.traverse((o) => {
         const m = o as THREE.Mesh;

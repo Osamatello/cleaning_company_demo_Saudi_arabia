@@ -10,7 +10,6 @@ export default function Hero3DCanvas() {
   const sectionRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const cueRef = useRef<HTMLDivElement>(null);
-  const [loadPct, setLoadPct] = useState(0);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -37,10 +36,7 @@ export default function Hero3DCanvas() {
     // three.js is only needed client-side; load it lazily with the scene module.
     import('./hero/createHeroScene').then(({ createHeroScene }) => {
       if (cancelled) return;
-      scene = createHeroScene(canvas, {
-        onProgress: (f) => setLoadPct(Math.round(f * 100)),
-        onReady: () => setReady(true),
-      });
+      scene = createHeroScene(canvas, { onReady: () => setReady(true) });
       onScroll();
     });
 
@@ -61,7 +57,14 @@ export default function Hero3DCanvas() {
   return (
     <section id="hero-3d" ref={sectionRef} className={`${inter.className} relative h-[340vh] w-full bg-white`}>
       <div className="sticky top-0 h-[100svh] w-full overflow-hidden">
-        <canvas ref={canvasRef} className="absolute inset-0 block h-full w-full" />
+        {/* The page and headline show at once on white; the 3D scene loads in the background and
+            fades in only when its first complete frame has been drawn (no loading screen). */}
+        <canvas
+          ref={canvasRef}
+          className={`absolute inset-0 block h-full w-full transition-opacity duration-1000 ease-out ${
+            ready ? 'opacity-100' : 'opacity-0'
+          }`}
+        />
 
         {/* Headline — right-hand side like the reference, stacked on top on small screens */}
         <div className="pointer-events-none absolute inset-x-0 top-[92px] px-6 text-left md:inset-x-auto md:right-[7.5vw] md:top-[31%] md:px-0 md:text-right">
@@ -88,17 +91,6 @@ export default function Hero3DCanvas() {
           <span className="h-8 w-px bg-neutral-300" />
         </div>
 
-        {/* Loader: a hairline on white, fades away once the models are ready */}
-        <div
-          className={`absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 bg-white transition-opacity duration-700 ${
-            ready ? 'pointer-events-none opacity-0' : 'opacity-100'
-          }`}
-        >
-          <span className="text-[10px] font-medium uppercase tracking-[0.35em] text-neutral-400">Loading {loadPct}%</span>
-          <span className="relative h-px w-40 overflow-hidden bg-neutral-200">
-            <span className="absolute inset-y-0 left-0 bg-neutral-800 transition-[width] duration-300" style={{ width: `${loadPct}%` }} />
-          </span>
-        </div>
       </div>
     </section>
   );
