@@ -14,6 +14,7 @@ import {
   ROAD_ROTATION_DEG,
   ROAD_SCALE,
   TIMELINE,
+  VAN_DRIVE,
   VAN_ROUTE,
   VAN_SCALE,
   roadPointModel,
@@ -31,7 +32,7 @@ import {
 import { type GroundUniforms, bakeContactAO, bakeVanFootprint, createGroundUniforms } from './groundShading';
 import { buildTree, type WindUniforms } from './tree';
 import { createDriveProfile, rigVan } from './vehicle';
-import { type RoadExtension, buildExtensionPath, buildStreetGeometry, distToStreets, groundFade } from './roadExtension';
+import { type RoadExtension, buildStreet, buildStreetGeometry, distToStreets, groundFade, streetS } from './roadExtension';
 import { createVanTrail } from './vanTrail';
 
 // ---------------------------------------------------------------------------
@@ -71,15 +72,6 @@ const roadWorld = (deg: number, lane: number, y = 0) => {
 };
 const ROAD_CX = ROAD_CENTER_MODEL.x * ROAD_SCALE;
 const ROAD_CZ = ROAD_CENTER_MODEL.z * ROAD_SCALE;
-/** Point on the road `off` metres out from its inner edge at angle `deg` (edge smoothed over ±10°,
- *  so the measured model's small wiggles don't turn into steering corrections). */
-const roadWorldAt = (deg: number, off: number, y = 0) => {
-  let ri = 0;
-  for (let k = -10; k <= 10; k++) ri += roadRadiiAt(deg + k)[0];
-  const r = (ri / 21) * ROAD_SCALE + off;
-  const t = THREE.MathUtils.degToRad(deg);
-  return new THREE.Vector3(ROAD_CX + Math.cos(t) * r, y, ROAD_CZ + Math.sin(t) * r);
-};
 
 // Daylight: sun from the front-left, fairly high, like a late-morning shoot.
 const SUN_DIR = new THREE.Vector3(-0.45, 0.72, 0.53).normalize();
@@ -173,17 +165,16 @@ export function createHeroScene(
   // --- van route: entirely on the road, from its right-hand end round the bend to the front
   const houseFrontZ = HOUSE_POS.zFront;
   const houseBackZ = houseFrontZ - 6.4;
-  // the road model's tips continue as streets running off into the distance on both sides
-  const streets = [buildExtensionPath('right'), buildExtensionPath('left')];
-  const [streetR] = streets;
+  // one short street, built in code: from behind the right of the house, one bend, away to the left
+  const street = buildStreet();
+  const streets = [street];
   const route: THREE.Vector3[] = [];
   // the van approaches from far down the right-hand street, so it is seen arriving, not appearing
-  for (let s = streetR.tipS + VAN_ROUTE.approach; s > 0.5; s -= 1.5) route.push(streetR.point(s, VAN_ROUTE.lane).setY(0));
+  const sStart = streetS({ z: VAN_DRIVE.startZ });
+  const sPark = streetS({ x: VAN_DRIVE.parkX });
+  for (let s = sStart; s < sPark; s += 1) route.push(street.point(s, VAN_DRIVE.lane).setY(0));
+  route.push(street.point(sPark, VAN_DRIVE.lane).setY(0));
   // in its lane round the bend, then it pulls in to the kerb beside the house and parks
-  const laneOff = VAN_ROUTE.lane * streetR.width;
-  const offAt = (a: number) => laneOff + (VAN_ROUTE.parkOffset - laneOff) * smooth(VAN_ROUTE.parkDeg - 30, VAN_ROUTE.parkDeg - 2, a);
-  for (let a = streetR.joinDeg; a < VAN_ROUTE.parkDeg; a += 3) route.push(roadWorldAt(a, offAt(a)));
-  route.push(roadWorldAt(VAN_ROUTE.parkDeg, VAN_ROUTE.parkOffset));
   const driveLine = buildDriveLine(new THREE.CatmullRomCurve3(route, false, 'centripetal'));
   const pathLength = driveLine.length;
   const drive = createDriveProfile();
@@ -191,7 +182,6 @@ export function createHeroScene(
   // --- environment
   const groundMesh = buildGround(ground, houseFrontZ, houseBackZ, streets);
   scene.add(groundMesh.mesh);
-  scene.add(buildVerge(ground));
   scene.add(buildApron(ground, streets));
   for (const st of streets) {
     const m = new THREE.Mesh(buildStreetGeometry(st), createRoadMaterial(ground, { width: st.width }));
@@ -209,7 +199,7 @@ export function createHeroScene(
   scene.add(treeRight, treeLeft);
   // concrete path from the front door down to the road
   const doorX = HOUSE_POS.x - 0.63 * HOUSE_SCALE;
-  const padDepth = roadWorld(VAN_ROUTE.parkDeg, 0).z - houseFrontZ + 0.4;
+  const padDepth = street.point(sPark, 0).z - houseFrontZ + 0.4;
   const pad = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.14, padDepth), createPavingMaterial(ground));
   pad.position.set(doorX, 0.1, houseFrontZ + padDepth / 2 - 0.1);
   pad.receiveShadow = true;
@@ -254,7 +244,7 @@ export function createHeroScene(
     return h;
   };
 
-  const primary = Promise.all([loadGLB(ASSETS.road).promise, loadGLB(ASSETS.dirtyHouse).promise]);
+  const primary = Promise.all([loadGLB(ASSETS.dirtyHouse).promise]);
   // the rest streams in as soon as the first frame's models are in (never competing with them)
   const secondary = primary.finally(() => {
     if (disposed) return;
@@ -262,27 +252,8 @@ export function createHeroScene(
     loadGLB(ASSETS.cleanHouse);
   });
   primary
-    .then(([roadG, dirtyG]) => {
+    .then(([dirtyG]) => {
       if (disposed) return;
-      // Road: the model is flat; it is turned about its inner centre (see ROAD_ROTATION_DEG).
-      const road = roadG.scene;
-      road.scale.setScalar(ROAD_SCALE);
-      road.position.y = -0.005 * ROAD_SCALE + 0.03;
-      const rot = THREE.MathUtils.degToRad(ROAD_ROTATION_DEG);
-      const pivot = new THREE.Vector3(ROAD_CX, 0, ROAD_CZ);
-      const turned = pivot.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), -rot);
-      road.rotation.y = -rot;
-      road.position.x = pivot.x - turned.x;
-      road.position.z = pivot.z - turned.z;
-      const roadMat = createRoadMaterial(ground);
-      road.traverse((c) => {
-        const m = c as THREE.Mesh;
-        if (!m.isMesh) return;
-        m.material = roadMat;
-        m.receiveShadow = true;
-      });
-      scene.add(road);
-
       dirtyHouse = placeHouse(dirtyG, 0.694, -0.765, true);
       scene.add(dirtyHouse);
       scene.updateMatrixWorld(true);

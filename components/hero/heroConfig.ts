@@ -2,14 +2,16 @@
 // Units: world units ≈ metres. All GLB models are normalised by Meshy to ~1.9 units wide,
 // so each one gets its own scale factor here.
 
-// Web-optimized copies of the provided models (public/assets/web, made with gltfpack: meshopt
-// compression, float positions kept in the original model space, 12-bit normals, no simplification).
-// The untouched originals stay in public/assets.
+// Web copies of the provided models (public/assets/web, made with gltfpack from the untouched
+// originals in public/assets): meshopt compression, float positions in the original model space,
+// and conservative, normal-aware simplification checked against the full-detail copies (houses
+// −40/−45% triangles with 12-bit normals, van −35% with 12-bit normals). The full-detail
+// *-web.glb copies stay alongside.
 export const ASSETS = {
-  road: '/assets/web/road-web.glb',
-  dirtyHouse: '/assets/web/house-dirty-web.glb',
-  cleanHouse: '/assets/web/house-clean-web.glb',
-  van: '/assets/web/van-web.glb',
+  road: '/assets/web/road-web.glb', // no longer loaded by the Hero (the street is built in code)
+  dirtyHouse: '/assets/web/house-dirty-lite.glb',
+  cleanHouse: '/assets/web/house-clean-lite.glb',
+  van: '/assets/web/van-lite.glb',
 } as const;
 
 export const ROAD_SCALE = 12;
@@ -79,6 +81,9 @@ export const HOUSE_POS = { x: ROAD_CENTER_MODEL.x * ROAD_SCALE, zFront: -0.6 };
 // `lane`: fraction of the street width from its inner edge; `parkOffset`: metres from the inner edge
 // (inside the lay-by) where it stops.
 export const VAN_ROUTE = { approach: 36, parkDeg: 76, lane: 0.42, parkOffset: 1.6 };
+// On the procedural street: starts hidden behind the right side of the house (depth `startZ`),
+// drives in its lane (`lane`: 0 = house-side edge … 1 = far edge) and parks at `parkX`.
+export const VAN_DRIVE = { startZ: -16, lane: 0.25, parkX: 3.0 };
 
 // Scroll timeline (0 → 1 across the pinned hero)
 export const TIMELINE = {
