@@ -39,6 +39,8 @@ export function createDriveProfile() {
       const i = Math.floor(x);
       return i >= N ? 1 : THREE.MathUtils.lerp(table[i], table[i + 1], x - i);
     },
+    /** scripted speed at `d`, 0 … 1 (cruising) */
+    speed: (d: number) => (d <= 0 || d >= 1 ? 0 : speed(d)),
     /** scripted longitudinal acceleration at `d`, −1 (hardest braking) … 1 (hardest pull) */
     accel: (d: number) => (d <= 0 || d >= 1 ? 0 : accelRaw(d) / peak),
   };

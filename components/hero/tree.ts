@@ -236,7 +236,7 @@ function windMaterial(mat: THREE.MeshStandardMaterial, u: WindUniforms, leaves: 
   };
 }
 
-export function buildTree(position: THREE.Vector3, scale: number, seed: number, u: WindUniforms) {
+export function buildTree(position: THREE.Vector3, scale: number, seed: number, u: WindUniforms, density = 1) {
   const r = rng(seed);
   const group = new THREE.Group();
 
@@ -307,7 +307,7 @@ export function buildTree(position: THREE.Vector3, scale: number, seed: number, 
     p.y += 0.15 + r() * 0.3;
     tips.push({ p, size: 0.9 + r() * 0.3, phase: (a.phase + b.phase) / 2, dir: p.clone().sub(crown).normalize() });
   }
-  const perTip = 140;
+  const perTip = Math.round(140 * density);
   const count = tips.length * perTip;
   const card = new THREE.PlaneGeometry(0.72, 0.72);
   const leafMat = new THREE.MeshStandardMaterial({
@@ -364,7 +364,7 @@ export function buildTree(position: THREE.Vector3, scale: number, seed: number, 
 
   // --- shrubs at the base ------------------------------------------------------------------------
   const shrubSpots: [number, number, number][] = [[1.7, 0.8, 0.7], [-1.5, 1.1, 0.6], [0.4, 1.9, 0.65], [2.4, -0.6, 0.5], [-1.0, -1.5, 0.55]];
-  const perShrub = 150;
+  const perShrub = Math.round(150 * density);
   const sCount = shrubSpots.length * perShrub;
   const sCard = new THREE.PlaneGeometry(0.42, 0.42);
   const shrubs = new THREE.InstancedMesh(sCard, leafMat, sCount);

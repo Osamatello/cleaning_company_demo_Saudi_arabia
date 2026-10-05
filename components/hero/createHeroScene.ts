@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader, type GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import { Sky } from 'three/examples/jsm/objects/Sky.js';
 import { FXAAShader } from 'three/examples/jsm/shaders/FXAAShader.js';
 import { FullScreenQuad } from 'three/examples/jsm/postprocessing/Pass.js';
@@ -31,16 +32,23 @@ import { type GroundUniforms, bakeContactAO, bakeVanFootprint, createGroundUnifo
 import { buildTree, type WindUniforms } from './tree';
 import { createDriveProfile, rigVan } from './vehicle';
 import { type RoadExtension, buildExtensionPath, buildStreetGeometry, distToStreets, groundFade } from './roadExtension';
+import { createVanTrail } from './vanTrail';
 
 // ---------------------------------------------------------------------------
-// GLB loading is cached per page so React StrictMode's double-mount (dev) and
-// remounts never download or parse the ~220 MB of models twice.
+// GLB loading is cached per page so React StrictMode's double-mount (dev) and remounts never
+// download or decode the models twice. The web copies are meshopt-compressed; decoding runs in
+// worker threads, off the main thread.
 type Entry = { promise: Promise<GLTF> };
 const cache = new Map<string, Entry>();
+let loader: GLTFLoader | null = null;
 function loadGLB(url: string): Entry {
   let e = cache.get(url);
   if (!e) {
-    const entry: Entry = { promise: new GLTFLoader().loadAsync(url) };
+    if (!loader) {
+      (MeshoptDecoder as unknown as { useWorkers?: (count: number) => void }).useWorkers?.(2);
+      loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
+    }
+    const entry: Entry = { promise: loader.loadAsync(url) };
     // don't keep a failed download cached; the next mount retries it
     entry.promise.catch(() => cache.delete(url));
     cache.set(url, entry);
@@ -76,8 +84,16 @@ const roadWorldAt = (deg: number, off: number, y = 0) => {
 // Daylight: sun from the front-left, fairly high, like a late-morning shoot.
 const SUN_DIR = new THREE.Vector3(-0.45, 0.72, 0.53).normalize();
 const BACKDROP = new THREE.Color('#ffffff');
+// Rendering tier. Desktop keeps the full-quality settings; touch devices and low-core machines get
+// lighter ones (resolution, shadow map, foliage and foam-trail density), ready for mobile tuning.
+const LOW_POWER =
+  typeof window !== 'undefined' &&
+  (window.matchMedia?.('(pointer: coarse)').matches || (navigator.hardwareConcurrency || 8) <= 4);
+const QUALITY = LOW_POWER
+  ? { maxPixelRatio: 1.25, shadowMapSize: 1024, foliageDensity: 0.6, trailDetail: 0.5 }
+  : { maxPixelRatio: 1.5, shadowMapSize: 2048, foliageDensity: 1, trailDetail: 1 };
 // Pixel-ratio ceiling: sharp on high-DPI screens without tripling the shading cost.
-const MAX_PIXEL_RATIO = typeof window === 'undefined' ? 1 : Math.min(window.devicePixelRatio, 1.5);
+const MAX_PIXEL_RATIO = typeof window === 'undefined' ? 1 : Math.min(window.devicePixelRatio, QUALITY.maxPixelRatio);
 
 export type HeroScene = {
   setProgress: (p: number) => void;
@@ -118,7 +134,7 @@ export function createHeroScene(
   sun.position.copy(sunTarget).addScaledVector(SUN_DIR, 45);
   sun.target.position.copy(sunTarget);
   sun.castShadow = true;
-  sun.shadow.mapSize.set(2048, 2048);
+  sun.shadow.mapSize.set(QUALITY.shadowMapSize, QUALITY.shadowMapSize);
   sun.shadow.camera.left = -21;
   sun.shadow.camera.right = 21;
   sun.shadow.camera.top = 21;
@@ -188,8 +204,8 @@ export function createHeroScene(
   treeR.y = groundMesh.heightAt(treeR.x, treeR.z) - 0.05;
   const treeL = inwardFrom(roadWorld(a1 - 8, 0), 2.0);
   treeL.y = groundMesh.heightAt(treeL.x, treeL.z) - 0.05;
-  const treeRight = buildTree(treeR, 1.05, 3, wind);
-  const treeLeft = buildTree(treeL, 0.88, 8, wind);
+  const treeRight = buildTree(treeR, 1.05, 3, wind, QUALITY.foliageDensity);
+  const treeLeft = buildTree(treeL, 0.88, 8, wind, QUALITY.foliageDensity);
   scene.add(treeRight, treeLeft);
   // concrete path from the front door down to the road
   const doorX = HOUSE_POS.x - 0.63 * HOUSE_SCALE;
@@ -204,29 +220,50 @@ export function createHeroScene(
   let aoDirty: THREE.Texture | null = null;
   let aoClean: THREE.Texture | null = null;
 
-  // --- models
-  const entries = {
-    road: loadGLB(ASSETS.road),
-    dirty: loadGLB(ASSETS.dirtyHouse),
-    clean: loadGLB(ASSETS.cleanHouse),
-    van: loadGLB(ASSETS.van),
-  };
+  // --- van foam trail (its own effect, separate from the house-cleaning foam)
+  const trail = createVanTrail(driveLine, QUALITY.trailDetail);
+  scene.add(trail.mesh);
+  let trailActive = false;
 
+  // --- models, loaded progressively. The first frame needs only the road and the dirty house (the
+  // terrain, streets and trees are built in code); the scene is revealed as soon as those two are
+  // in. The van and the clean house then stream in behind it and are ready before they're needed.
   let dirtyHouse: THREE.Object3D | null = null;
   let cleanHouse: THREE.Object3D | null = null;
   let van: THREE.Object3D | null = null;
   let rig: ReturnType<typeof rigVan> | null = null;
   let placeVanShadow: ((x: number, z: number, yaw: number, visible: boolean) => void) | null = null;
   let ready = false;
-  let announceReady = false;
   let disposed = false;
   const vanLights = { value: new THREE.Vector2(0, 0) };
+  const aoRect = { cx: 1.4, cz: -6, half: 22 };
 
+  // Houses share placement so the dissolve lines up: same scale, front walls and base aligned.
+  const placeHouse = (g: GLTF, frontZ: number, minY: number, dirty: boolean) => {
+    const h = g.scene;
+    h.scale.setScalar(HOUSE_SCALE);
+    h.position.set(HOUSE_POS.x, -minY * HOUSE_SCALE, houseFrontZ - frontZ * HOUSE_SCALE);
+    const mat = createHouseMaterial(shared, dirty, minY);
+    h.traverse((c) => {
+      const m = c as THREE.Mesh;
+      if (!m.isMesh) return;
+      m.material = mat;
+      m.castShadow = true;
+      m.receiveShadow = true;
+    });
+    return h;
+  };
 
-  Promise.all([entries.road.promise, entries.dirty.promise, entries.clean.promise, entries.van.promise])
-    .then(([roadG, dirtyG, cleanG, vanG]) => {
+  const primary = Promise.all([loadGLB(ASSETS.road).promise, loadGLB(ASSETS.dirtyHouse).promise]);
+  // the rest streams in as soon as the first frame's models are in (never competing with them)
+  const secondary = primary.finally(() => {
+    if (disposed) return;
+    loadGLB(ASSETS.van);
+    loadGLB(ASSETS.cleanHouse);
+  });
+  primary
+    .then(([roadG, dirtyG]) => {
       if (disposed) return;
-
       // Road: the model is flat; it is turned about its inner centre (see ROAD_ROTATION_DEG).
       const road = roadG.scene;
       road.scale.setScalar(ROAD_SCALE);
@@ -246,66 +283,87 @@ export function createHeroScene(
       });
       scene.add(road);
 
-      // Houses share placement so the dissolve lines up: same scale, front walls and base aligned.
-      const placeHouse = (g: GLTF, frontZ: number, minY: number, dirty: boolean) => {
-        const h = g.scene;
-        h.scale.setScalar(HOUSE_SCALE);
-        h.position.set(HOUSE_POS.x, -minY * HOUSE_SCALE, houseFrontZ - frontZ * HOUSE_SCALE);
-        const mat = createHouseMaterial(shared, dirty, minY);
-        h.traverse((c) => {
-          const m = c as THREE.Mesh;
-          if (!m.isMesh) return;
-          m.material = mat;
-          m.castShadow = true;
-          m.receiveShadow = true;
-        });
-        scene.add(h);
-        return h;
-      };
       dirtyHouse = placeHouse(dirtyG, 0.694, -0.765, true);
-      cleanHouse = placeHouse(cleanG, 0.497, -0.733, false);
-      cleanHouse.visible = false;
-
-      van = vanG.scene;
-      van.scale.setScalar(VAN_SCALE);
-      van.rotation.order = 'YXZ'; // yaw, then roll / pitch in the van's own frame
-      const vanMat = createVanMaterial(vanLights);
-      van.traverse((c) => {
-        const m = c as THREE.Mesh;
-        if (!m.isMesh) return;
-        m.material = vanMat;
-        m.receiveShadow = true;
-      });
-      rig = rigVan(van, VAN_SCALE, 0.4 * VAN_SCALE + 0.03);
-      van.position.set(0, 0.4 * VAN_SCALE + 0.03, 0);
-      scene.add(van);
-      placeVanShadow = bakeVanFootprint(renderer, ground, van, 4.4, 2.4);
-
+      scene.add(dirtyHouse);
       scene.updateMatrixWorld(true);
-      // soft contact occlusion under houses, trees (and the litter, before the clean-up)
-      const aoRect = { cx: 1.4, cz: -6, half: 22 };
-      aoDirty = bakeContactAO(renderer, ground, [dirtyHouse, cleanHouse, litter, treeRight, treeLeft], aoRect);
-      aoClean = bakeContactAO(renderer, ground, [dirtyHouse, cleanHouse, treeRight, treeLeft], aoRect);
+      // soft contact occlusion under the house, trees and litter (re-baked when the clean house lands)
+      aoDirty = bakeContactAO(renderer, ground, [dirtyHouse, litter, treeRight, treeLeft], aoRect);
+      aoClean = aoDirty;
       ground.uAOTex.value = aoDirty;
       const houseBox = new THREE.Box3().setFromObject(dirtyHouse);
       ground.uWetRect.value.set(houseBox.min.x, houseBox.min.z, houseBox.max.x, houseBox.max.z);
 
       ready = true;
-      // Soft sun shadows are baked once, from both house states together (they share a footprint),
-      // so the multi-million-triangle shadow pass never re-runs while scrolling.
-      dirtyHouse.visible = true;
-      cleanHouse.visible = true;
-      renderer.compile(scene, camera); // compile every shader now so the first scroll doesn't hitch
-      renderer.shadowMap.needsUpdate = true;
-      renderer.render(scene, camera);
-      cleanHouse.visible = false;
+      renderer.compile(scene, camera); // every first-frame shader, so the first scroll doesn't hitch
+      bakeShadows();
       applyScene(current, current, current, 0);
-      needsRender = true;
-      announceReady = true; // revealed after the next full frame (FXAA and all) has been drawn
+      try {
+        present(); // a complete first frame is on the canvas now…
+      } finally {
+        opts.onReady?.(); // …so the canvas fades in, whatever else happens
+      }
     })
-    .catch((err) => {
-      console.error('Hero scene failed to load', err);
+    .catch((err) => console.error('Hero scene failed to load', err))
+    // …and join the scene once the first frame is up
+    .then(() => secondary)
+    .finally(() => {
+      if (disposed) return;
+      loadGLB(ASSETS.van).promise.then(addVan, (err) => console.error('Van failed to load', err));
+      loadGLB(ASSETS.cleanHouse).promise.then(addCleanHouse, (err) => console.error('Clean house failed to load', err));
     });
+
+  /** Sun shadows are baked, never re-rendered while scrolling: from both house states together
+   *  once the clean house is in (they share a footprint). */
+  function bakeShadows() {
+    const vis = [dirtyHouse?.visible, cleanHouse?.visible];
+    if (dirtyHouse) dirtyHouse.visible = true;
+    if (cleanHouse) cleanHouse.visible = true;
+    renderer.shadowMap.needsUpdate = true;
+    renderer.render(scene, camera);
+    if (dirtyHouse) dirtyHouse.visible = vis[0] ?? true;
+    if (cleanHouse) cleanHouse.visible = vis[1] ?? false;
+  }
+
+  async function addVan(vanG: GLTF) {
+    if (disposed || !ready) return;
+    const v = vanG.scene;
+    v.scale.setScalar(VAN_SCALE);
+    v.rotation.order = 'YXZ'; // yaw, then roll / pitch in the van's own frame
+    const vanMat = createVanMaterial(vanLights);
+    v.traverse((c) => {
+      const m = c as THREE.Mesh;
+      if (!m.isMesh) return;
+      m.material = vanMat;
+      m.receiveShadow = true;
+    });
+    const r = rigVan(v, VAN_SCALE, 0.4 * VAN_SCALE + 0.03);
+    v.position.set(0, 0.4 * VAN_SCALE + 0.03, 0);
+    await renderer.compileAsync(v, camera, scene); // compile off the critical path, no hitch on arrival
+    if (disposed) return;
+    placeVanShadow = bakeVanFootprint(renderer, ground, v, 4.4, 2.4);
+    scene.add(v);
+    van = v;
+    rig = r;
+    applyScene(current, camP, vanP, 0);
+    needsRender = true;
+  }
+
+  async function addCleanHouse(cleanG: GLTF) {
+    if (disposed || !ready || !dirtyHouse) return;
+    const h = placeHouse(cleanG, 0.497, -0.733, false);
+    scene.add(h);
+    await renderer.compileAsync(h, camera, scene);
+    if (disposed) return;
+    cleanHouse = h;
+    scene.updateMatrixWorld(true);
+    const oldAO = aoDirty;
+    aoDirty = bakeContactAO(renderer, ground, [dirtyHouse, h, litter, treeRight, treeLeft], aoRect);
+    aoClean = bakeContactAO(renderer, ground, [dirtyHouse, h, treeRight, treeLeft], aoRect);
+    oldAO?.dispose();
+    bakeShadows();
+    applyScene(current, camP, vanP, 0);
+    needsRender = true;
+  }
 
   // --- camera
   const camFrom = orbit(CAMERA.start);
@@ -348,19 +406,25 @@ export function createHeroScene(
   const vanPos = new THREE.Vector3();
   function applyScene(pFx: number, pCam: number, pVan: number, dt: number) {
     placeCamera(pCam);
-    if (!ready || !van || !rig || !dirtyHouse || !cleanHouse || !placeVanShadow) return;
+    if (!ready || !dirtyHouse) return;
 
     // van: eased acceleration, cruise and braking along the road; suspension reacts to it
     const d = range(TIMELINE.vanDrive, pVan);
     vanT = drive.at(d);
-    const line = driveLine.sample(vanT * pathLength, vanPos);
-    vanSettling = rig.update(vanPos, line.yaw, vanT * pathLength, dt, drive.accel(d), line.curvature);
-    van.visible = true;
-    placeVanShadow(vanPos.x, vanPos.z, van.rotation.y, true);
-    // daytime running lights while driving (fading after it stops); brake lights as it pulls in
-    const lightsOn = 1 - smooth(0.985, 1.0, d) * 0.9;
-    const brake = smooth(0.58, 0.72, d) * (1 - smooth(0.985, 1.0, d));
-    vanLights.value.set(lightsOn, brake);
+    if (van && rig && placeVanShadow) {
+      const line = driveLine.sample(vanT * pathLength, vanPos);
+      vanSettling = rig.update(vanPos, line.yaw, vanT * pathLength, dt, drive.accel(d), line.curvature);
+      placeVanShadow(vanPos.x, vanPos.z, van.rotation.y, true);
+      // daytime running lights while driving (fading after it stops); brake lights as it pulls in
+      const lightsOn = 1 - smooth(0.985, 1.0, d) * 0.9;
+      const brake = smooth(0.58, 0.72, d) * (1 - smooth(0.985, 1.0, d));
+      vanLights.value.set(lightsOn, brake);
+      // foam trail behind the van: longer at speed, easing off as it nears the house, gone by the time it parks
+      const trailStrength = smooth(0.0, 0.05, d) * (1 - smooth(0.62, 0.9, d));
+      trailActive = trail.update(vanT * pathLength - 3.0, 3 + 10 * drive.speed(d), trailStrength, clock.getElapsedTime());
+    } else {
+      trailActive = trail.update(0, 0, 0, 0);
+    }
 
     // cleaning: foam spreads over the house (and spills round it), the dirt goes under it, the foam
     // slides off, rinse water follows it down, then everything drains and dries
@@ -377,10 +441,11 @@ export function createHeroScene(
     const runoff = smooth(TIMELINE.washIn[0], TIMELINE.washIn[1], pFx);
     ground.uWetGround.value.set(runoff * (1 - smooth(TIMELINE.washOut[0] + 0.04, TIMELINE.washOut[1], pFx)), 1.0 + 2.6 * runoff);
     washing = (foamIn > 0 && foamOut < 1) || (wetIn > 0 && wetOut < 1) || ground.uWetGround.value.x > 0;
-    const dis = smooth(TIMELINE.dissolve[0], TIMELINE.dissolve[1], pFx);
+    // (until the clean house has streamed in, the dirty one simply stays)
+    const dis = cleanHouse ? smooth(TIMELINE.dissolve[0], TIMELINE.dissolve[1], pFx) : 0;
     shared.uDissolve.value = dis;
     dirtyHouse.visible = dis < 0.999;
-    cleanHouse.visible = dis > 0.001;
+    if (cleanHouse) cleanHouse.visible = dis > 0.001;
     litter.visible = dis < 0.999;
     ground.uAOTex.value = dis < 0.5 ? aoDirty : aoClean;
   }
@@ -445,11 +510,11 @@ export function createHeroScene(
     const key = `${current.toFixed(5)}|${vanP.toFixed(5)}|${camP.toFixed(5)}`;
     const moved = key !== lastKey;
     const idleDue = now - lastIdle > 33; // trees keep swaying at ~30 fps when nothing else moves
-    if (moved || washing || vanSettling || needsRender) {
+    if (moved || washing || vanSettling || trailActive || needsRender) {
       applyScene(current, camP, vanP, dt);
       lastKey = key;
     }
-    const continuous = moved || washing || vanSettling;
+    const continuous = moved || washing || vanSettling || trailActive;
     if (ready && (continuous || needsRender || idleDue)) {
       // only consecutive frames say anything about GPU load (idle frames are throttled on purpose)
       if (continuous && renderedLastFrame) adaptResolution(now);
@@ -457,10 +522,6 @@ export function createHeroScene(
       shared.uTime.value = wind.uWind.value;
       present();
       needsRender = false;
-      if (announceReady) {
-        announceReady = false;
-        opts.onReady?.();
-      }
       lastIdle = now;
       lastRenderAt = now;
       renderedLastFrame = continuous;
@@ -476,18 +537,36 @@ export function createHeroScene(
   const fxaaQuad = new FullScreenQuad(fxaa);
   const bufSize = new THREE.Vector2();
   let frameTex: THREE.FramebufferTexture | null = null;
+  // The canvas has no alpha channel, so the copy target must be RGB: copying an RGB framebuffer
+  // into RGBA is an error on Metal/GLES (macOS, iOS, Android) and would leave the frame blank.
+  const canvasHasAlpha = renderer.getContext().getContextAttributes()?.alpha === true;
+  let fxaaState: 'untested' | 'ok' | 'off' = 'untested';
   function present() {
     renderer.render(scene, camera);
-    renderer.getDrawingBufferSize(bufSize);
-    if (!frameTex || frameTex.image.width !== bufSize.x || frameTex.image.height !== bufSize.y) {
-      frameTex?.dispose();
-      frameTex = new THREE.FramebufferTexture(bufSize.x, bufSize.y);
-      frameTex.minFilter = frameTex.magFilter = THREE.LinearFilter;
+    if (fxaaState === 'off') return;
+    try {
+      renderer.getDrawingBufferSize(bufSize);
+      if (!frameTex || frameTex.image.width !== bufSize.x || frameTex.image.height !== bufSize.y) {
+        frameTex?.dispose();
+        frameTex = new THREE.FramebufferTexture(bufSize.x, bufSize.y);
+        frameTex.format = canvasHasAlpha ? THREE.RGBAFormat : THREE.RGBFormat;
+        frameTex.minFilter = frameTex.magFilter = THREE.LinearFilter;
+      }
+      const gl = renderer.getContext();
+      if (fxaaState === 'untested') while (gl.getError() !== gl.NO_ERROR); // start from a clean slate
+      renderer.copyFramebufferToTexture(frameTex);
+      if (fxaaState === 'untested') {
+        if (gl.getError() !== gl.NO_ERROR) throw new Error('framebuffer copy unsupported');
+        fxaaState = 'ok';
+      }
+      fxaa.uniforms.tDiffuse.value = frameTex;
+      fxaa.uniforms.resolution.value.set(1 / bufSize.x, 1 / bufSize.y);
+      fxaaQuad.render(renderer);
+    } catch {
+      // anti-aliasing is a nicety: if this device can't do it, keep the plain frame
+      fxaaState = 'off';
+      renderer.render(scene, camera);
     }
-    renderer.copyFramebufferToTexture(frameTex);
-    fxaa.uniforms.tDiffuse.value = frameTex;
-    fxaa.uniforms.resolution.value.set(1 / bufSize.x, 1 / bufSize.y);
-    fxaaQuad.render(renderer);
   }
 
   const resize = () => {

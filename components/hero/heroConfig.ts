@@ -2,11 +2,14 @@
 // Units: world units ≈ metres. All GLB models are normalised by Meshy to ~1.9 units wide,
 // so each one gets its own scale factor here.
 
+// Web-optimized copies of the provided models (public/assets/web, made with gltfpack: meshopt
+// compression, float positions kept in the original model space, 12-bit normals, no simplification).
+// The untouched originals stay in public/assets.
 export const ASSETS = {
-  road: '/assets/Curved_Empty_Road_Draft.glb',
-  dirtyHouse: '/assets/Weathered_Suburban_Duplex_Draft.glb',
-  cleanHouse: '/assets/Suburban_Semi_Detached_House_Draft.glb',
-  van: '/assets/FreshSpaces_Cleaning_Services_Van_Draft.glb',
+  road: '/assets/web/road-web.glb',
+  dirtyHouse: '/assets/web/house-dirty-web.glb',
+  cleanHouse: '/assets/web/house-clean-web.glb',
+  van: '/assets/web/van-web.glb',
 } as const;
 
 export const ROAD_SCALE = 12;

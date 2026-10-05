@@ -51,7 +51,7 @@ function getNoiseTexture() {
 // ---------------------------------------------------------------------------------------------
 // GLSL helpers
 
-const NOISE_GLSL = /* glsl */ `
+export const NOISE_GLSL = /* glsl */ `
   float h_hash(vec3 p) { p = fract(p * 0.3183099 + 0.1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
   uniform highp sampler3D uNoiseTex;
   float h_noise(vec3 x) {
@@ -73,7 +73,6 @@ const NOISE_GLSL = /* glsl */ `
   }
 `;
 
-// Bump mapping from a procedural height (world units) via screen-space derivatives.
 const FOAM_GLSL = /* glsl */ `
   // Cleaning-foam coverage at world point w: soft masses grow from the roof and upper walls and
   // merge into one thick coat, then the coat slides down and off. Shared by the vertex (volume)
@@ -91,6 +90,7 @@ const FOAM_GLSL = /* glsl */ `
   }
 `;
 
+// Bump mapping from a procedural height (world units) via screen-space derivatives.
 const BUMP_GLSL = /* glsl */ `
   vec3 h_bump(vec3 surfPos, vec3 surfNorm, float h) {
     vec3 sx = dFdx(surfPos), sy = dFdy(surfPos);
@@ -102,7 +102,7 @@ const BUMP_GLSL = /* glsl */ `
   }
 `;
 
-function injectObjectSpaceVaryings(shader: THREE.WebGLProgramParametersWithUniforms) {
+export function injectObjectSpaceVaryings(shader: THREE.WebGLProgramParametersWithUniforms) {
   shader.uniforms.uNoiseTex = { value: getNoiseTexture() };
   shader.vertexShader = shader.vertexShader
     .replace('#include <common>', '#include <common>\nvarying vec3 vObjPos;\nvarying vec3 vObjNormal;\nvarying vec3 vWPos;')
