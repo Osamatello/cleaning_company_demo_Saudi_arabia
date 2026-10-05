@@ -91,6 +91,56 @@ export function groundFade(x: number, z: number) {
   return THREE.MathUtils.smoothstep(r, r0, r1);
 }
 
+/**
+ * The Hero's street, built in code (no road model to download): it comes up from behind the right
+ * side of the house, takes one gentle bend in front of it and runs away to the left. Both ends
+ * reach far enough to dissolve into the distance, so it reads as part of a longer street.
+ */
+export const STREET = { x: 12.5, bendRadius: 8, bendZ: -4, fromZ: -45, toX: -40 };
+
+export function buildStreet(): RoadExtension {
+  const { x: X, bendRadius: R, bendZ, fromZ, toX } = STREET;
+  const width = STREET_WIDTH;
+  const pts: THREE.Vector3[] = [];
+  const across: THREE.Vector3[] = []; // towards the outside of the bend (away from the house)
+  for (let z = fromZ; z < bendZ; z += STEP) {
+    pts.push(new THREE.Vector3(X, ROAD_TOP, z));
+    across.push(new THREE.Vector3(1, 0, 0));
+  }
+  const arcSteps = Math.ceil(((Math.PI / 2) * R) / STEP);
+  for (let i = 0; i < arcSteps; i++) {
+    const a = (i / arcSteps) * (Math.PI / 2);
+    pts.push(new THREE.Vector3(X - R + R * Math.cos(a), ROAD_TOP, bendZ + R * Math.sin(a)));
+    across.push(new THREE.Vector3(Math.cos(a), 0, Math.sin(a)));
+  }
+  for (let x = X - R; x >= toX; x -= STEP) {
+    pts.push(new THREE.Vector3(x, ROAD_TOP, bendZ + R));
+    across.push(new THREE.Vector3(0, 0, 1));
+  }
+  const dist = [0];
+  for (let i = 1; i < pts.length; i++) dist.push(dist[i - 1] + pts[i].distanceTo(pts[i - 1]));
+  const point = (s: number, lane: number, target = new THREE.Vector3()) => {
+    s = THREE.MathUtils.clamp(s, 0, dist[dist.length - 1]);
+    let i = 1;
+    while (i < dist.length - 1 && dist[i] < s) i++;
+    const t = (s - dist[i - 1]) / Math.max(dist[i] - dist[i - 1], 1e-6);
+    const off = (lane - 0.5) * width;
+    return target.set(
+      THREE.MathUtils.lerp(pts[i - 1].x, pts[i].x, t) + THREE.MathUtils.lerp(across[i - 1].x, across[i].x, t) * off,
+      ROAD_TOP,
+      THREE.MathUtils.lerp(pts[i - 1].z, pts[i].z, t) + THREE.MathUtils.lerp(across[i - 1].z, across[i].z, t) * off
+    );
+  };
+  return { joinDeg: 0, width, tipS: 0, length: dist[dist.length - 1], pts, across, dist, point };
+}
+
+/** Distance along the street at which it reaches depth z (on the first straight) or x (after the bend). */
+export function streetS(at: { z: number } | { x: number }) {
+  const { x: X, bendRadius: R, bendZ, fromZ } = STREET;
+  if ('z' in at) return at.z - fromZ;
+  return bendZ - fromZ + (Math.PI / 2) * R + (X - R - at.x);
+}
+
 /** Distance in plan from (x, z) to the nearest street centreline. */
 export function distToStreets(exts: RoadExtension[], x: number, z: number) {
   let best = Infinity;

@@ -11,17 +11,22 @@
 //   u = x·cos(yaw) − z·sin(yaw),  v = y,  depth = x·sin(yaw) + z·cos(yaw)
 export type Rect = [number, number, number, number, number, number, number];
 
+// A measured region that isn't actually glass (a flat recess or bracket the analysis mistook for a
+// pane): it stays in the list so every other pane keeps its index (which seeds its interior), but a
+// negative depth tolerance means no pixel ever matches it — no glass, no frame, no sill.
+const notGlass = (r: Rect): Rect => [r[0], r[1], r[2], r[3], r[4], r[5], -0.1];
+
 export const CLEAN_HOUSE_GLASS: Rect[] = [
   [0, -0.675, -0.645, -0.645, -0.5525, 0.4067, 0.0062],
   [0, -0.6075, -0.58, -0.645, -0.5525, 0.4068, 0.0062],
-  [0, -0.5375, -0.4025, -0.5775, -0.305, 0.4195, 0.0063],
+  notGlass([0, -0.5375, -0.4025, -0.5775, -0.305, 0.4195, 0.0063]), // porch wall right of the door
   [0, -0.265, 0.0175, -0.55, -0.39, 0.485, 0.0061],
   [0, 0.43, 0.67, -0.55, -0.39, 0.4851, 0.0061],
   [0, -0.6775, -0.645, -0.505, -0.4075, 0.4058, 0.0069],
   [0, -0.6075, -0.58, -0.505, -0.4075, 0.4065, 0.0061],
-  [0, -0.7725, -0.735, -0.4925, -0.325, 0.4191, 0.0062],
-  [0, -0.8275, -0.8125, -0.43, -0.395, 0.4382, 0.0077],
-  [0, -0.5075, -0.49, -0.4275, -0.395, 0.4353, 0.0076],
+  notGlass([0, -0.7725, -0.735, -0.4925, -0.325, 0.4191, 0.0062]), // porch wall left of the door
+  notGlass([0, -0.8275, -0.8125, -0.43, -0.395, 0.4382, 0.0077]), // porch bracket
+  notGlass([0, -0.5075, -0.49, -0.4275, -0.395, 0.4353, 0.0076]), // porch bracket
   [0, -0.265, -0.1325, -0.3675, -0.32, 0.485, 0.0062],
   [0, -0.675, -0.645, -0.365, -0.34, 0.4054, 0.0061],
   [0, -0.6075, -0.58, -0.365, -0.34, 0.4054, 0.0061],

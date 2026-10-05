@@ -2,15 +2,31 @@
 // Units: world units ≈ metres. All GLB models are normalised by Meshy to ~1.9 units wide,
 // so each one gets its own scale factor here.
 
+// Web copies of the provided models (public/assets/web, made with gltfpack from the untouched
+// originals in public/assets): meshopt compression, float positions in the original model space,
+// and conservative, normal-aware simplification checked against the full-detail copies (houses
+// −40/−45% triangles with 12-bit normals, van −35% with 12-bit normals). The full-detail
+// *-web.glb copies stay alongside.
 export const ASSETS = {
-  road: '/assets/Curved_Empty_Road_Draft.glb',
-  dirtyHouse: '/assets/Weathered_Suburban_Duplex_Draft.glb',
-  cleanHouse: '/assets/Suburban_Semi_Detached_House_Draft.glb',
-  van: '/assets/FreshSpaces_Cleaning_Services_Van_Draft.glb',
+  road: '/assets/web/road-web.glb', // no longer loaded by the Hero (the street is built in code)
+  // first-load stand-in for the dirty house (1.25 MB, shaded with surface-derived normals),
+  // swapped in place for the full-quality one as soon as that has loaded
+  dirtyHouseInstant: '/assets/web/dirty-house-instant.glb',
+  dirtyHouse: '/assets/web/house-dirty-lite.glb',
+  cleanHouse: '/assets/web/house-clean-lite.glb',
+  van: '/assets/web/van-lite.glb',
 } as const;
 
 export const ROAD_SCALE = 12;
 export const HOUSE_SCALE = 4.6;
+// Model-space bounds of the full dirty house (house-dirty-lite.glb, measured from its vertices) and
+// its ground line. It's the reference every house version is fitted to: the instant LOD and the
+// clean house are scaled / placed per axis onto this box, so all three share one world-space size.
+export const HOUSE_REF_BOUNDS = {
+  min: [-0.951477, -0.768066, -0.765198],
+  max: [0.94989, 0.778015, 0.755615],
+  groundY: -0.765,
+} as const;
 export const VAN_SCALE = 3.3;
 
 // The road mesh is a flat crescent. Its footprint was measured by ray-marching outwards from
@@ -76,6 +92,9 @@ export const HOUSE_POS = { x: ROAD_CENTER_MODEL.x * ROAD_SCALE, zFront: -0.6 };
 // `lane`: fraction of the street width from its inner edge; `parkOffset`: metres from the inner edge
 // (inside the lay-by) where it stops.
 export const VAN_ROUTE = { approach: 36, parkDeg: 76, lane: 0.42, parkOffset: 1.6 };
+// On the procedural street: starts hidden behind the right side of the house (depth `startZ`),
+// drives in its lane (`lane`: 0 = house-side edge … 1 = far edge) and parks at `parkX`.
+export const VAN_DRIVE = { startZ: -16, lane: 0.25, parkX: 3.0 };
 
 // Scroll timeline (0 → 1 across the pinned hero)
 export const TIMELINE = {

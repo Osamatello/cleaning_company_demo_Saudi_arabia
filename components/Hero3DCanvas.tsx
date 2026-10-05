@@ -3,8 +3,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Inter } from 'next/font/google';
 import type { HeroScene } from './hero/createHeroScene';
+import { ASSETS } from './hero/heroConfig';
 
 const inter = Inter({ subsets: ['latin'], style: ['normal', 'italic'], display: 'swap' });
+
+// The 3D code starts downloading as soon as this module runs, not after the page has hydrated.
+const sceneModule = typeof window !== 'undefined' ? import('./hero/createHeroScene') : null;
 
 export default function Hero3DCanvas() {
   const sectionRef = useRef<HTMLDivElement>(null);
@@ -34,7 +38,7 @@ export default function Hero3DCanvas() {
     };
 
     // three.js is only needed client-side; load it lazily with the scene module.
-    import('./hero/createHeroScene').then(({ createHeroScene }) => {
+    (sceneModule ?? import('./hero/createHeroScene')).then(({ createHeroScene }) => {
       if (cancelled) return;
       scene = createHeroScene(canvas, { onReady: () => setReady(true) });
       onScroll();
@@ -56,6 +60,8 @@ export default function Hero3DCanvas() {
 
   return (
     <section id="hero-3d" ref={sectionRef} className={`${inter.className} relative h-[340vh] w-full bg-white`}>
+      {/* the first-frame model downloads from the very start of the page load */}
+      <link rel="preload" href={ASSETS.dirtyHouseInstant} as="fetch" crossOrigin="anonymous" />
       <div className="sticky top-0 h-[100svh] w-full overflow-hidden">
         {/* The page and headline show at once on white; the 3D scene loads in the background and
             fades in only when its first complete frame has been drawn (no loading screen). */}
