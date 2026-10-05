@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
-import { inter, serif } from './fonts';
+import { inter } from './fonts';
 import { useInView, useOnScreen } from './hooks';
 
 type Review = { name: string; initials: string; place: string; service: string; quote: string; tint: string; shape: string };
@@ -120,7 +120,7 @@ export default function Testimonials() {
         className={`absolute inset-0 bg-gradient-to-br ${rv.tint} transition-[filter,opacity] duration-500 ${i === active ? '' : 'opacity-70 grayscale-[30%]'}`}
         style={{ borderRadius: rv.shape }}
       />
-      <span className={`${serif.className} relative text-[19px] text-neutral-800`}>{rv.initials}</span>
+      <span className={`relative text-[15px] font-medium text-neutral-800`}>{rv.initials}</span>
       {i === active && (
         <svg className="pointer-events-none absolute -inset-[7px] h-[calc(100%+14px)] w-[calc(100%+14px)] -rotate-90" viewBox="0 0 100 100" aria-hidden>
           <circle cx="50" cy="50" r="48" fill="none" stroke="#e7e1d5" strokeWidth="1.5" />
@@ -176,18 +176,18 @@ export default function Testimonials() {
             <figure className="relative mt-20 min-h-[300px] md:mt-28 md:min-h-[330px]" aria-live="polite">
               <span
                 aria-hidden
-                className={`${serif.className} pointer-events-none absolute -left-1 -top-[72px] select-none bg-gradient-to-br from-sky-400 via-cyan-300 to-emerald-300 bg-clip-text text-[150px] leading-none text-transparent md:-left-5 md:-top-[118px] md:text-[240px]`}
+                className={`pointer-events-none absolute -left-1 font-[300] -top-[72px] select-none bg-gradient-to-br from-sky-400 via-cyan-300 to-emerald-300 bg-clip-text text-[150px] leading-none text-transparent md:-left-5 md:-top-[118px] md:text-[240px]`}
               >
                 “
               </span>
               <blockquote key={active} className="tm-in">
-                <p className={`${serif.className} text-[1.9rem] leading-[1.18] tracking-[-0.01em] text-neutral-900 sm:text-[2.3rem] md:text-[clamp(2.4rem,3.4vw,3.25rem)]`}>
+                <p className={`text-[1.55rem] font-[300] leading-[1.28] tracking-[-0.02em] text-neutral-900 sm:text-[1.9rem] md:text-[clamp(1.9rem,2.7vw,2.6rem)]`}>
                   {r.quote}
                 </p>
               </blockquote>
               <figcaption key={`c-${active}`} className="tm-in mt-8 flex items-center gap-4" style={{ animationDelay: '120ms' }}>
                 <span className={`grid h-12 w-12 place-items-center bg-gradient-to-br ${r.tint}`} style={{ borderRadius: r.shape }}>
-                  <span className={`${serif.className} text-[17px] text-neutral-800`}>{r.initials}</span>
+                  <span className={`text-[14px] font-medium text-neutral-800`}>{r.initials}</span>
                 </span>
                 <span>
                   <span className="block text-[15px] font-semibold text-neutral-900">{r.name}</span>
@@ -202,7 +202,7 @@ export default function Testimonials() {
           {/* the rating and the reviewers */}
           <div className="md:col-span-4 md:pt-10">
             <div className="reveal flex items-end gap-4 md:block" data-in={headIn} style={{ transitionDelay: '120ms' }}>
-              <p className={`${serif.className} text-[88px] leading-[0.85] text-neutral-900 md:text-[132px]`}>
+              <p className={`text-[80px] font-[200] leading-[0.85] tracking-[-0.05em] text-neutral-900 md:text-[120px]`}>
                 4.9<span className="text-[0.32em] text-neutral-400">/5</span>
               </p>
               <div className="pb-1 md:mt-4 md:pb-0">
@@ -242,7 +242,7 @@ export default function Testimonials() {
               >
                 <ArrowRight className="h-4 w-4" />
               </button>
-              <span className={`${serif.className} ml-2 text-[18px] text-neutral-400`}>
+              <span className={`ml-2 text-[14px] tabular-nums text-neutral-400`}>
                 <span className="text-neutral-900">0{active + 1}</span> / 0{REVIEWS.length}
               </span>
             </div>
@@ -259,7 +259,7 @@ export default function Testimonials() {
             <ul key={copy} className="flex shrink-0 items-center" aria-hidden={copy === 1}>
               {SNIPPETS.map(([q, who]) => (
                 <li key={q} className="flex items-center gap-4 px-8 md:px-10">
-                  <span className={`${serif.className} whitespace-nowrap text-[22px] italic text-neutral-800 md:text-[26px]`}>“{q}”</span>
+                  <span className={`whitespace-nowrap text-[18px] font-[300] text-neutral-800 md:text-[21px]`}>“{q}”</span>
                   <span className="whitespace-nowrap text-[11px] uppercase tracking-[0.2em] text-neutral-400">{who}</span>
                   <svg viewBox="0 0 20 20" className="ml-6 h-3.5 w-3.5 text-sky-400 md:ml-8" aria-hidden>
                     <path d="M10 0c.6 5.6 4.4 9.4 10 10-5.6.6-9.4 4.4-10 10-.6-5.6-4.4-9.4-10-10C5.6 9.4 9.4 5.6 10 0z" fill="currentColor" />

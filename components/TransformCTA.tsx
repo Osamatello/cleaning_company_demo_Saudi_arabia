@@ -81,11 +81,11 @@ export default function TransformCTA() {
               </div>
               <div className="flex items-center gap-4 text-slate-600">
                 <Phone className="w-5 h-5 text-emerald-600 shrink-0" />
-                <span className="text-sm font-mono">+966 50 123 4567 / +966 11 800 9000</span>
+                <span className="text-sm">+966 50 123 4567 / +966 11 800 9000</span>
               </div>
               <div className="flex items-center gap-4 text-slate-600">
                 <Mail className="w-5 h-5 text-cyan-600 shrink-0" />
-                <span className="text-sm font-mono">booking@freshspaces.sa</span>
+                <span className="text-sm">booking@freshspaces.sa</span>
               </div>
             </div>
           </div>
@@ -100,7 +100,7 @@ export default function TransformCTA() {
                   </div>
                   <h3 className="text-2xl font-bold text-slate-900">Booking Request Received!</h3>
                   <p className="text-sm text-slate-600 max-w-sm mx-auto">
-                    Thank you, <span className="text-sky-600 font-bold">{formData.name}</span>. Our Riyadh dispatch team will call you at <span className="font-mono text-slate-900">{formData.phone}</span> within 15 minutes.
+                    Thank you, <span className="text-sky-600 font-bold">{formData.name}</span>. Our Riyadh dispatch team will call you at <span className="text-slate-900">{formData.phone}</span> within 15 minutes.
                   </p>
                   <button
                     onClick={() => setSubmitted(false)}
@@ -144,7 +144,7 @@ export default function TransformCTA() {
                         placeholder="+966 5X XXX XXXX"
                         value={formData.phone}
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:border-sky-400 transition-colors font-mono"
+                        className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:border-sky-400 transition-colors"
                       />
                     </div>
                   </div>

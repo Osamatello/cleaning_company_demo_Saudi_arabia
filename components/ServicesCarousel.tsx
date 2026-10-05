@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight, Sparkles, Shield, Star, CheckCircle, ArrowRight } from 'lucide-react';
 
 interface ServiceItem {
@@ -77,9 +77,25 @@ const services: ServiceItem[] = [
   }
 ];
 
+// Ring geometry: each card sits on a circle around a point behind the active one.
+const STEP_DEG = 34;
+const EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
+
 export default function ServicesCarousel() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isAutoSpin, setIsAutoSpin] = useState(true);
+  const [radius, setRadius] = useState(560);
+  const prevActive = useRef(0);
+
+  useEffect(() => {
+    const fit = () => setRadius(window.innerWidth < 640 ? 360 : 560);
+    fit();
+    window.addEventListener('resize', fit);
+    return () => window.removeEventListener('resize', fit);
+  }, []);
+  useEffect(() => {
+    prevActive.current = activeIndex;
+  }, [activeIndex]);
 
   // Auto-rotate carousel every 4 seconds unless hovered
   useEffect(() => {
@@ -107,7 +123,7 @@ export default function ServicesCarousel() {
         {/* Section Header Matching Video Reference */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
           <div>
-            <div className="inline-flex items-center gap-2 text-xs font-mono font-semibold uppercase tracking-widest text-sky-600 mb-3">
+            <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-sky-600 mb-3">
               <span className="w-4 h-[2px] bg-sky-400"></span>
               <span>WHAT WE DO</span>
             </div>
@@ -128,38 +144,44 @@ export default function ServicesCarousel() {
           onMouseLeave={() => setIsAutoSpin(true)}
         >
           {services.map((service, index) => {
-            // Calculate distance relative to active index
+            // position on the ring relative to the active card
             const count = services.length;
-            let offset = (index - activeIndex + count) % count;
-            if (offset > count / 2) offset -= count;
+            const ringOffset = (from: number) => {
+              const o = (index - from + count) % count;
+              return o > count / 2 ? o - count : o;
+            };
+            const offset = ringOffset(activeIndex);
+            // a card crossing the hidden back of the ring jumps there instead of sweeping across the front
+            const wrapped = Math.abs(offset - ringOffset(prevActive.current)) > 1;
 
             const isActive = offset === 0;
             const absOffset = Math.abs(offset);
-
-            // 3D positioning styles matching user reference image
-            let translateX = offset * 280; // Distance spread
-            let rotateY = offset * -25; // Curved perspective rotation
-            let translateZ = -absOffset * 180; // Depth push back
-            let scale = isActive ? 1.05 : Math.max(0.75, 1 - absOffset * 0.15);
-            let opacity = absOffset > 2 ? 0 : Math.max(0.4, 1 - absOffset * 0.3);
-            let zIndex = 20 - absOffset * 5;
+            const angle = offset * STEP_DEG;
+            const rad = (angle * Math.PI) / 180;
+            const translateX = Math.sin(rad) * radius;
+            const translateZ = (Math.cos(rad) - 1) * radius;
+            const rotateY = -angle * 0.75; // turned in towards the viewer
+            const scale = isActive ? 1 : 0.94;
+            const zIndex = 20 - absOffset * 5;
+            // side cards stay solid and recede into a soft white haze instead of turning see-through
+            const haze = isActive ? 0 : absOffset === 1 ? 0.38 : 0.62;
 
             return (
               <div
                 key={service.id}
                 onClick={() => setActiveIndex(index)}
-                className={`absolute w-[300px] sm:w-[360px] cursor-pointer transition-all duration-700 ease-out transform-gpu ${
-                  isActive ? 'pointer-events-auto' : 'pointer-events-auto hover:opacity-100'
-                }`}
+                className="group/card absolute w-[300px] sm:w-[360px] cursor-pointer will-change-transform"
                 style={{
-                  transform: `translateX(${translateX}px) translateZ(${translateZ}px) rotateY(${rotateY}deg) scale(${scale})`,
-                  opacity: opacity,
-                  zIndex: zIndex,
+                  transform: `translate3d(${translateX.toFixed(1)}px, ${isActive ? -8 : 0}px, ${translateZ.toFixed(1)}px) rotateY(${rotateY}deg) scale(${scale})`,
+                  opacity: absOffset > 2 ? 0 : 1,
+                  zIndex,
+                  pointerEvents: absOffset > 2 ? 'none' : 'auto',
+                  transition: wrapped ? 'none' : `transform 1100ms ${EASE}, opacity 700ms ${EASE}`,
                 }}
               >
                 {/* Service Card */}
                 <div
-                  className={`relative rounded-3xl overflow-hidden glass-panel border transition-all duration-300 ${
+                  className={`relative rounded-3xl overflow-hidden glass-panel border transition-[border-color,box-shadow] duration-700 ${
                     isActive
                       ? 'border-sky-400/50 shadow-2xl shadow-sky-500/25 ring-2 ring-sky-400/30'
                       : 'border-slate-200 hover:border-slate-300'
@@ -170,7 +192,9 @@ export default function ServicesCarousel() {
                     <img
                       src={service.image}
                       alt={service.title}
-                      className="w-full h-full object-cover transition-transform duration-700 hover:scale-110"
+                      className={`w-full h-full object-cover transition-transform duration-[1400ms] ease-out ${
+                        isActive ? 'scale-105 group-hover/card:scale-110' : 'scale-100'
+                      }`}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-white via-white/40 to-transparent"></div>
 
@@ -182,7 +206,7 @@ export default function ServicesCarousel() {
                     </div>
 
                     <div className="absolute bottom-4 left-4 right-4">
-                      <span className="text-xs font-mono font-semibold text-sky-600 uppercase tracking-wider">
+                      <span className="text-xs font-semibold text-sky-600 uppercase tracking-wider">
                         {service.category}
                       </span>
                       <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mt-1">{service.title}</h3>
@@ -214,6 +238,12 @@ export default function ServicesCarousel() {
                       </a>
                     </div>
                   </div>
+
+                  {/* depth haze for the cards turning away */}
+                  <div
+                    className="pointer-events-none absolute inset-0 rounded-3xl bg-white"
+                    style={{ opacity: haze, transition: `opacity 900ms ${EASE}` }}
+                  />
                 </div>
               </div>
             );

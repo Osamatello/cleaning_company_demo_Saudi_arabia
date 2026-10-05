@@ -21,7 +21,7 @@ export default function Footer() {
             <p className="text-xs leading-relaxed text-slate-500">
               Riyadh’s premier 3D-driven villa, residential & commercial deep cleaning company. Transform your living space from chaos to spotless in 1 hour.
             </p>
-            <div className="flex items-center gap-2 text-xs font-mono text-emerald-600">
+            <div className="flex items-center gap-2 text-xs text-emerald-600">
               <Shield className="w-4 h-4" />
               <span>Licensed Saudi Commercial CR #101089201</span>
             </div>
@@ -29,7 +29,7 @@ export default function Footer() {
 
           {/* Quick Links */}
           <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 mb-4 font-mono">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 mb-4">
               Quick Navigation
             </h4>
             <ul className="space-y-2.5 text-xs">
@@ -58,7 +58,7 @@ export default function Footer() {
 
           {/* Services Offered */}
           <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 mb-4 font-mono">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 mb-4">
               Popular Services
             </h4>
             <ul className="space-y-2.5 text-xs">
@@ -87,7 +87,7 @@ export default function Footer() {
 
           {/* Riyadh Office Location */}
           <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 mb-4 font-mono">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 mb-4">
               Riyadh Dispatch HQ
             </h4>
             <div className="space-y-3 text-xs">
@@ -97,13 +97,13 @@ export default function Footer() {
               </div>
               <div className="flex items-center gap-2.5">
                 <Phone className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span className="font-mono text-slate-900">+966 50 123 4567</span>
+                <span className="text-slate-900">+966 50 123 4567</span>
               </div>
               <div className="flex items-center gap-2.5">
                 <Mail className="w-4 h-4 text-cyan-600 shrink-0" />
                 <span className="font-mono">support@freshspaces.sa</span>
               </div>
-              <div className="flex items-center gap-2.5 text-emerald-600 font-mono text-[11px]">
+              <div className="flex items-center gap-2.5 text-emerald-600 text-[11px]">
                 <Globe className="w-3.5 h-3.5" />
                 <span>24/7 Emergency Cleaning Hotline</span>
               </div>

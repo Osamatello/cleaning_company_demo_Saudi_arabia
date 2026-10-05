@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import { CalendarCheck2, Sparkles, KeyRound, type LucideIcon } from 'lucide-react';
-import { inter, serif } from './fonts';
+import { inter } from './fonts';
 import { useInView, useScrollFrame } from './hooks';
 
 type Step = { title: string; text: string; points: string[]; icon: LucideIcon };
@@ -189,7 +189,7 @@ export default function HowItWorks() {
                 <div className={`relative md:col-span-3 ${right ? 'md:order-2 md:col-start-10' : 'md:col-start-2'}`}>
                   <span
                     aria-hidden
-                    className={`${serif.className} pointer-events-none absolute -top-12 left-1/2 hidden -translate-x-[96%] select-none text-[150px] leading-none text-transparent transition-colors duration-700 [-webkit-text-stroke:1px_#d9d2c4] group-data-[active=true]:[-webkit-text-stroke:1px_#7dd3fc] md:block`}
+                    className={`pointer-events-none absolute -top-12 font-[200] tracking-[-0.05em] left-1/2 hidden -translate-x-[96%] select-none text-[150px] leading-none text-transparent transition-colors duration-700 [-webkit-text-stroke:1px_#d9d2c4] group-data-[active=true]:[-webkit-text-stroke:1px_#7dd3fc] md:block`}
                   >
                     0{i + 1}
                   </span>
@@ -212,7 +212,7 @@ export default function HowItWorks() {
                     right ? 'md:order-1 md:col-start-4' : 'md:col-start-6'
                   }`}
                 >
-                  <p className={`${serif.className} text-[18px] italic text-sky-600 md:hidden`}>0{i + 1}</p>
+                  <p className={`text-[13px] font-medium tabular-nums text-sky-600 md:hidden`}>0{i + 1}</p>
                   <h3 className="text-[1.6rem] font-semibold leading-tight tracking-[-0.01em] text-neutral-900 md:text-[2rem]">{step.title}</h3>
                   <p className="mt-3 max-w-md text-[15px] leading-relaxed text-neutral-500">{step.text}</p>
                   <ul className="mt-5 flex flex-wrap gap-x-6 gap-y-2">

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import { inter } from '@/components/home/fonts';
 
 export const metadata: Metadata = {
   title: 'FreshSpaces | Premium Home & Villa Cleaning in Riyadh, Saudi Arabia',
@@ -13,15 +14,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
-          rel="stylesheet"
-        />
-      </head>
+    <html lang="en" className={inter.variable}>
       <body className="bg-white text-slate-900 antialiased selection:bg-sky-500 selection:text-white font-sans">
         {children}
       </body>

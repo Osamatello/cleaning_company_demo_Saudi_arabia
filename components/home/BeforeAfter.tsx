@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { inter, serif } from './fonts';
+import { inter } from './fonts';
 import { prefersReducedMotion, useInView } from './hooks';
 
 type Room = { id: string; label: string; place: string; time: string; team: string; work: string };
@@ -281,7 +281,7 @@ export default function BeforeAfter() {
                 i === active ? 'border-neutral-900 bg-neutral-900 text-white' : 'border-neutral-300 text-neutral-600'
               }`}
             >
-              <span className={`${serif.className} mr-1.5 text-[14px] italic opacity-60`}>0{i + 1}</span>
+              <span className={`mr-1.5 text-[12px] font-medium tabular-nums opacity-60`}>0{i + 1}</span>
               {r.label}
             </button>
           ))}
@@ -402,7 +402,7 @@ export default function BeforeAfter() {
             <div className="mt-5 md:absolute md:bottom-0 md:left-0 md:mt-0 md:w-[clamp(280px,32%,410px)] md:pr-6">
               <p className="text-[10px] font-medium uppercase tracking-[0.28em] text-neutral-500">{room.place}</p>
               <p className="mt-1.5 text-[15px] text-neutral-900">
-                <span className={`${serif.className} text-[22px] leading-none`}>{room.time}</span>
+                <span className={`text-[20px] font-[350] leading-none tracking-[-0.01em]`}>{room.time}</span>
                 <span className="mx-2 text-neutral-300">/</span>
                 {room.team}
               </p>
@@ -428,7 +428,7 @@ export default function BeforeAfter() {
                         i === active ? 'scale-y-100' : 'scale-y-0'
                       }`}
                     />
-                    <span className={`${serif.className} block text-[15px] italic ${i === active ? 'text-sky-600' : 'text-neutral-400'}`}>0{i + 1}</span>
+                    <span className={`block text-[12px] font-medium tabular-nums ${i === active ? 'text-sky-600' : 'text-neutral-400'}`}>0{i + 1}</span>
                     <span
                       className={`block text-[17px] leading-tight transition-colors ${
                         i === active ? 'font-semibold text-neutral-900' : 'text-neutral-500 group-hover:text-neutral-800'
