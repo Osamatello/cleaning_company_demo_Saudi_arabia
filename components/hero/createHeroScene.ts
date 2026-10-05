@@ -105,6 +105,8 @@ export function createHeroScene(
 ): HeroScene {
   // No MSAA: with multi-million-triangle models it cost 25–30% of the frame. Edges are smoothed
   // by an FXAA pass on the final image instead (see present()).
+  // the first-frame model starts downloading before anything else is built
+  loadGLB(ASSETS.dirtyHouseInstant);
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
   renderer.setPixelRatio(MAX_PIXEL_RATIO);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -236,11 +238,19 @@ export function createHeroScene(
   // Houses share placement so the dissolve lines up: same scale, front walls and base aligned.
   const lodMix = { value: 0 }; // instant-LOD → full-quality dirty house crossfade
   let lodFade: { from: THREE.Object3D; t: number } | null = null;
-  const placeHouse = (g: GLTF, frontZ: number, minY: number, dirty: boolean, flatNormals = false, mix = false) => {
+  const placeHouse = (
+    g: GLTF,
+    frontZ: number,
+    minY: number,
+    dirty: boolean,
+    flatNormals = false,
+    mix = false,
+    material?: THREE.Material
+  ) => {
     const h = g.scene;
     h.scale.setScalar(HOUSE_SCALE);
     h.position.set(HOUSE_POS.x, -minY * HOUSE_SCALE, houseFrontZ - frontZ * HOUSE_SCALE);
-    const mat = createHouseMaterial(shared, dirty, minY, flatNormals, mix ? lodMix : undefined);
+    const mat = material ?? createHouseMaterial(shared, dirty, minY, flatNormals, mix ? lodMix : undefined);
     h.traverse((c) => {
       const m = c as THREE.Mesh;
       if (!m.isMesh) return;
@@ -253,6 +263,14 @@ export function createHeroScene(
 
   // First frame: a 1.25 MB stand-in for the dirty house. Then, in order (never competing for
   // bandwidth with what's needed sooner): the full-quality dirty house, then the van and clean house.
+  // Every first-frame shader compiles in the background while that model downloads (in parallel,
+  // where the browser supports it): the stand-in's material exists before its geometry does.
+  const lodHouseMat = createHouseMaterial(shared, true, -0.765, true, lodMix);
+  const warmUp = new THREE.Mesh(new THREE.BoxGeometry(0.01, 0.01, 0.01), lodHouseMat);
+  warmUp.castShadow = warmUp.receiveShadow = true;
+  const shadersReady = Promise.all([renderer.compileAsync(scene, camera), renderer.compileAsync(warmUp, camera, scene)])
+    .catch(() => undefined)
+    .finally(() => warmUp.geometry.dispose());
   const primary = Promise.all([loadGLB(ASSETS.dirtyHouseInstant).promise]);
   const fullDirty = primary.catch(() => null).then(() => (disposed ? null : loadGLB(ASSETS.dirtyHouse).promise));
   const secondary = fullDirty.catch(() => null).finally(() => {
@@ -261,9 +279,9 @@ export function createHeroScene(
     loadGLB(ASSETS.cleanHouse);
   });
   primary
-    .then(([dirtyG]) => {
+    .then(async ([dirtyG]) => {
       if (disposed) return;
-      dirtyHouse = placeHouse(dirtyG, 0.694, -0.765, true, true, true);
+      dirtyHouse = placeHouse(dirtyG, 0.694, -0.765, true, true, true, lodHouseMat);
       scene.add(dirtyHouse);
       scene.updateMatrixWorld(true);
       // soft contact occlusion under the house, trees and litter (re-baked when the clean house lands)
@@ -273,8 +291,10 @@ export function createHeroScene(
       const houseBox = new THREE.Box3().setFromObject(dirtyHouse);
       ground.uWetRect.value.set(houseBox.min.x, houseBox.min.z, houseBox.max.x, houseBox.max.z);
 
+      await shadersReady;
+      if (disposed) return;
       ready = true;
-      renderer.compile(scene, camera); // every first-frame shader, so the first scroll doesn't hitch
+      renderer.compile(scene, camera); // anything not warmed up yet, so the first scroll doesn't hitch
       bakeShadows();
       applyScene(current, current, current, 0);
       try {
