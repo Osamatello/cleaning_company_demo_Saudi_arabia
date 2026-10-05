@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import { GLTFLoader, type GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import { Sky } from 'three/examples/jsm/objects/Sky.js';
 import { FXAAShader } from 'three/examples/jsm/shaders/FXAAShader.js';
 import { FullScreenQuad } from 'three/examples/jsm/postprocessing/Pass.js';
@@ -34,6 +33,7 @@ import { type GroundUniforms, bakeContactAO, bakeVanFootprint, createGroundUnifo
 import { buildTree, type WindUniforms } from './tree';
 import { createDriveProfile, rigVan } from './vehicle';
 import { buildStreet, buildStreetGeometry, groundFade, streetS } from './roadExtension';
+import { createMeshoptDecoder } from './meshoptDecoder';
 import { createVanTrail } from './vanTrail';
 
 // ---------------------------------------------------------------------------
@@ -46,16 +46,14 @@ function loadGLB(url: string): Entry {
   let e = cache.get(url);
   if (!e) {
     if (!loader) {
-      // Decoded on the main thread (WASM, fast): the decoder's worker mode builds its worker from
-      // its own function source, which production minification renames — the worker then fails
-      // and the models never finish loading.
-      loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
+      // models are unpacked on background workers, so a large one never freezes the page
+      loader = new GLTFLoader().setMeshoptDecoder(createMeshoptDecoder() as unknown as Parameters<GLTFLoader['setMeshoptDecoder']>[0]);
     }
     // a dropped connection shouldn't leave a model missing: retry twice before giving up
     const l = loader;
     const attempt = (n: number): Promise<GLTF> =>
       l.loadAsync(url).catch((err) => (n > 0 ? new Promise((r) => setTimeout(r, 800)).then(() => attempt(n - 1)) : Promise.reject(err)));
-    const entry: Entry = { promise: attempt(2) };
+    const entry: Entry = { promise: attempt(2).then((g) => (widenPackedAttributes(g.scene), g)) };
     // don't keep a failed download cached; the next mount retries it
     entry.promise.catch(() => cache.delete(url));
     cache.set(url, entry);
@@ -64,7 +62,34 @@ function loadGLB(url: string): Entry {
   return e;
 }
 
+/**
+ * The web copies store normals as three 16-bit values padded to four. Direct3D (Windows) has no
+ * three-component 16-bit vertex format, so the browser converts them on the CPU the first time each
+ * model is drawn. Reading the padding too (same bytes, ignored by the shaders) gives a format the
+ * GPU takes as is.
+ */
+function widenPackedAttributes(root: THREE.Object3D) {
+  root.traverse((o) => {
+    const geo = (o as THREE.Mesh).geometry as THREE.BufferGeometry | undefined;
+    if (!geo) return;
+    for (const [name, a] of Object.entries(geo.attributes)) {
+      if (!(a instanceof THREE.InterleavedBufferAttribute) || a.itemSize !== 3) continue;
+      if (a.array instanceof Float32Array || a.offset + 4 > a.data.stride) continue;
+      geo.setAttribute(name, new THREE.InterleavedBufferAttribute(a.data, 4, a.offset, a.normalized));
+    }
+  });
+}
+
 const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
+
+// Opaque draw order: the big occluders first, so floor and road pixels hidden behind them fail the
+// depth test before they're shaded instead of being shaded and then painted over.
+const DRAW_ORDER = { house: -3, van: -2, litter: -2, tree: -1 } as const;
+const drawFirst = (root: THREE.Object3D, order: number) =>
+  root.traverse((o) => {
+    if ((o as THREE.Mesh).isMesh) o.renderOrder = order;
+  });
+
 const smooth = (a: number, b: number, x: number) => {
   const t = clamp01((x - a) / (b - a));
   return t * t * (3 - 2 * t);
@@ -204,6 +229,8 @@ export function createHeroScene(
   treeL.y = -0.05;
   const treeRight = buildTree(treeR, 1.05, 3, wind, QUALITY.foliageDensity, false);
   const treeLeft = buildTree(treeL, 0.88, 8, wind, QUALITY.foliageDensity, false);
+  drawFirst(treeRight, DRAW_ORDER.tree);
+  drawFirst(treeLeft, DRAW_ORDER.tree);
   scene.add(treeRight, treeLeft);
   // concrete path from the front door down to the road
   const doorX = HOUSE_POS.x - 0.63 * HOUSE_SCALE;
@@ -214,6 +241,7 @@ export function createHeroScene(
   scene.add(pad);
 
   const litter = buildLitter(shared, houseFrontZ);
+  drawFirst(litter, DRAW_ORDER.litter);
   scene.add(litter);
   let aoDirty: THREE.Texture | null = null;
   let aoClean: THREE.Texture | null = null;
@@ -264,6 +292,7 @@ export function createHeroScene(
       m.material = mat;
       m.castShadow = true;
       m.receiveShadow = true;
+      m.renderOrder = DRAW_ORDER.house;
     });
     return h;
   };
@@ -381,6 +410,7 @@ export function createHeroScene(
       if (!m.isMesh) return;
       m.material = vanMat;
       m.receiveShadow = true;
+      m.renderOrder = DRAW_ORDER.van;
     });
     const r = rigVan(v, VAN_SCALE, 0.4 * VAN_SCALE + 0.03);
     v.position.set(0, 0.4 * VAN_SCALE + 0.03, 0);
@@ -457,6 +487,9 @@ export function createHeroScene(
     // van: eased acceleration, cruise and braking along the road; suspension reacts to it
     const d = range(TIMELINE.vanDrive, pVan);
     vanT = drive.at(d);
+    // parked out of sight behind the house until it sets off, while the camera is still at its start
+    // pose (checked on every screen shape): not drawn then — its ground shadow is drawn separately
+    if (van) van.visible = d > 0 || range(TIMELINE.camera, pCam) > 0;
     if (van && rig && placeVanShadow) {
       const line = driveLine.sample(vanT * pathLength, vanPos);
       vanSettling = rig.update(vanPos, line.yaw, vanT * pathLength, dt, drive.accel(d), line.curvature);
