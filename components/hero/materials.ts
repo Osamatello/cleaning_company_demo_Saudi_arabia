@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { HOUSE_SCALE, ROAD_CENTER_MODEL, ROAD_PROFILE, ROAD_SCALE, STREET_WIDTH, roadPointModel, roadRadiiAt } from './heroConfig';
+import { ROAD_CENTER_MODEL, ROAD_PROFILE, ROAD_SCALE, STREET_WIDTH, roadPointModel, roadRadiiAt } from './heroConfig';
 import {
   CLEAN_HOUSE_DOOR,
   CLEAN_HOUSE_GLASS,
@@ -388,7 +388,9 @@ export function createHouseMaterial(
           ? '#include <project_vertex>'
           : `if (uFoam > 0.0 && uFoamOut < 1.0) {
           vec2 fm = foamAt((modelMatrix * vec4(transformed, 1.0)).xyz);
-          transformed += normalize(objectNormal) * fm.x * (0.1 + 0.32 * fm.y) / ${HOUSE_SCALE.toFixed(2)};
+          // world-space puff size whatever the model's (per-axis) scale
+          vec3 hs = vec3(length(modelMatrix[0].xyz), length(modelMatrix[1].xyz), length(modelMatrix[2].xyz));
+          transformed += normalize(objectNormal) * fm.x * (0.1 + 0.32 * fm.y) / hs;
         }
         #include <project_vertex>`
       );

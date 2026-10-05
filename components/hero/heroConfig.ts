@@ -19,6 +19,14 @@ export const ASSETS = {
 
 export const ROAD_SCALE = 12;
 export const HOUSE_SCALE = 4.6;
+// Model-space bounds of the full dirty house (house-dirty-lite.glb, measured from its vertices) and
+// its ground line. It's the reference every house version is fitted to: the instant LOD and the
+// clean house are scaled / placed per axis onto this box, so all three share one world-space size.
+export const HOUSE_REF_BOUNDS = {
+  min: [-0.951477, -0.768066, -0.765198],
+  max: [0.94989, 0.778015, 0.755615],
+  groundY: -0.765,
+} as const;
 export const VAN_SCALE = 3.3;
 
 // The road mesh is a flat crescent. Its footprint was measured by ray-marching outwards from

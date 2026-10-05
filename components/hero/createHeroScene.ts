@@ -8,6 +8,7 @@ import {
   ASSETS,
   CAMERA,
   HOUSE_POS,
+  HOUSE_REF_BOUNDS,
   HOUSE_SCALE,
   ROAD_ANGLE_RANGE,
   ROAD_CENTER_MODEL,
@@ -235,22 +236,28 @@ export function createHeroScene(
   const vanLights = { value: new THREE.Vector2(0, 0) };
   const aoRect = { cx: 1.4, cz: -6, half: 22 };
 
-  // Houses share placement so the dissolve lines up: same scale, front walls and base aligned.
+  // Every house version fills one world-space box: the full dirty house's bounds at its placement
+  // (front wall at houseFrontZ, ground line at y = 0). Each model's own bounding box is fitted onto it
+  // per axis, so nothing shrinks, grows or shifts across the LOD swap or the foam dissolve.
+  const refMin = new THREE.Vector3(...HOUSE_REF_BOUNDS.min);
+  const refSize = new THREE.Vector3(...HOUSE_REF_BOUNDS.max).sub(refMin);
+  const refPos = new THREE.Vector3(HOUSE_POS.x, -HOUSE_REF_BOUNDS.groundY * HOUSE_SCALE, houseFrontZ - 0.694 * HOUSE_SCALE);
+  const refWorldMin = refMin.clone().multiplyScalar(HOUSE_SCALE).add(refPos);
   const lodMix = { value: 0 }; // instant-LOD → full-quality dirty house crossfade
   let lodFade: { from: THREE.Object3D; t: number } | null = null;
-  const placeHouse = (
-    g: GLTF,
-    frontZ: number,
-    minY: number,
-    dirty: boolean,
-    flatNormals = false,
-    mix = false,
-    material?: THREE.Material
-  ) => {
+  const placeHouse = (g: GLTF, dirty: boolean, flatNormals = false, mix = false, material?: THREE.Material) => {
     const h = g.scene;
-    h.scale.setScalar(HOUSE_SCALE);
-    h.position.set(HOUSE_POS.x, -minY * HOUSE_SCALE, houseFrontZ - frontZ * HOUSE_SCALE);
-    const mat = material ?? createHouseMaterial(shared, dirty, minY, flatNormals, mix ? lodMix : undefined);
+    h.position.set(0, 0, 0);
+    h.rotation.set(0, 0, 0);
+    h.scale.set(1, 1, 1);
+    h.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(h);
+    const size = box.getSize(new THREE.Vector3());
+    h.scale.copy(refSize).divide(size).multiplyScalar(HOUSE_SCALE);
+    h.position.copy(refWorldMin).sub(box.min.clone().multiply(h.scale));
+    // the reference ground line, in this model's space (for its foot occlusion)
+    const baseY = box.min.y + (HOUSE_REF_BOUNDS.groundY - refMin.y) * (size.y / refSize.y);
+    const mat = material ?? createHouseMaterial(shared, dirty, baseY, flatNormals, mix ? lodMix : undefined);
     h.traverse((c) => {
       const m = c as THREE.Mesh;
       if (!m.isMesh) return;
@@ -265,7 +272,7 @@ export function createHeroScene(
   // bandwidth with what's needed sooner): the full-quality dirty house, then the van and clean house.
   // Every first-frame shader compiles in the background while that model downloads (in parallel,
   // where the browser supports it): the stand-in's material exists before its geometry does.
-  const lodHouseMat = createHouseMaterial(shared, true, -0.765, true, lodMix);
+  const lodHouseMat = createHouseMaterial(shared, true, HOUSE_REF_BOUNDS.groundY, true, lodMix);
   const warmUp = new THREE.Mesh(new THREE.BoxGeometry(0.01, 0.01, 0.01), lodHouseMat);
   warmUp.castShadow = warmUp.receiveShadow = true;
   const shadersReady = Promise.all([renderer.compileAsync(scene, camera), renderer.compileAsync(warmUp, camera, scene)])
@@ -281,7 +288,7 @@ export function createHeroScene(
   primary
     .then(async ([dirtyG]) => {
       if (disposed) return;
-      dirtyHouse = placeHouse(dirtyG, 0.694, -0.765, true, true, true, lodHouseMat);
+      dirtyHouse = placeHouse(dirtyG, true, true, true, lodHouseMat);
       scene.add(dirtyHouse);
       scene.updateMatrixWorld(true);
       // soft contact occlusion under the house, trees and litter (re-baked when the clean house lands)
@@ -332,7 +339,7 @@ export function createHeroScene(
    *  0.6 s dithered crossfade, then the stand-in is dropped. It takes over whatever the scroll state is. */
   async function swapDirtyHouse(fullG: GLTF) {
     if (disposed || !dirtyHouse) return;
-    const full = placeHouse(fullG, 0.694, -0.765, true, false, true);
+    const full = placeHouse(fullG, true, false, true);
     full.visible = dirtyHouse.visible;
     scene.add(full);
     await renderer.compileAsync(full, camera, scene); // shader ready before it shows: no hitch, no flash
@@ -389,7 +396,7 @@ export function createHeroScene(
 
   async function addCleanHouse(cleanG: GLTF) {
     if (disposed || !ready || !dirtyHouse) return;
-    const h = placeHouse(cleanG, 0.497, -0.733, false);
+    const h = placeHouse(cleanG, false);
     scene.add(h);
     await renderer.compileAsync(h, camera, scene);
     if (disposed) return;
