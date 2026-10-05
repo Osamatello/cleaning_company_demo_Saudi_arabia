@@ -9,6 +9,9 @@
 // *-web.glb copies stay alongside.
 export const ASSETS = {
   road: '/assets/web/road-web.glb', // no longer loaded by the Hero (the street is built in code)
+  // first-load stand-in for the dirty house (1.25 MB, shaded with surface-derived normals),
+  // swapped in place for the full-quality one as soon as that has loaded
+  dirtyHouseInstant: '/assets/web/dirty-house-instant.glb',
   dirtyHouse: '/assets/web/house-dirty-lite.glb',
   cleanHouse: '/assets/web/house-clean-lite.glb',
   van: '/assets/web/van-lite.glb',

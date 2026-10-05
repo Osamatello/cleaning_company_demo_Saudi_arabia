@@ -236,7 +236,7 @@ function windMaterial(mat: THREE.MeshStandardMaterial, u: WindUniforms, leaves: 
   };
 }
 
-export function buildTree(position: THREE.Vector3, scale: number, seed: number, u: WindUniforms, density = 1) {
+export function buildTree(position: THREE.Vector3, scale: number, seed: number, u: WindUniforms, density = 1, withShrubs = true) {
   const r = rng(seed);
   const group = new THREE.Group();
 
@@ -399,7 +399,7 @@ export function buildTree(position: THREE.Vector3, scale: number, seed: number, 
   sCard.setAttribute('aAO', new THREE.InstancedBufferAttribute(sAO, 1));
   sCard.setAttribute('aWind', new THREE.InstancedBufferAttribute(sWind, 3));
   sCard.setAttribute('aTile', new THREE.InstancedBufferAttribute(sTile, 1));
-  group.add(shrubs);
+  if (withShrubs) group.add(shrubs);
 
   group.position.copy(position);
   group.scale.setScalar(scale);

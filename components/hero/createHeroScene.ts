@@ -22,7 +22,7 @@ import {
 } from './heroConfig';
 import {
   type SharedUniforms,
-  createGrassMaterial,
+  createStudioFloorMaterial,
   createHouseMaterial,
   createLitterMaterial,
   createPavingMaterial,
@@ -32,7 +32,7 @@ import {
 import { type GroundUniforms, bakeContactAO, bakeVanFootprint, createGroundUniforms } from './groundShading';
 import { buildTree, type WindUniforms } from './tree';
 import { createDriveProfile, rigVan } from './vehicle';
-import { type RoadExtension, buildStreet, buildStreetGeometry, distToStreets, groundFade, streetS } from './roadExtension';
+import { buildStreet, buildStreetGeometry, groundFade, streetS } from './roadExtension';
 import { createVanTrail } from './vanTrail';
 
 // ---------------------------------------------------------------------------
@@ -49,7 +49,11 @@ function loadGLB(url: string): Entry {
       (MeshoptDecoder as unknown as { useWorkers?: (count: number) => void }).useWorkers?.(2);
       loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
     }
-    const entry: Entry = { promise: loader.loadAsync(url) };
+    // a dropped connection shouldn't leave a model missing: retry twice before giving up
+    const l = loader;
+    const attempt = (n: number): Promise<GLTF> =>
+      l.loadAsync(url).catch((err) => (n > 0 ? new Promise((r) => setTimeout(r, 800)).then(() => attempt(n - 1)) : Promise.reject(err)));
+    const entry: Entry = { promise: attempt(2) };
     // don't keep a failed download cached; the next mount retries it
     entry.promise.catch(() => cache.delete(url));
     cache.set(url, entry);
@@ -180,9 +184,9 @@ export function createHeroScene(
   const drive = createDriveProfile();
 
   // --- environment
-  const groundMesh = buildGround(ground, houseFrontZ, houseBackZ, streets);
-  scene.add(groundMesh.mesh);
-  scene.add(buildApron(ground, streets));
+  // a clean, light studio floor (no grass terrain) that fades into the white backdrop; it carries
+  // the contact shadows, the van's shadow and the foam / wet effects so nothing floats
+  scene.add(buildFloor(ground));
   for (const st of streets) {
     const m = new THREE.Mesh(buildStreetGeometry(st), createRoadMaterial(ground, { width: st.width }));
     m.receiveShadow = true;
@@ -191,11 +195,11 @@ export function createHeroScene(
   const inwardFrom = (p: THREE.Vector3, d: number) =>
     p.addScaledVector(new THREE.Vector3(ROAD_CX, 0, ROAD_CZ).sub(p).setY(0).normalize(), d);
   const treeR = inwardFrom(roadWorld(a0 + 9, 0), 2.0);
-  treeR.y = groundMesh.heightAt(treeR.x, treeR.z) - 0.05;
+  treeR.y = -0.05;
   const treeL = inwardFrom(roadWorld(a1 - 8, 0), 2.0);
-  treeL.y = groundMesh.heightAt(treeL.x, treeL.z) - 0.05;
-  const treeRight = buildTree(treeR, 1.05, 3, wind, QUALITY.foliageDensity);
-  const treeLeft = buildTree(treeL, 0.88, 8, wind, QUALITY.foliageDensity);
+  treeL.y = -0.05;
+  const treeRight = buildTree(treeR, 1.05, 3, wind, QUALITY.foliageDensity, false);
+  const treeLeft = buildTree(treeL, 0.88, 8, wind, QUALITY.foliageDensity, false);
   scene.add(treeRight, treeLeft);
   // concrete path from the front door down to the road
   const doorX = HOUSE_POS.x - 0.63 * HOUSE_SCALE;
@@ -229,11 +233,13 @@ export function createHeroScene(
   const aoRect = { cx: 1.4, cz: -6, half: 22 };
 
   // Houses share placement so the dissolve lines up: same scale, front walls and base aligned.
-  const placeHouse = (g: GLTF, frontZ: number, minY: number, dirty: boolean) => {
+  const lodMix = { value: 0 }; // instant-LOD → full-quality dirty house crossfade
+  let lodFade: { from: THREE.Object3D; t: number } | null = null;
+  const placeHouse = (g: GLTF, frontZ: number, minY: number, dirty: boolean, flatNormals = false, mix = false) => {
     const h = g.scene;
     h.scale.setScalar(HOUSE_SCALE);
     h.position.set(HOUSE_POS.x, -minY * HOUSE_SCALE, houseFrontZ - frontZ * HOUSE_SCALE);
-    const mat = createHouseMaterial(shared, dirty, minY);
+    const mat = createHouseMaterial(shared, dirty, minY, flatNormals, mix ? lodMix : undefined);
     h.traverse((c) => {
       const m = c as THREE.Mesh;
       if (!m.isMesh) return;
@@ -244,9 +250,11 @@ export function createHeroScene(
     return h;
   };
 
-  const primary = Promise.all([loadGLB(ASSETS.dirtyHouse).promise]);
-  // the rest streams in as soon as the first frame's models are in (never competing with them)
-  const secondary = primary.finally(() => {
+  // First frame: a 1.25 MB stand-in for the dirty house. Then, in order (never competing for
+  // bandwidth with what's needed sooner): the full-quality dirty house, then the van and clean house.
+  const primary = Promise.all([loadGLB(ASSETS.dirtyHouseInstant).promise]);
+  const fullDirty = primary.catch(() => null).then(() => (disposed ? null : loadGLB(ASSETS.dirtyHouse).promise));
+  const secondary = fullDirty.catch(() => null).finally(() => {
     if (disposed) return;
     loadGLB(ASSETS.van);
     loadGLB(ASSETS.cleanHouse);
@@ -254,7 +262,7 @@ export function createHeroScene(
   primary
     .then(([dirtyG]) => {
       if (disposed) return;
-      dirtyHouse = placeHouse(dirtyG, 0.694, -0.765, true);
+      dirtyHouse = placeHouse(dirtyG, 0.694, -0.765, true, true, true);
       scene.add(dirtyHouse);
       scene.updateMatrixWorld(true);
       // soft contact occlusion under the house, trees and litter (re-baked when the clean house lands)
@@ -275,7 +283,11 @@ export function createHeroScene(
       }
     })
     .catch((err) => console.error('Hero scene failed to load', err))
-    // …and join the scene once the first frame is up
+    // the full-quality dirty house replaces the stand-in as soon as it's ready
+    .then(() => fullDirty)
+    .then((g) => (g ? swapDirtyHouse(g) : undefined))
+    .catch((err) => console.error('Full-quality house failed to load', err))
+    // …and the van and clean house join once they're in
     .then(() => secondary)
     .finally(() => {
       if (disposed) return;
@@ -293,6 +305,41 @@ export function createHeroScene(
     renderer.render(scene, camera);
     if (dirtyHouse) dirtyHouse.visible = vis[0] ?? true;
     if (cleanHouse) cleanHouse.visible = vis[1] ?? false;
+  }
+
+  /** Bring in the full-quality dirty house over the stand-in: identical placement and shading, a
+   *  0.6 s dithered crossfade, then the stand-in is dropped. It takes over whatever the scroll state is. */
+  async function swapDirtyHouse(fullG: GLTF) {
+    if (disposed || !dirtyHouse) return;
+    const full = placeHouse(fullG, 0.694, -0.765, true, false, true);
+    full.visible = dirtyHouse.visible;
+    scene.add(full);
+    await renderer.compileAsync(full, camera, scene); // shader ready before it shows: no hitch, no flash
+    if (disposed || !dirtyHouse) return;
+    lodFade = { from: dirtyHouse, t: 0 };
+    dirtyHouse = full;
+    applyScene(current, camP, vanP, 0);
+    needsRender = true;
+  }
+
+  function stepLodFade(dt: number) {
+    if (!lodFade) return false;
+    lodFade.t = Math.min(1, lodFade.t + dt / 0.6);
+    lodMix.value = lodFade.t * lodFade.t * (3 - 2 * lodFade.t);
+    lodFade.from.visible = dirtyHouse?.visible ?? true;
+    if (lodFade.t >= 1) {
+      const old = lodFade.from;
+      lodFade = null;
+      scene.remove(old);
+      old.traverse((c) => {
+        const m = c as THREE.Mesh;
+        if (!m.isMesh) return;
+        m.geometry.dispose();
+        (m.material as THREE.Material).dispose();
+      });
+      return false;
+    }
+    return true;
   }
 
   async function addVan(vanG: GLTF) {
@@ -485,7 +532,8 @@ export function createHeroScene(
       applyScene(current, camP, vanP, dt);
       lastKey = key;
     }
-    const continuous = moved || washing || vanSettling || trailActive;
+    const fading = stepLodFade(dt);
+    const continuous = moved || washing || vanSettling || trailActive || fading;
     if (ready && (continuous || needsRender || idleDue)) {
       // only consecutive frames say anything about GPU load (idle frames are throttled on purpose)
       if (continuous && renderedLastFrame) adaptResolution(now);
@@ -616,160 +664,22 @@ function createSkyEnvironment(renderer: THREE.WebGLRenderer, sunDir: THREE.Vecto
   return rt.texture;
 }
 
-// Ground: a lawn inside the road's inner curve and, well behind the house, a rolling
-// grassy ridge as a backdrop. `aFade` dissolves its outer edge into the white backdrop.
-function buildGround(u: GroundUniforms, houseFrontZ: number, houseBackZ: number, streets: RoadExtension[]) {
-  const [firstDeg, lastDeg] = ROAD_ANGLE_RANGE;
-  const rings = 56;
-  const segs = 240;
-  const BACK_R = 14.5;
-
-  const wrap = (deg: number) => {
-    let d = ((deg % 360) + 360) % 360;
-    if (d < firstDeg) d += 360;
-    return d;
-  };
-  const boundary = (deg: number) => {
-    const d = wrap(deg);
-    if (d <= lastDeg) return roadRadiiAt(d)[0] * ROAD_SCALE - 0.1;
-    // behind the house (no road): widen into a larger, softly irregular island for the ridge
-    const t = (d - lastDeg) / (firstDeg + 360 - lastDeg);
-    const a = roadRadiiAt(lastDeg)[0] * ROAD_SCALE;
-    const b = roadRadiiAt(firstDeg)[0] * ROAD_SCALE;
-    const base = THREE.MathUtils.lerp(a, b, t);
-    return base + (BACK_R - base) * Math.pow(Math.sin(Math.PI * t), 0.5) + Math.sin(t * 11) * 0.45 + Math.sin(t * 23 + 1) * 0.2;
-  };
-
-  const height = (x: number, z: number, edge: number) => {
-    const r = Math.hypot(x - ROAD_CX, z - ROAD_CZ);
-    const k = clamp01(r / edge);
-    const edgeFall = Math.cos((Math.PI / 2) * Math.pow(k, 3.2));
-    // ridge starts a few metres behind the house and rolls along its length
-    const back = smooth(houseBackZ - 2.5, houseBackZ - 9, z);
-    const ridge = back * (3.4 + Math.sin(x * 0.33 + 1.2) * 1.3 + Math.sin(x * 0.71 + 0.4) * 0.5);
-    // gentle lawn undulation elsewhere, kept flat in front of the facade
-    const lawn = 0.14 + (Math.sin(x * 0.5) * Math.cos(z * 0.45) + 1) * 0.06 * smooth(houseFrontZ + 0.5, houseFrontZ - 2, z);
-    // the terrain settles to the level of the streets where they pass
-    const nearStreet = smooth(3.2, 8, distToStreets(streets, x, z));
-    return Math.max(0, (lawn + ridge) * edgeFall * nearStreet) + 0.02 - (r > edge - 0.3 ? 0.05 : 0);
-  };
-
-  const positions: number[] = [];
-  const uvs: number[] = [];
-  const fades: number[] = [];
-  const index: number[] = [];
-  for (let s = 0; s <= segs; s++) {
-    const a = (s / segs) * Math.PI * 2;
-    const deg = (a * 180) / Math.PI;
-    const edge = boundary(deg);
-    for (let ri = 0; ri <= rings; ri++) {
-      const k = ri / rings;
-      const rr = (1 - Math.pow(1 - k, 1.6)) * edge; // denser rings near the edge
-      const x = ROAD_CX + Math.cos(a) * rr;
-      const z = ROAD_CZ + Math.sin(a) * rr;
-      positions.push(x, height(x, z, edge), z);
-      uvs.push(x / 3.2, z / 3.2);
-      fades.push(groundFade(x, z));
-    }
-  }
-  const row = rings + 1;
-  for (let s = 0; s < segs; s++) {
-    for (let ri = 0; ri < rings; ri++) {
-      const a = s * row + ri;
-      const b = (s + 1) * row + ri;
-      index.push(a, b, a + 1, b, b + 1, a + 1); // counter-clockwise seen from above
-    }
-  }
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-  geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
-  geo.setAttribute('aFade', new THREE.Float32BufferAttribute(fades, 1));
-  geo.setIndex(index);
-  geo.computeVertexNormals();
-  const mesh = new THREE.Mesh(geo, createGrassMaterial(u, { fadeAttr: true, roadEnds: false }));
-  mesh.receiveShadow = true;
-  mesh.castShadow = true;
-  return {
-    mesh,
-    heightAt: (x: number, z: number) => height(x, z, boundary((Math.atan2(z - ROAD_CZ, x - ROAD_CX) * 180) / Math.PI)),
-  };
-}
-
-// Grass verge along the road's outer edge, flush with the road surface, so the road reads as
-// laid into the ground; its outer half dissolves into the backdrop.
-function buildVerge(u: GroundUniforms) {
-  const [a0, a1] = ROAD_ANGLE_RANGE;
-  const steps = 220;
-  const across = 8;
-  const width = 1.8;
-  const top = 0.036;
-  const positions: number[] = [];
-  const uvs: number[] = [];
-  const fades: number[] = [];
-  const index: number[] = [];
-  for (let i = 0; i <= steps; i++) {
-    const deg = a0 + ((a1 - a0) * i) / steps;
-    const a = (deg * Math.PI) / 180;
-    const rOut = roadRadiiAt(deg)[1] * ROAD_SCALE - 0.06;
-    for (let j = 0; j <= across; j++) {
-      const t = j / across;
-      const r = rOut + width * t;
-      const x = ROAD_CX + Math.cos(a) * r;
-      const z = ROAD_CZ + Math.sin(a) * r;
-      positions.push(x, top - 0.07 * t * t, z);
-      uvs.push(x / 3.2, z / 3.2);
-      fades.push(groundFade(x, z));
-    }
-  }
-  const row = across + 1;
-  for (let i = 0; i < steps; i++) {
-    for (let j = 0; j < across; j++) {
-      const p = i * row + j;
-      const q = (i + 1) * row + j;
-      index.push(p, q, p + 1, q, q + 1, p + 1);
-    }
-  }
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-  geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
-  geo.setAttribute('aFade', new THREE.Float32BufferAttribute(fades, 1));
-  geo.setIndex(index);
-  geo.computeVertexNormals();
-  const mat = createGrassMaterial(u, { fadeAttr: true, roadEnds: false });
-  mat.side = THREE.DoubleSide;
-  const mesh = new THREE.Mesh(geo, mat);
-  mesh.receiveShadow = true;
-  return mesh;
-}
-
-// Terrain beyond the island: continuous lawn under everything that carries on around the
-// streets and rolls into low hills far to the sides, dissolving into the white backdrop only in
-// the distance (close in front of the road, the island look is kept).
-function buildApron(u: GroundUniforms, streets: RoadExtension[]) {
-  const rings = 80;
-  const segs = 200;
+/** Flat studio floor round the scene, dissolving into the backdrop with distance (see groundFade). */
+function buildFloor(u: GroundUniforms) {
+  const rings = 60;
+  const segs = 120;
   const R = 110;
   const positions: number[] = [];
-  const uvs: number[] = [];
   const fades: number[] = [];
   const index: number[] = [];
   for (let s = 0; s <= segs; s++) {
     const a = (s / segs) * Math.PI * 2;
     for (let ri = 0; ri <= rings; ri++) {
-      const k = ri / rings;
-      const r = Math.pow(k, 1.5) * R;
+      const r = Math.pow(ri / rings, 1.5) * R;
       const x = ROAD_CX + Math.cos(a) * r;
       const z = ROAD_CZ + Math.sin(a) * r;
-      const fade = groundFade(x, z);
-      const front = Math.pow(Math.max(0, Math.sin(a)), 2);
-      const hills =
-        smooth(24, 42, r) *
-        (1 - front) *
-        smooth(7, 16, distToStreets(streets, x, z)) *
-        (1.6 + Math.sin(x * 0.085 + 1.3) * 1.1 + Math.sin(z * 0.11 + 0.4) * 0.8 + Math.sin((x + z) * 0.21) * 0.3);
-      positions.push(x, -0.06 + Math.max(0, hills), z); // below the verge and island rims, never coplanar
-      uvs.push(x / 3.2, z / 3.2);
-      fades.push(fade);
+      positions.push(x, 0, z);
+      fades.push(groundFade(x, z));
     }
   }
   const row = rings + 1;
@@ -782,11 +692,10 @@ function buildApron(u: GroundUniforms, streets: RoadExtension[]) {
   }
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-  geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
   geo.setAttribute('aFade', new THREE.Float32BufferAttribute(fades, 1));
   geo.setIndex(index);
   geo.computeVertexNormals();
-  const mesh = new THREE.Mesh(geo, createGrassMaterial(u, { fadeAttr: true, roadEnds: false }));
+  const mesh = new THREE.Mesh(geo, createStudioFloorMaterial(u));
   mesh.receiveShadow = true;
   return mesh;
 }
@@ -881,14 +790,14 @@ function buildLitter(shared: SharedUniforms, houseFrontZ: number) {
   bags.forEach(([x, z, s, c], i) => {
     const m = new THREE.Mesh(bagGeo, mats[c]);
     m.scale.setScalar(s * 0.7);
-    m.position.set(hx + x, s * 0.4 + 0.1, houseFrontZ + z);
+    m.position.set(hx + x, s * 0.4 - 0.03, houseFrontZ + z);
     m.rotation.set((i % 3) * 0.12, i * 1.7, (i % 2) * 0.1);
     group.add(m);
   });
   const boards: [number, number, number][] = [[-2.0, 1.6, 0.4], [1.2, 1.3, -0.3], [-5.8, 1.2, 0.9], [2.8, 1.8, 1.2]];
   boards.forEach(([x, z, r]) => {
     const m = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.03, 0.8), box);
-    m.position.set(hx + x, 0.17, houseFrontZ + z);
+    m.position.set(hx + x, 0.04, houseFrontZ + z);
     m.rotation.set(0.04, r, 0.06);
     group.add(m);
   });

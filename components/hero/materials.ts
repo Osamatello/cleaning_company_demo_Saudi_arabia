@@ -339,16 +339,40 @@ const BRICK_GLSL = /* glsl */ `
 // ---------------------------------------------------------------------------------------------
 // House
 
-export function createHouseMaterial(shared: SharedUniforms, dirty: boolean, baseY: number) {
+/**
+ * `flatNormals`: shade from surface-derived normals (for the instant LOD, whose normals aren't kept).
+ * `lodMix`: dithered crossfade between the instant LOD and the full model (0 = LOD, 1 = full).
+ */
+export function createHouseMaterial(
+  shared: SharedUniforms,
+  dirty: boolean,
+  baseY: number,
+  flatNormals = false,
+  lodMix?: { value: number }
+) {
   const glass = rectUniforms(dirty ? DIRTY_HOUSE_GLASS : CLEAN_HOUSE_GLASS);
   const door = rectUniforms([dirty ? DIRTY_HOUSE_DOOR : CLEAN_HOUSE_DOOR]);
   const grid = buildPaneGrid(dirty ? DIRTY_HOUSE_GLASS : CLEAN_HOUSE_GLASS, 0.02);
-  const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.85, metalness: 0 });
-  mat.customProgramCacheKey = () => (dirty ? 'house-dirty-v4' : 'house-clean-v4');
+  const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.85, metalness: 0, flatShading: flatNormals });
+  mat.customProgramCacheKey = () => (dirty ? 'house-dirty-v4' : 'house-clean-v4') + (flatNormals ? '-flat' : '') + (lodMix ? '-mix' : '');
   mat.addEventListener('dispose', () => grid.texture.dispose());
   mat.onBeforeCompile = (shader) => {
     injectObjectSpaceVaryings(shader);
     injectDissolve(shader, shared, dirty);
+    if (lodMix) {
+      // screen-door crossfade: each pixel shows either the LOD or the full model, never both
+      shader.uniforms.uLodMix = lodMix;
+      shader.fragmentShader = shader.fragmentShader
+        .replace('#include <common>', '#include <common>\nuniform float uLodMix;')
+        .replace(
+          '#include <clipping_planes_fragment>',
+          `#include <clipping_planes_fragment>
+          {
+            float lodDither = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))));
+            ${flatNormals ? 'if (lodDither < uLodMix) discard;' : 'if (lodDither >= uLodMix) discard;'}
+          }`
+        );
+    }
     shader.uniforms.uGlassA = { value: glass.a };
     shader.uniforms.uGlassB = { value: glass.b };
     shader.uniforms.uDoorA = { value: door.a };
@@ -360,7 +384,9 @@ export function createHouseMaterial(shared: SharedUniforms, dirty: boolean, base
       )
       .replace(
         '#include <project_vertex>',
-        `if (uFoam > 0.0 && uFoamOut < 1.0) {
+        flatNormals
+          ? '#include <project_vertex>'
+          : `if (uFoam > 0.0 && uFoamOut < 1.0) {
           vec2 fm = foamAt((modelMatrix * vec4(transformed, 1.0)).xyz);
           transformed += normalize(objectNormal) * fm.x * (0.1 + 0.32 * fm.y) / ${HOUSE_SCALE.toFixed(2)};
         }
@@ -384,7 +410,7 @@ export function createHouseMaterial(shared: SharedUniforms, dirty: boolean, base
       .replace(
         '#include <color_fragment>',
         /* glsl */ `#include <color_fragment>
-      vec3 n = normalize(vObjNormal);
+      vec3 n = ${flatNormals ? 'normalize(cross(dFdx(vObjPos), dFdy(vObjPos)))' : 'normalize(vObjNormal)'};
       vec3 p = vObjPos;
       float y = p.y;
       // under a full coat of foam nothing of the facade shows: skip windows, bricks and weathering
@@ -955,6 +981,25 @@ export function createGrassMaterial(ground: GroundUniforms, opts: { fadeAttr: bo
         diffuseColor.rgb *= mix(0.84, 1.1, fine);
         diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(1.08, 1.05, 0.82), smoothstep(0.45, 0.7, lush) * 0.55);`
     );
+  };
+  return mat;
+}
+
+/**
+ * Studio floor: a clean, light neutral ground that carries the contact shadows, the van's shadow
+ * and the foam / wet effects, and dissolves into the white backdrop (`aFade`).
+ */
+export function createStudioFloorMaterial(ground: GroundUniforms) {
+  // slightly warm, so the cool sky light reads as neutral rather than blue-grey
+  const mat = new THREE.MeshStandardMaterial({ color: 0xf7f1e6, roughness: 0.95, metalness: 0 });
+  mat.customProgramCacheKey = () => 'studio-floor';
+  mat.onBeforeCompile = (shader) => {
+    injectObjectSpaceVaryings(shader);
+    injectGroundShading(shader, ground, 'vFade');
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', '#include <common>\nattribute float aFade;\nvarying float vFade;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvFade = aFade;');
+    shader.fragmentShader = shader.fragmentShader.replace('#include <common>', '#include <common>\nvarying float vFade;');
   };
   return mat;
 }
