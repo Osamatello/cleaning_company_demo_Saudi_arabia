@@ -37,8 +37,7 @@ import { createVanTrail } from './vanTrail';
 
 // ---------------------------------------------------------------------------
 // GLB loading is cached per page so React StrictMode's double-mount (dev) and remounts never
-// download or decode the models twice. The web copies are meshopt-compressed; decoding runs in
-// worker threads, off the main thread.
+// download or decode the models twice. The web copies are meshopt-compressed.
 type Entry = { promise: Promise<GLTF> };
 const cache = new Map<string, Entry>();
 let loader: GLTFLoader | null = null;
@@ -46,7 +45,9 @@ function loadGLB(url: string): Entry {
   let e = cache.get(url);
   if (!e) {
     if (!loader) {
-      (MeshoptDecoder as unknown as { useWorkers?: (count: number) => void }).useWorkers?.(2);
+      // Decoded on the main thread (WASM, fast): the decoder's worker mode builds its worker from
+      // its own function source, which production minification renames — the worker then fails
+      // and the models never finish loading.
       loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
     }
     // a dropped connection shouldn't leave a model missing: retry twice before giving up
