@@ -153,13 +153,13 @@ export default function Testimonials() {
         </defs>
       </svg>
       {/* a soft pebble behind the quote */}
-      <svg aria-hidden className="pointer-events-none absolute -left-[12%] -top-6 h-[600px] w-[88%] overflow-visible md:-top-12 md:h-[640px] md:w-[70%]" viewBox="0 0 900 640" preserveAspectRatio="none">
+      <svg aria-hidden className="pointer-events-none absolute -left-[12%] top-4 h-[560px] w-[88%] overflow-visible md:top-6 md:h-[560px] md:w-[70%]" viewBox="0 0 900 640" preserveAspectRatio="none">
         <path d="M118 96C214 18 392 -10 560 24c160 32 300 110 330 246 30 138-56 268-214 330-152 60-356 52-492-12C46 528-14 412 4 300 18 206 46 154 118 96Z" fill="#f6f4ef" />
         <path d="M118 96C214 18 392 -10 560 24c160 32 300 110 330 246 30 138-56 268-214 330-152 60-356 52-492-12C46 528-14 412 4 300 18 206 46 154 118 96Z" fill="none" stroke="#e3dccd" strokeWidth="1" vectorEffect="non-scaling-stroke" />
       </svg>
 
       <div className="relative mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
-        <div ref={headRef} className="grid grid-cols-1 gap-14 md:grid-cols-12 md:gap-8">
+        <div ref={headRef} className="grid grid-cols-1 gap-14 md:min-h-[545px] md:grid-cols-12 md:gap-8">
           {/* the quote */}
           <div
             className="relative md:col-span-7"
@@ -245,7 +245,7 @@ export default function Testimonials() {
       </div>
 
       {/* a slow ribbon of short reviews, easing the page into the booking section */}
-      <div className="group relative mt-24 border-y border-[#ece7dd] bg-[#fbfaf7] py-5 md:mt-32">
+      <div className="group relative mt-36 border-y border-[#ece7dd] bg-[#fbfaf7] py-5 md:mt-16">
         <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-[#fbfaf7] to-transparent md:w-40" />
         <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-[#fbfaf7] to-transparent md:w-40" />
         <div className="tm-marquee flex w-max group-hover:[animation-play-state:paused]">
