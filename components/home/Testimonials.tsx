@@ -162,7 +162,7 @@ export default function Testimonials() {
         <div ref={headRef} className="grid grid-cols-1 gap-14 md:min-h-[545px] md:grid-cols-12 md:gap-8">
           {/* the quote */}
           <div
-            className="relative md:col-span-7"
+            className="relative md:col-span-7 md:-ml-6 md:pt-14"
             onMouseEnter={() => setPaused(true)}
             onMouseLeave={() => setPaused(false)}
             onFocusCapture={() => setPaused(true)}
