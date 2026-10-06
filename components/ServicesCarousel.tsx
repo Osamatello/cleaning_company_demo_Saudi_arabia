@@ -275,27 +275,20 @@ export default function ServicesCarousel() {
                   transition: wrapped ? 'none' : `transform 1100ms ${EASE}, opacity 700ms ${EASE}`,
                 }}
               >
-                {/* gentle float for the card in front, then the pointer tilt */}
-                <div className={isActive ? 'svc-float' : ''}>
+                {/* the pointer tilt; a permanent layer, so neither tilting nor a change of card ever repaints it */}
                 <div
-                  className="relative"
+                  className="relative will-change-transform"
                   onMouseMove={isActive ? tilt : undefined}
                   onMouseLeave={isActive ? untilt : undefined}
                 >
-                {/* living gradient edge on the active card */}
+                {/* living gradient edge and deep shadow of the active card, faded in on the compositor */}
                 <div
                   aria-hidden
                   className="svc-edge absolute -inset-[1.5px] rounded-[31.5px] transition-opacity duration-700 will-change-[opacity]"
                   style={{ opacity: isActive ? 1 : 0 }}
                 />
-                {/* Service Card: a tall, image-led portrait with a frosted panel */}
-                <div
-                  className={`relative aspect-[3/4] overflow-hidden rounded-[30px] bg-slate-200 [contain:layout_paint] ${
-                    isActive
-                      ? 'shadow-[0_50px_90px_-35px_rgba(2,132,199,0.5),0_18px_40px_-18px_rgba(15,23,42,0.35)]'
-                      : 'shadow-[0_20px_40px_-24px_rgba(15,23,42,0.35)]'
-                  }`}
-                >
+                {/* Service Card: a tall, image-led portrait with a frosted panel (its paint never changes) */}
+                <div className="relative aspect-[3/4] overflow-hidden rounded-[30px] bg-slate-200 shadow-[0_20px_40px_-24px_rgba(15,23,42,0.35)] [contain:layout_paint]">
                   <img
                     src={service.image}
                     alt={service.title}
@@ -303,9 +296,7 @@ export default function ServicesCarousel() {
                     height={960}
                     decoding="async"
                     draggable={false}
-                    className={`absolute inset-0 h-full w-full object-cover transition-transform duration-[1600ms] ease-out will-change-transform ${
-                      isActive ? 'scale-[1.06] group-hover/card:scale-[1.1]' : 'scale-100'
-                    }`}
+                    className="absolute inset-0 h-full w-full object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/55 via-slate-950/5 to-slate-950/25" />
 
@@ -366,7 +357,6 @@ export default function ServicesCarousel() {
                   />
                 </div>
                 </div>
-                </div>
               </div>
             );
           })}
@@ -382,13 +372,13 @@ export default function ServicesCarousel() {
             <ChevronLeft className="w-6 h-6" />
           </button>
 
-          {/* Dots Indicator */}
-          <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-slate-50 border border-slate-200">
+          {/* Dots Indicator (fixed size and contained, so the growing dot never relayouts the page) */}
+          <div className="flex h-[26px] w-[154px] items-center gap-2 px-4 py-2 rounded-full bg-slate-50 border border-slate-200 [contain:strict]">
             {services.map((_, i) => (
               <button
                 key={i}
                 onClick={() => setActiveIndex(i)}
-                className={`relative h-2 overflow-hidden rounded-full transition-all duration-500 ${
+                className={`relative h-2 shrink-0 overflow-hidden rounded-full transition-[width,background-color] duration-500 ${
                   i === activeIndex ? 'w-10 bg-sky-100' : 'w-2 bg-slate-300 hover:bg-slate-400'
                 }`}
                 aria-label={`Go to slide ${i + 1}`}

@@ -118,17 +118,12 @@
 }
 .tm-marquee { animation: tm-marquee 60s linear infinite; }
 
-/* services ring: living edge, float and autoplay progress */
-/* static gradient edge + glow: an animated background or filter would repaint the card every frame */
+/* services ring: living edge and autoplay progress */
+/* static gradient edge, glow and the active card's deep shadow: it only ever fades, so nothing repaints */
 .svc-edge {
   background: linear-gradient(135deg, #38bdf8, #22d3ee 40%, #34d399 70%, #a5f3fc);
-  box-shadow: 0 0 22px rgba(56, 189, 248, 0.35);
+  box-shadow: 0 0 22px rgba(56, 189, 248, 0.35), 0 50px 90px -35px rgba(2, 132, 199, 0.5), 0 18px 40px -18px rgba(15, 23, 42, 0.3);
 }
-@keyframes svc-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-7px); }
-}
-.svc-float { animation: svc-float 6s ease-in-out infinite; }
 @keyframes svc-progress {
   from { transform: scaleX(0); }
   to { transform: scaleX(1); }
@@ -164,7 +159,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .hero-in, .hero-bubble, .hero-glint { animation: none; }
-  .svc-float { animation: none; }
   .reveal { opacity: 1; transform: none; transition: none; }
   .hiw-blob, .tm-marquee, .tm-in { animation: none; }
 }
