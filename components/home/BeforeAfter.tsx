@@ -6,7 +6,7 @@ import { prefersReducedMotion, useInView } from './hooks';
 
 type Room = { id: string; label: string; place: string; time: string; team: string; work: string };
 
-// Demo imagery: each "before" was made from its "after" photo (grime added), so the pair lines up
+// Demo imagery: each "before" is its "after" photo with AI-generated clutter composited in, so the pair lines up
 // exactly. Replace with real before/after photos from jobs (same framing) when available.
 const ROOMS: Room[] = [
   { id: 'living', label: 'Living room', place: 'Villa · Al Nakheel', time: '3h 20m', team: '2 specialists', work: 'Rug shampoo, upholstery steam, glass & skirting detail' },

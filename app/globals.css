@@ -117,7 +117,29 @@
 }
 .tm-marquee { animation: tm-marquee 60s linear infinite; }
 
+/* services ring: living edge, float and autoplay progress */
+.svc-edge {
+  background: linear-gradient(120deg, #38bdf8, #22d3ee, #34d399, #a5f3fc, #38bdf8);
+  background-size: 300% 300%;
+  animation: svc-edge 8s linear infinite;
+  filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.35));
+}
+@keyframes svc-edge {
+  to { background-position: 300% 0; }
+}
+@keyframes svc-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-7px); }
+}
+.svc-float { animation: svc-float 6s ease-in-out infinite; }
+@keyframes svc-progress {
+  from { width: 0; }
+  to { width: 100%; }
+}
+.svc-progress { animation: svc-progress 4s linear forwards; }
+
 @media (prefers-reduced-motion: reduce) {
+  .svc-edge, .svc-float { animation: none; }
   .reveal { opacity: 1; transform: none; transition: none; }
   .hiw-blob, .tm-marquee, .tm-in { animation: none; }
 }

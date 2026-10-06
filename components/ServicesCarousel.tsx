@@ -97,6 +97,35 @@ export default function ServicesCarousel() {
     prevActive.current = activeIndex;
   }, [activeIndex]);
 
+  // swipe / drag the ring
+  const drag = useRef<{ x: number; id: number } | null>(null);
+  const onPointerDown = (e: React.PointerEvent) => {
+    drag.current = { x: e.clientX, id: e.pointerId };
+  };
+  const onPointerUp = (e: React.PointerEvent) => {
+    const d = drag.current;
+    drag.current = null;
+    if (!d || d.id !== e.pointerId) return;
+    const dx = e.clientX - d.x;
+    if (Math.abs(dx) > 50) (dx < 0 ? handleNext : handlePrev)();
+  };
+
+  // the active card leans gently towards the pointer
+  const tilt = (e: React.MouseEvent<HTMLDivElement>) => {
+    const el = e.currentTarget;
+    const r = el.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width - 0.5;
+    const py = (e.clientY - r.top) / r.height - 0.5;
+    el.style.transition = 'transform 200ms ease-out';
+    el.style.transform = `rotateX(${(-py * 7).toFixed(2)}deg) rotateY(${(px * 9).toFixed(2)}deg)`;
+    el.style.setProperty('--gx', `${((px + 0.5) * 100).toFixed(1)}%`);
+    el.style.setProperty('--gy', `${((py + 0.5) * 100).toFixed(1)}%`);
+  };
+  const untilt = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.currentTarget.style.transition = `transform 900ms ${EASE}`;
+    e.currentTarget.style.transform = '';
+  };
+
   // Auto-rotate carousel every 4 seconds unless hovered
   useEffect(() => {
     if (!isAutoSpin) return;
@@ -139,10 +168,28 @@ export default function ServicesCarousel() {
 
         {/* 3D Spinning Carousel (3D Coverflow Container) */}
         <div
-          className="relative min-h-[520px] sm:min-h-[560px] flex items-center justify-center perspective-1000 my-8"
+          className="relative min-h-[520px] sm:min-h-[560px] flex items-center justify-center perspective-1000 my-8 select-none"
+          style={{ touchAction: 'pan-y' }}
           onMouseEnter={() => setIsAutoSpin(false)}
           onMouseLeave={() => setIsAutoSpin(true)}
+          onPointerDown={onPointerDown}
+          onPointerUp={onPointerUp}
+          onPointerCancel={() => (drag.current = null)}
         >
+          {/* the orbit the cards travel on, and a pool of light under the card in front */}
+          <svg aria-hidden className="pointer-events-none absolute left-1/2 top-[74%] h-[200px] w-[1180px] -translate-x-1/2" viewBox="0 0 1180 200" fill="none">
+            <defs>
+              <linearGradient id="svc-orbit" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0" stopColor="#38bdf8" stopOpacity="0" />
+                <stop offset="0.5" stopColor="#38bdf8" stopOpacity="0.55" />
+                <stop offset="1" stopColor="#34d399" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            <ellipse cx="590" cy="100" rx="560" ry="70" stroke="url(#svc-orbit)" strokeWidth="1.2" />
+            <ellipse cx="590" cy="100" rx="470" ry="52" stroke="#cbd5e1" strokeOpacity="0.5" strokeWidth="1" strokeDasharray="2 8" />
+          </svg>
+          <div aria-hidden className="pointer-events-none absolute left-1/2 top-[82%] h-16 w-[340px] -translate-x-1/2 rounded-[50%] bg-sky-500/25 blur-2xl" />
+          <div aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 h-[420px] w-[420px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(56,189,248,0.18),transparent_65%)]" />
           {services.map((service, index) => {
             // position on the ring relative to the active card
             const count = services.length;
@@ -179,14 +226,33 @@ export default function ServicesCarousel() {
                   transition: wrapped ? 'none' : `transform 1100ms ${EASE}, opacity 700ms ${EASE}`,
                 }}
               >
+                {/* gentle float for the card in front, then the pointer tilt */}
+                <div className={isActive ? 'svc-float' : ''}>
+                <div
+                  className="relative"
+                  onMouseMove={isActive ? tilt : undefined}
+                  onMouseLeave={isActive ? untilt : undefined}
+                >
+                {/* living gradient edge on the active card */}
+                <div
+                  aria-hidden
+                  className="svc-edge absolute -inset-[1.5px] rounded-[25.5px] transition-opacity duration-700"
+                  style={{ opacity: isActive ? 1 : 0 }}
+                />
                 {/* Service Card */}
                 <div
                   className={`relative rounded-3xl overflow-hidden glass-panel border transition-[border-color,box-shadow] duration-700 ${
                     isActive
-                      ? 'border-sky-400/50 shadow-2xl shadow-sky-500/25 ring-2 ring-sky-400/30'
-                      : 'border-slate-200 hover:border-slate-300'
+                      ? 'border-transparent shadow-[0_40px_80px_-30px_rgba(2,132,199,0.45),0_12px_30px_-12px_rgba(15,23,42,0.18)]'
+                      : 'border-slate-200 group-hover/card:border-slate-300'
                   }`}
                 >
+                  {/* soft light following the pointer */}
+                  <div
+                    aria-hidden
+                    className="pointer-events-none absolute inset-0 z-20 opacity-0 transition-opacity duration-500 group-hover/card:opacity-100"
+                    style={{ background: isActive ? 'radial-gradient(420px circle at var(--gx,50%) var(--gy,30%), rgba(255,255,255,0.35), transparent 60%)' : 'none' }}
+                  />
                   {/* Image Banner */}
                   <div className="relative h-48 sm:h-56 w-full overflow-hidden">
                     <img
@@ -214,7 +280,10 @@ export default function ServicesCarousel() {
                   </div>
 
                   {/* Card Content */}
-                  <div className="p-6">
+                  <div
+                    className="p-6 transition-[opacity,transform] duration-700"
+                    style={{ opacity: isActive ? 1 : 0.7, transform: isActive ? 'none' : 'translateY(6px)', transitionDelay: isActive ? '150ms' : '0ms' }}
+                  >
                     <p className="text-slate-600 text-xs sm:text-sm leading-relaxed">{service.description}</p>
 
                     {/* Features List */}
@@ -239,11 +308,13 @@ export default function ServicesCarousel() {
                     </div>
                   </div>
 
-                  {/* depth haze for the cards turning away */}
+                  {/* depth haze for the cards turning away; it lifts a little on hover */}
                   <div
-                    className="pointer-events-none absolute inset-0 rounded-3xl bg-white"
-                    style={{ opacity: haze, transition: `opacity 900ms ${EASE}` }}
+                    className="pointer-events-none absolute inset-0 rounded-3xl bg-gradient-to-b from-white/90 to-white opacity-[var(--haze)] group-hover/card:opacity-[calc(var(--haze)*0.45)]"
+                    style={{ '--haze': haze, transition: `opacity 900ms ${EASE}` } as React.CSSProperties}
                   />
+                </div>
+                </div>
                 </div>
               </div>
             );
@@ -266,11 +337,19 @@ export default function ServicesCarousel() {
               <button
                 key={i}
                 onClick={() => setActiveIndex(i)}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  i === activeIndex ? 'w-6 bg-sky-400' : 'w-2 bg-slate-600 hover:bg-slate-400'
+                className={`relative h-2 overflow-hidden rounded-full transition-all duration-500 ${
+                  i === activeIndex ? 'w-10 bg-sky-100' : 'w-2 bg-slate-300 hover:bg-slate-400'
                 }`}
                 aria-label={`Go to slide ${i + 1}`}
-              />
+              >
+                {/* fills while the ring waits to turn */}
+                {i === activeIndex && (
+                  <span
+                    key={`${activeIndex}-${isAutoSpin}`}
+                    className={`absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-sky-500 to-emerald-400 ${isAutoSpin ? 'svc-progress' : 'w-full'}`}
+                  />
+                )}
+              </button>
             ))}
           </div>
 
