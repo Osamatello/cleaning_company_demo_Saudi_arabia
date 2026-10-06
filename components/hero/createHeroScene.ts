@@ -106,7 +106,7 @@ const ROAD_CZ = ROAD_CENTER_MODEL.z * ROAD_SCALE;
 
 // Daylight: sun from the front-left, fairly high, like a late-morning shoot.
 const SUN_DIR = new THREE.Vector3(-0.45, 0.72, 0.53).normalize();
-const BACKDROP = new THREE.Color('#ffffff');
+const BACKDROP = new THREE.Color('#e1e4e8'); // soft light grey stage the scene dissolves into
 // Rendering tier. Desktop keeps the full-quality settings; touch devices and low-core machines get
 // lighter ones (resolution, shadow map, foliage and foam-trail density), ready for mobile tuning.
 const LOW_POWER =
@@ -190,7 +190,7 @@ export function createHeroScene(
   const [a0, a1] = ROAD_ANGLE_RANGE;
   const ground = createGroundUniforms(
     SUN_DIR,
-    BACKDROP.clone(), // sRGB output colour, compared after colour-space conversion
+    BACKDROP.clone().convertLinearToSRGB(), // sRGB output colour, compared after colour-space conversion
     new THREE.Vector4(ROAD_CX, ROAD_CZ, THREE.MathUtils.degToRad(a0), THREE.MathUtils.degToRad(a1))
   );
   const wind: WindUniforms = { uWind: { value: 0 }, uSunDir: { value: SUN_DIR.clone() } };

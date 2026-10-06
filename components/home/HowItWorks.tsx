@@ -129,7 +129,7 @@ export default function HowItWorks() {
       </svg>
       <div aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 h-[820px] w-[820px] -translate-x-1/2 -translate-y-1/2 bg-[radial-gradient(closest-side,rgba(207,250,254,0.6),transparent)]" />
 
-      <div ref={containerRef} className="relative mx-auto max-w-7xl px-5 pb-28 sm:px-6 md:pb-40 lg:px-8">
+      <div ref={containerRef} className="relative mx-auto max-w-7xl px-5 pb-16 sm:px-6 md:pb-20 lg:px-8">
         <svg aria-hidden className="pointer-events-none absolute inset-0 h-full w-full overflow-visible">
           <defs>
             <linearGradient id="hiw-flow" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
@@ -187,12 +187,6 @@ export default function HowItWorks() {
               >
                 {/* the station: an organic shape that fills with water when the line reaches it */}
                 <div className={`relative md:col-span-3 ${right ? 'md:order-2 md:col-start-10' : 'md:col-start-2'}`}>
-                  <span
-                    aria-hidden
-                    className={`pointer-events-none absolute -top-12 font-[200] tracking-[-0.05em] left-1/2 hidden -translate-x-[96%] select-none text-[150px] leading-none text-transparent transition-colors duration-700 [-webkit-text-stroke:1px_#d9d2c4] group-data-[active=true]:[-webkit-text-stroke:1px_#7dd3fc] md:block`}
-                  >
-                    0{i + 1}
-                  </span>
                   <div
                     ref={(n) => {
                       nodeRefs.current[i] = n;
@@ -212,7 +206,7 @@ export default function HowItWorks() {
                     right ? 'md:order-1 md:col-start-4' : 'md:col-start-6'
                   }`}
                 >
-                  <p className={`text-[13px] font-medium tabular-nums text-sky-600 md:hidden`}>0{i + 1}</p>
+                  <p className="mb-1 text-[13px] font-medium tabular-nums tracking-[0.2em] text-sky-600 md:mb-2 md:text-[15px]">0{i + 1} <span className="text-neutral-400">/ 03</span></p>
                   <h3 className="text-[1.6rem] font-semibold leading-tight tracking-[-0.01em] text-neutral-900 md:text-[2rem]">{step.title}</h3>
                   <p className="mt-3 max-w-md text-[15px] leading-relaxed text-neutral-500">{step.text}</p>
                   <ul className="mt-5 flex flex-wrap gap-x-6 gap-y-2">

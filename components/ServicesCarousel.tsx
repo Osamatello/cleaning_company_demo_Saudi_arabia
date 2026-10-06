@@ -77,6 +77,11 @@ const services: ServiceItem[] = [
   }
 ];
 
+// Card titles, shared with the footer so its service links always match the cards
+export const SERVICE_TITLES = services.map((s) => s.title);
+// other parts of the page can bring a card to the front: dispatchEvent(new CustomEvent(SELECT_SERVICE, { detail: index }))
+export const SELECT_SERVICE = 'services:select';
+
 // Ring geometry: each card sits on a circle around a point behind the active one.
 const STEP_DEG = 34;
 
@@ -106,7 +111,7 @@ function SlidePanel({ active, header, children }: { active: boolean; header: Rea
       {header}
       <div
         ref={details}
-        style={{ opacity: active ? 1 : 0, transition: `opacity ${active ? '700ms 200ms' : '300ms'} ${EASE}` }}
+        style={{ opacity: active ? 1 : 0, willChange: 'opacity', transition: `opacity ${active ? '700ms 200ms' : '300ms'} ${EASE}` }}
       >
         {children}
       </div>
@@ -130,6 +135,14 @@ export default function ServicesCarousel() {
   useEffect(() => {
     prevActive.current = activeIndex;
   }, [activeIndex]);
+  useEffect(() => {
+    const onSelect = (e: Event) => {
+      const i = (e as CustomEvent<number>).detail;
+      if (typeof i === 'number') setActiveIndex(i);
+    };
+    window.addEventListener(SELECT_SERVICE, onSelect);
+    return () => window.removeEventListener(SELECT_SERVICE, onSelect);
+  }, []);
 
   // swipe / drag the ring
   const drag = useRef<{ x: number; id: number } | null>(null);
@@ -178,13 +191,15 @@ export default function ServicesCarousel() {
   };
 
   return (
-    <section id="services" className="relative py-24 md:py-32 bg-white overflow-hidden border-t border-slate-100">
+    <section id="services" className="relative pt-14 pb-28 md:pt-16 md:pb-32 bg-white overflow-hidden">
+      {/* the hero's grey stage fades softly into the white page */}
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-48 bg-gradient-to-b from-[#e1e4e8] to-white" />
       {/* Background Lighting Gradients */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] bg-[radial-gradient(closest-side,rgba(14,165,233,0.10),transparent)] pointer-events-none"></div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Section Header Matching Video Reference */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 md:mb-10">
           <div>
             <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-sky-600 mb-3">
               <span className="w-4 h-[2px] bg-sky-400"></span>
@@ -202,7 +217,7 @@ export default function ServicesCarousel() {
 
         {/* 3D Spinning Carousel (3D Coverflow Container) */}
         <div
-          className="relative min-h-[470px] sm:min-h-[690px] flex items-center justify-center perspective-1000 my-8 select-none"
+          className="relative min-h-[470px] sm:min-h-[650px] flex items-center justify-center perspective-1000 my-4 select-none"
           style={{ touchAction: 'pan-y' }}
           onMouseEnter={() => setIsAutoSpin(false)}
           onMouseLeave={() => setIsAutoSpin(true)}
@@ -211,7 +226,7 @@ export default function ServicesCarousel() {
           onPointerCancel={() => (drag.current = null)}
         >
           {/* the orbit the cards travel on, and a pool of light under the card in front */}
-          <svg aria-hidden className="pointer-events-none absolute left-1/2 top-[80%] h-[200px] w-[1180px] -translate-x-1/2" viewBox="0 0 1180 200" fill="none">
+          <svg aria-hidden className="pointer-events-none absolute left-1/2 top-[calc(100%+64px)] h-[100px] w-[1180px] -translate-x-1/2" viewBox="0 0 1180 100" fill="none">
             <defs>
               <linearGradient id="svc-orbit" x1="0" y1="0" x2="1" y2="0">
                 <stop offset="0" stopColor="#38bdf8" stopOpacity="0" />
@@ -219,8 +234,8 @@ export default function ServicesCarousel() {
                 <stop offset="1" stopColor="#34d399" stopOpacity="0" />
               </linearGradient>
             </defs>
-            <ellipse cx="590" cy="100" rx="560" ry="70" stroke="url(#svc-orbit)" strokeWidth="1.2" />
-            <ellipse cx="590" cy="100" rx="470" ry="52" stroke="#cbd5e1" strokeOpacity="0.5" strokeWidth="1" strokeDasharray="2 8" />
+            <ellipse cx="590" cy="50" rx="560" ry="34" stroke="url(#svc-orbit)" strokeWidth="1.2" />
+            <ellipse cx="590" cy="50" rx="470" ry="26" stroke="#cbd5e1" strokeOpacity="0.5" strokeWidth="1" strokeDasharray="2 8" />
           </svg>
           <div aria-hidden className="pointer-events-none absolute left-1/2 top-[90%] h-24 w-[520px] -translate-x-1/2 bg-[radial-gradient(closest-side,rgba(14,165,233,0.22),transparent)]" />
           <div aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 h-[420px] w-[420px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(56,189,248,0.18),transparent_65%)]" />
@@ -270,7 +285,7 @@ export default function ServicesCarousel() {
                 {/* living gradient edge on the active card */}
                 <div
                   aria-hidden
-                  className="svc-edge absolute -inset-[1.5px] rounded-[31.5px] transition-opacity duration-700"
+                  className="svc-edge absolute -inset-[1.5px] rounded-[31.5px] transition-opacity duration-700 will-change-[opacity]"
                   style={{ opacity: isActive ? 1 : 0 }}
                 />
                 {/* Service Card: a tall, image-led portrait with a frosted panel */}
@@ -288,7 +303,7 @@ export default function ServicesCarousel() {
                     height={960}
                     decoding="async"
                     draggable={false}
-                    className={`absolute inset-0 h-full w-full object-cover transition-transform duration-[1600ms] ease-out ${
+                    className={`absolute inset-0 h-full w-full object-cover transition-transform duration-[1600ms] ease-out will-change-transform ${
                       isActive ? 'scale-[1.06] group-hover/card:scale-[1.1]' : 'scale-100'
                     }`}
                   />
@@ -297,7 +312,7 @@ export default function ServicesCarousel() {
                   {/* soft light following the pointer */}
                   <div
                     aria-hidden
-                    className="pointer-events-none absolute inset-0 z-20 opacity-0 transition-opacity duration-500 group-hover/card:opacity-100"
+                    className="pointer-events-none absolute inset-0 z-20 opacity-0 transition-opacity duration-500 will-change-[opacity] group-hover/card:opacity-100"
                     style={{ background: isActive ? 'radial-gradient(460px circle at var(--gx,50%) var(--gy,30%), rgba(255,255,255,0.28), transparent 60%)' : 'none' }}
                   />
 
@@ -346,7 +361,7 @@ export default function ServicesCarousel() {
 
                   {/* depth haze for the cards turning away; it lifts a little on hover */}
                   <div
-                    className="pointer-events-none absolute inset-0 rounded-[30px] bg-gradient-to-b from-white/90 to-white opacity-[var(--haze)] group-hover/card:opacity-[calc(var(--haze)*0.45)]"
+                    className="pointer-events-none absolute inset-0 rounded-[30px] bg-gradient-to-b from-white/90 to-white will-change-[opacity] opacity-[var(--haze)] group-hover/card:opacity-[calc(var(--haze)*0.45)]"
                     style={{ '--haze': haze, transition: `opacity 900ms ${EASE}` } as React.CSSProperties}
                   />
                 </div>
@@ -358,7 +373,7 @@ export default function ServicesCarousel() {
         </div>
 
         {/* Carousel Navigation Buttons */}
-        <div className="flex items-center justify-center gap-4 mt-8">
+        <div className="flex items-center justify-center gap-4 mt-4">
           <button
             onClick={handlePrev}
             className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-sky-500/20 hover:border-sky-500/40 transition-all active:scale-95"
@@ -382,7 +397,7 @@ export default function ServicesCarousel() {
                 {i === activeIndex && (
                   <span
                     key={`${activeIndex}-${isAutoSpin}`}
-                    className={`absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-sky-500 to-emerald-400 ${isAutoSpin ? 'svc-progress' : 'w-full'}`}
+                    className={`absolute inset-0 origin-left rounded-full bg-gradient-to-r from-sky-500 to-emerald-400 ${isAutoSpin ? 'svc-progress' : ''}`}
                   />
                 )}
               </button>

@@ -759,18 +759,33 @@ function createLiveryTexture() {
   g.fillStyle = SKY;
   g.fillText('Spaces', lx + fw, yv(0.44));
   const logoW = fw + g.measureText('Spaces').width;
-  const star = (cx: number, cy: number, r: number) => {
-    g.beginPath();
-    for (let i = 0; i < 8; i++) {
-      const a = (i * Math.PI) / 4 - Math.PI / 2;
-      const rr = i % 2 === 0 ? r : r * 0.3;
-      g.lineTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr);
-    }
-    g.closePath();
-    g.fill();
-  };
-  star(lx + logoW + 76, yv(0.51), 52);
-  star(lx + logoW + 140, yv(0.58), 25);
+  // the FreshSpaces mark (same drawing as components/BrandMark.tsx), just before the wordmark
+  {
+    const k = 5.4; // 40-unit mark → ~216 px
+    const ox = lx - 40 * k - 26;
+    const oy = yv(0.44) - 30 * k;
+    g.save();
+    g.translate(ox, oy);
+    g.scale(k, k);
+    const grad = g.createLinearGradient(10, 4, 30, 38);
+    grad.addColorStop(0, '#38bdf8');
+    grad.addColorStop(0.55, '#0284c7');
+    grad.addColorStop(1, '#0c4a6e');
+    g.fillStyle = grad;
+    g.fill(new Path2D('M20 3.5C20 3.5 7 17.2 7 25.2a13 13 0 0 0 26 0C33 17.2 20 3.5 20 3.5Z'));
+    g.lineCap = 'round';
+    g.lineJoin = 'round';
+    g.strokeStyle = 'rgba(255,255,255,0.55)';
+    g.lineWidth = 1.6;
+    g.stroke(new Path2D('M12.6 23.4c.5-2.3 1.9-4.7 3.5-6.7'));
+    g.strokeStyle = '#ffffff';
+    g.lineWidth = 2.1;
+    g.stroke(new Path2D('M13.5 27.5 20 21.4l6.5 6.1M15.6 25.6v5.2h8.8v-5.2'));
+    g.fillStyle = '#34d399';
+    g.fill(new Path2D('M32.5 4.5c.3 1.6 1.1 2.4 2.7 2.7-1.6.3-2.4 1.1-2.7 2.7-.3-1.6-1.1-2.4-2.7-2.7 1.6-.3 2.4-1.1 2.7-2.7Z'));
+    g.restore();
+  }
+  void logoW;
   g.fillStyle = '#1f2937';
   g.font = '600 64px Inter, Helvetica, Arial, sans-serif';
   g.fillText('Home & Villa Cleaning  ·  Riyadh', lx + 6, yv(0.335));
@@ -993,7 +1008,7 @@ export function createGrassMaterial(ground: GroundUniforms, opts: { fadeAttr: bo
  */
 export function createStudioFloorMaterial(ground: GroundUniforms) {
   // slightly warm, so the cool sky light reads as neutral rather than blue-grey
-  const mat = new THREE.MeshStandardMaterial({ color: 0xf7f1e6, roughness: 0.95, metalness: 0 });
+  const mat = new THREE.MeshStandardMaterial({ color: 0xdedddb, roughness: 0.95, metalness: 0 });
   mat.customProgramCacheKey = () => 'studio-floor';
   mat.onBeforeCompile = (shader) => {
     injectObjectSpaceVaryings(shader);

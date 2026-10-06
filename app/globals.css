@@ -130,10 +130,30 @@
 }
 .svc-float { animation: svc-float 6s ease-in-out infinite; }
 @keyframes svc-progress {
-  from { width: 0; }
-  to { width: 100%; }
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
 }
 .svc-progress { animation: svc-progress 4s linear forwards; }
+
+/* hero label: bobbing soap bubbles and a glint across the text */
+@keyframes hero-bubble {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+.hero-bubble { animation: hero-bubble 3.6s ease-in-out infinite; transform-box: fill-box; }
+.hero-glint {
+  background: linear-gradient(100deg, #262626 0%, #262626 42%, #7dd3fc 48%, #ffffff 50%, #7dd3fc 52%, #262626 58%, #262626 100%);
+  background-size: 260% 100%;
+  background-position: 100% 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: hero-glint 6s cubic-bezier(0.45, 0, 0.2, 1) 1.2s infinite;
+}
+@keyframes hero-glint {
+  0% { background-position: 100% 0; }
+  30%, 100% { background-position: 0% 0; }
+}
 
 /* hero copy: a quick staggered entrance on load */
 @keyframes hero-in {
@@ -143,7 +163,7 @@
 .hero-in { animation: hero-in 0.9s cubic-bezier(0.22, 1, 0.36, 1) both; }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero-in { animation: none; }
+  .hero-in, .hero-bubble, .hero-glint { animation: none; }
   .svc-float { animation: none; }
   .reveal { opacity: 1; transform: none; transition: none; }
   .hiw-blob, .tm-marquee, .tm-in { animation: none; }

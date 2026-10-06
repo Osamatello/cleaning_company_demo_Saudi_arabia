@@ -1,124 +1,82 @@
 'use client';
 
 import React from 'react';
-import { Sparkles, MapPin, Phone, Mail, Globe, Shield, Heart } from 'lucide-react';
+import { MapPin, Phone, Mail, ArrowUp } from 'lucide-react';
+import BrandMark from './BrandMark';
+import { SERVICE_TITLES, SELECT_SERVICE } from './ServicesCarousel';
+
+// Same links, in the same order, as the header
+const NAV = [
+  { id: 'services', label: 'Services' },
+  { id: 'results', label: 'Before & After' },
+  { id: 'how-it-works', label: 'How It Works' },
+  { id: 'reviews', label: 'Reviews' },
+  { id: 'contact', label: 'Contact' },
+];
 
 export default function Footer() {
   return (
-    <footer className="bg-slate-50 border-t border-slate-200 pt-16 pb-12 text-slate-500">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
-          {/* Brand Info */}
-          <div className="space-y-4 md:col-span-1">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-sky-500 to-cyan-300 flex items-center justify-center">
-                <Sparkles className="w-5 h-5 text-slate-950 stroke-[2.5]" />
-              </div>
-              <span className="text-xl font-extrabold text-slate-900 font-sans">
-                Fresh<span className="text-sky-600">Spaces</span>
-              </span>
-            </div>
-            <p className="text-xs leading-relaxed text-slate-500">
-              Riyadh’s premier 3D-driven villa, residential & commercial deep cleaning company. Transform your living space from chaos to spotless in 1 hour.
-            </p>
-            <div className="flex items-center gap-2 text-xs text-emerald-600">
-              <Shield className="w-4 h-4" />
-              <span>Licensed Saudi Commercial CR #101089201</span>
-            </div>
-          </div>
+    <footer className="border-t border-slate-200 bg-white text-slate-500">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        {/* brand + section links, mirroring the header */}
+        <div className="flex flex-col gap-5 py-7 lg:flex-row lg:items-center lg:justify-between">
+          <a href="#" className="group flex items-center gap-3">
+            <BrandMark size={40} className="transition-transform duration-500 group-hover:-rotate-6" />
+            <span className="text-lg font-extrabold tracking-tight text-slate-900">
+              Fresh<span className="text-sky-600">Spaces</span>
+            </span>
+            <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-sky-600">
+              Riyadh
+            </span>
+          </a>
 
-          {/* Quick Links */}
-          <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 mb-4">
-              Quick Navigation
-            </h4>
-            <ul className="space-y-2.5 text-xs">
-              <li>
-                <a href="#hero-3d" className="hover:text-sky-600 transition-colors">
-                  3D Hero Experience
-                </a>
-              </li>
-              <li>
-                <a href="#services" className="hover:text-sky-600 transition-colors">
-                  Our Services
-                </a>
-              </li>
-              <li>
-                <a href="#contact" className="hover:text-sky-600 transition-colors">
-                  Riyadh Coverage
-                </a>
-              </li>
-              <li>
-                <a href="#contact" className="hover:text-sky-600 transition-colors">
-                  Instant Booking
-                </a>
-              </li>
-            </ul>
-          </div>
+          <nav className="flex flex-wrap gap-x-6 gap-y-2 text-sm font-medium text-slate-600">
+            {NAV.map((item) => (
+              <a key={item.id} href={`#${item.id}`} className="transition-colors hover:text-sky-600">
+                {item.label}
+              </a>
+            ))}
+          </nav>
+        </div>
 
-          {/* Services Offered */}
-          <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 mb-4">
-              Popular Services
-            </h4>
-            <ul className="space-y-2.5 text-xs">
-              <li>
-                <a href="#services" className="hover:text-sky-600 transition-colors">
-                  Villa Deep Cleaning
+        {/* services (same names as the cards; clicking one brings it to the front) and contact */}
+        <div className="flex flex-col gap-4 border-t border-slate-200 py-5 text-[13px] lg:flex-row lg:items-center lg:justify-between">
+          <ul className="flex flex-wrap gap-x-5 gap-y-1.5">
+            {SERVICE_TITLES.map((title, i) => (
+              <li key={title}>
+                <a
+                  href="#services"
+                  onClick={() => window.dispatchEvent(new CustomEvent(SELECT_SERVICE, { detail: i }))}
+                  className="transition-colors hover:text-sky-600"
+                >
+                  {title}
                 </a>
               </li>
-              <li>
-                <a href="#services" className="hover:text-sky-600 transition-colors">
-                  Post-Construction Clean
-                </a>
-              </li>
-              <li>
-                <a href="#services" className="hover:text-sky-600 transition-colors">
-                  Sofa & Carpet Steam Care
-                </a>
-              </li>
-              <li>
-                <a href="#services" className="hover:text-sky-600 transition-colors">
-                  Marble Floor Polishing
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          {/* Riyadh Office Location */}
-          <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 mb-4">
-              Riyadh Dispatch HQ
-            </h4>
-            <div className="space-y-3 text-xs">
-              <div className="flex items-start gap-2.5">
-                <MapPin className="w-4 h-4 text-sky-600 shrink-0 mt-0.5" />
-                <span>King Fahd Road, Al Olaya District, Riyadh, Kingdom of Saudi Arabia</span>
-              </div>
-              <div className="flex items-center gap-2.5">
-                <Phone className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span className="text-slate-900">+966 50 123 4567</span>
-              </div>
-              <div className="flex items-center gap-2.5">
-                <Mail className="w-4 h-4 text-cyan-600 shrink-0" />
-                <span className="font-mono">support@freshspaces.sa</span>
-              </div>
-              <div className="flex items-center gap-2.5 text-emerald-600 text-[11px]">
-                <Globe className="w-3.5 h-3.5" />
-                <span>24/7 Emergency Cleaning Hotline</span>
-              </div>
-            </div>
+            ))}
+          </ul>
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5">
+            <a href="tel:+966501234567" className="flex items-center gap-1.5 text-slate-900 transition-colors hover:text-sky-600">
+              <Phone className="h-3.5 w-3.5 text-sky-600" />
+              +966 50 123 4567
+            </a>
+            <a href="mailto:booking@freshspaces.sa" className="flex items-center gap-1.5 transition-colors hover:text-sky-600">
+              <Mail className="h-3.5 w-3.5 text-sky-600" />
+              booking@freshspaces.sa
+            </a>
           </div>
         </div>
 
-        {/* Bottom Copyright */}
-        <div className="pt-8 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
-          <p>© {new Date().getFullYear()} FreshSpaces Cleaning Services Ltd. All rights reserved.</p>
-          <div className="flex items-center gap-1 text-slate-500">
-            <span>Crafted with</span>
-            <Heart className="w-3.5 h-3.5 text-sky-500 fill-sky-500" />
-            <span>for Riyadh, Saudi Arabia</span>
-          </div>
+        <div className="flex flex-col items-center justify-between gap-3 border-t border-slate-200 py-4 text-xs sm:flex-row">
+          <p className="flex items-center gap-1.5">
+            © {new Date().getFullYear()} FreshSpaces
+            <span className="text-slate-300">·</span>
+            <MapPin className="h-3 w-3 text-emerald-600" />
+            King Fahd Road, Al Olaya, Riyadh
+          </p>
+          <a href="#" className="group inline-flex items-center gap-2 font-medium text-slate-600 transition-colors hover:text-sky-600">
+            Back to top
+            <ArrowUp className="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5" />
+          </a>
         </div>
       </div>
     </footer>

@@ -233,10 +233,10 @@ export default function BeforeAfter() {
     <section
       id="results"
       ref={sectionRef}
-      className={`${inter.className} relative section-clip bg-[#f6f4ef] pb-28 pt-32 md:pb-40 md:pt-44`}
+      className={`${inter.className} relative -mt-[2px] section-clip bg-[#f6f4ef] pb-28 pt-20 md:pb-40 md:pt-28`}
     >
       {/* the white of the Services section flows down into this one along a soft curve */}
-      <svg aria-hidden className="absolute inset-x-0 top-0 h-[64px] w-full md:h-[110px]" viewBox="0 0 1440 110" preserveAspectRatio="none">
+      <svg aria-hidden className="absolute inset-x-0 -top-px h-[41px] w-full md:h-[65px]" viewBox="0 0 1440 110" preserveAspectRatio="none">
         <path d="M0 0H1440V30C1210 96 900 112 590 74 370 47 170 52 0 96Z" fill="#ffffff" />
       </svg>
       <div aria-hidden className="pointer-events-none absolute -right-72 top-24 h-[860px] w-[860px] bg-[radial-gradient(closest-side,rgba(186,230,253,0.45),transparent)]" />
