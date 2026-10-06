@@ -153,9 +153,9 @@ export default function Testimonials() {
         </defs>
       </svg>
       {/* a soft pebble behind the quote */}
-      <svg aria-hidden className="pointer-events-none absolute -left-[12%] -top-12 h-[600px] w-[88%] overflow-visible md:-top-24 md:h-[640px] md:w-[70%]" viewBox="0 0 900 640" preserveAspectRatio="none">
+      <svg aria-hidden className="pointer-events-none absolute -left-[12%] -top-6 h-[600px] w-[88%] overflow-visible md:-top-12 md:h-[640px] md:w-[70%]" viewBox="0 0 900 640" preserveAspectRatio="none">
         <path d="M118 96C214 18 392 -10 560 24c160 32 300 110 330 246 30 138-56 268-214 330-152 60-356 52-492-12C46 528-14 412 4 300 18 206 46 154 118 96Z" fill="#f6f4ef" />
-        <path d="M118 96C214 18 392 -10 560 24c160 32 300 110 330 246 30 138-56 268-214 330-152 60-356 52-492-12C46 528-14 412 4 300 18 206 46 154 118 96Z" fill="none" stroke="#e3dccd" strokeWidth="1" vectorEffect="non-scaling-stroke" transform="translate(450 320) scale(1.035) translate(-450 -320)" />
+        <path d="M118 96C214 18 392 -10 560 24c160 32 300 110 330 246 30 138-56 268-214 330-152 60-356 52-492-12C46 528-14 412 4 300 18 206 46 154 118 96Z" fill="none" stroke="#e3dccd" strokeWidth="1" vectorEffect="non-scaling-stroke" />
       </svg>
 
       <div className="relative mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
@@ -200,7 +200,7 @@ export default function Testimonials() {
           {/* the rating and the reviewers */}
           <div className="md:col-span-5 md:self-center md:pl-6">
             <div className="reveal flex items-center gap-6" data-in={headIn} style={{ transitionDelay: '120ms' }}>
-              <p className="text-[84px] font-[200] leading-none tracking-[-0.045em] text-neutral-900 md:text-[124px]">4.9</p>
+              <p className="text-[64px] font-[200] leading-none tracking-[-0.04em] text-neutral-900 md:text-[92px]">4.9</p>
               <div className="border-l border-neutral-200 pl-6">
                 <Stars size="h-[18px] w-[18px] md:h-5 md:w-5" className="gap-1" />
                 <p className="mt-3 text-[15px] font-medium leading-tight text-neutral-900 md:text-[17px]">out of 5</p>
@@ -213,7 +213,7 @@ export default function Testimonials() {
               {REVIEWS.map((rv, i) => avatar(rv, i, 52))}
             </div>
             {/* desktop: a loose cluster of pebbles */}
-            <div className="relative mt-10 hidden h-[96px] w-[400px] md:block">
+            <div className="relative ml-10 mt-10 hidden h-[96px] w-[400px] md:block">
               {REVIEWS.map((rv, i) => (
                 <div key={rv.name} className="absolute" style={{ left: CLUSTER[i].x, top: CLUSTER[i].y }}>
                   {avatar(rv, i, CLUSTER[i].s)}
@@ -245,7 +245,7 @@ export default function Testimonials() {
       </div>
 
       {/* a slow ribbon of short reviews, easing the page into the booking section */}
-      <div className="group relative mt-12 border-y border-[#ece7dd] bg-[#fbfaf7] py-5 md:mt-14">
+      <div className="group relative mt-24 border-y border-[#ece7dd] bg-[#fbfaf7] py-5 md:mt-32">
         <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-[#fbfaf7] to-transparent md:w-40" />
         <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-[#fbfaf7] to-transparent md:w-40" />
         <div className="tm-marquee flex w-max group-hover:[animation-play-state:paused]">
