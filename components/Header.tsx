@@ -3,9 +3,39 @@
 import React, { useState, useEffect } from 'react';
 import { Sparkles, PhoneCall, Menu, X, MapPin, ShieldCheck } from 'lucide-react';
 
+// Header links, in the order the sections appear on the homepage
+const NAV = [
+  { id: 'services', label: 'Services' },
+  { id: 'results', label: 'Before & After' },
+  { id: 'how-it-works', label: 'How It Works' },
+  { id: 'reviews', label: 'Reviews' },
+  { id: 'contact', label: 'Contact' },
+];
+
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [current, setCurrent] = useState<string | null>(null);
+
+  // highlight the section that is in the middle of the screen
+  useEffect(() => {
+    const els = NAV.map((n) => document.getElementById(n.id)).filter((e): e is HTMLElement => !!e);
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) if (e.isIntersecting) setCurrent(e.target.id);
+      },
+      { rootMargin: '-45% 0px -50% 0px' }
+    );
+    els.forEach((e) => io.observe(e));
+    const top = () => {
+      if (window.scrollY < window.innerHeight * 0.5) setCurrent(null);
+    };
+    window.addEventListener('scroll', top, { passive: true });
+    return () => {
+      io.disconnect();
+      window.removeEventListener('scroll', top);
+    };
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -45,20 +75,23 @@ export default function Header() {
           </div>
         </a>
 
-        {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
-          <a href="#hero-3d" className="hover:text-sky-600 transition-colors">
-            3D Transformation
-          </a>
-          <a href="#services" className="hover:text-sky-600 transition-colors">
-            Services
-          </a>
-          <a href="#about" className="hover:text-sky-600 transition-colors">
-            Why Us
-          </a>
-          <a href="#contact" className="hover:text-sky-600 transition-colors">
-            Contact
-          </a>
+        {/* Desktop Navigation: one link per homepage section, the one in view highlighted */}
+        <nav className="hidden lg:flex items-center gap-7 text-sm font-medium text-slate-600">
+          {NAV.map((item) => (
+            <a
+              key={item.id}
+              href={`#${item.id}`}
+              aria-current={current === item.id ? 'true' : undefined}
+              className={`relative py-1 transition-colors hover:text-sky-600 ${current === item.id ? 'text-slate-900' : ''}`}
+            >
+              {item.label}
+              <span
+                className={`absolute -bottom-0.5 left-0 h-[2px] w-full origin-left rounded-full bg-gradient-to-r from-sky-500 to-emerald-400 transition-transform duration-500 ${
+                  current === item.id ? 'scale-x-100' : 'scale-x-0'
+                }`}
+              />
+            </a>
+          ))}
         </nav>
 
         {/* Right CTA */}
@@ -88,7 +121,7 @@ export default function Header() {
         {/* Mobile Toggle */}
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="md:hidden p-2 text-slate-600 hover:text-slate-900"
+          className="lg:hidden p-2 text-slate-600 hover:text-slate-900"
           aria-label="Toggle menu"
         >
           {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -97,35 +130,17 @@ export default function Header() {
 
       {/* Mobile Menu Dropdown */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-white border-b border-slate-200 px-6 py-6 flex flex-col gap-4 text-slate-700">
-          <a
-            href="#hero-3d"
-            onClick={() => setMobileMenuOpen(false)}
-            className="text-base font-medium hover:text-sky-600 py-1"
-          >
-            3D Experience
-          </a>
-          <a
-            href="#services"
-            onClick={() => setMobileMenuOpen(false)}
-            className="text-base font-medium hover:text-sky-600 py-1"
-          >
-            Services
-          </a>
-          <a
-            href="#about"
-            onClick={() => setMobileMenuOpen(false)}
-            className="text-base font-medium hover:text-sky-600 py-1"
-          >
-            Why FreshSpaces
-          </a>
-          <a
-            href="#contact"
-            onClick={() => setMobileMenuOpen(false)}
-            className="text-base font-medium hover:text-sky-600 py-1"
-          >
-            Contact
-          </a>
+        <div className="lg:hidden bg-white border-b border-slate-200 px-6 py-6 flex flex-col gap-4 text-slate-700">
+          {NAV.map((item) => (
+            <a
+              key={item.id}
+              href={`#${item.id}`}
+              onClick={() => setMobileMenuOpen(false)}
+              className={`text-base font-medium hover:text-sky-600 py-1 ${current === item.id ? 'text-sky-600' : ''}`}
+            >
+              {item.label}
+            </a>
+          ))}
           <div className="pt-3 border-t border-slate-200 flex flex-col gap-3">
             <a
               href="tel:+966500000000"

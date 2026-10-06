@@ -13,7 +13,6 @@ const sceneModule = typeof window !== 'undefined' ? import('./hero/createHeroSce
 export default function Hero3DCanvas() {
   const sectionRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const cueRef = useRef<HTMLDivElement>(null);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -30,7 +29,6 @@ export default function Hero3DCanvas() {
       const scrollable = rect.height - window.innerHeight;
       const p = scrollable > 0 ? Math.min(1, Math.max(0, -rect.top / scrollable)) : 0;
       scene?.setProgress(p);
-      if (cueRef.current) cueRef.current.style.opacity = String(Math.max(0, 1 - p * 12));
     };
     const onResize = () => {
       scene?.resize();
@@ -72,31 +70,50 @@ export default function Hero3DCanvas() {
           }`}
         />
 
-        {/* Headline — right-hand side like the reference, stacked on top on small screens */}
-        <div className="pointer-events-none absolute inset-x-0 top-[92px] px-6 text-left md:inset-x-auto md:right-[7.5vw] md:top-[31%] md:px-0 md:text-right">
-          <p className="text-[10px] font-medium uppercase tracking-[0.32em] text-neutral-500 md:text-[11px]">
-            Est. 2026 · Riyadh
-          </p>
-          <h1 className="mt-3 text-[2.5rem] leading-[1.02] tracking-[-0.02em] text-neutral-900 sm:text-5xl md:mt-4 md:text-[clamp(3rem,4.2vw,5.25rem)]">
-            <span className="font-[350]">From chaos</span>
-            <br />
-            <span className="font-[300] italic text-neutral-400">to </span>
-            <span className="font-bold">spotless.</span>
-          </h1>
-          <p className="mt-4 max-w-[19rem] text-[13px] leading-relaxed text-neutral-500 md:ml-auto md:mt-5 md:text-[15px]">
-            Professional cleaning that transforms every corner of your home — scroll to see it happen.
-          </p>
-        </div>
-
-        {/* Scroll cue */}
+        {/* soft light behind the copy so it stays crisp over the scene */}
         <div
-          ref={cueRef}
-          className="pointer-events-none absolute bottom-7 left-1/2 flex -translate-x-1/2 flex-col items-center gap-3 transition-opacity duration-300"
-        >
-          <span className="text-[10px] font-medium uppercase tracking-[0.35em] text-neutral-400">Scroll</span>
-          <span className="h-8 w-px bg-neutral-300" />
-        </div>
+          aria-hidden
+          className="pointer-events-none absolute -right-[10vw] top-[8%] hidden h-[90vh] w-[60vw] bg-[radial-gradient(closest-side,rgba(255,255,255,0.92),rgba(255,255,255,0.6)_55%,transparent)] md:block"
+        />
 
+        {/* Headline — right-hand side, stacked on top on small screens */}
+        <div
+          className="pointer-events-none absolute inset-x-0 top-[92px] px-6 text-left md:inset-x-auto md:right-[7vw] md:top-[24%] md:px-0 md:text-right"
+        >
+          <p className="hero-in flex items-center gap-3 text-[10px] font-medium uppercase tracking-[0.34em] text-neutral-500 md:justify-end md:text-[11px]">
+            <span className="h-px w-10 bg-neutral-400" />
+            Home &amp; villa cleaning · Riyadh
+          </p>
+          <h1
+            className="hero-in mt-5 text-[2.7rem] leading-[0.98] tracking-[-0.035em] text-neutral-900 sm:text-[3.4rem] md:mt-6 md:text-[clamp(3.4rem,5vw,6.25rem)]"
+            style={{ animationDelay: '90ms' }}
+          >
+            <span className="font-[300]">From chaos</span>
+            <br />
+            <span className="font-[250] italic text-neutral-400">to </span>
+            <span className="bg-gradient-to-r from-neutral-900 via-neutral-900 to-sky-700 bg-clip-text font-bold text-transparent">spotless.</span>
+          </h1>
+          <p
+            className="hero-in mt-5 max-w-[21rem] text-[14px] leading-relaxed text-neutral-500 md:ml-auto md:mt-6 md:max-w-[25rem] md:text-[16px]"
+            style={{ animationDelay: '180ms' }}
+          >
+            Deep cleaning for villas and apartments across Riyadh — vetted specialists, eco-certified products and a
+            spotless result, guaranteed.
+          </p>
+          <div
+            className="hero-in mt-7 flex items-center gap-4 text-[12px] text-neutral-500 md:justify-end"
+            style={{ animationDelay: '360ms' }}
+          >
+            <span className="flex items-center gap-1.5">
+              <span className="text-amber-400">★★★★★</span>
+              <span className="font-medium text-neutral-800">4.9</span>
+            </span>
+            <span className="h-3 w-px bg-neutral-300" />
+            <span>1,200+ homes cleaned</span>
+            <span className="h-3 w-px bg-neutral-300" />
+            <span>Same-day service</span>
+          </div>
+        </div>
       </div>
     </section>
   );
