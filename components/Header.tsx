@@ -11,7 +11,7 @@ export default function Header() {
     const handleScroll = () => {
       setScrolled(window.scrollY > 40);
     };
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -19,7 +19,7 @@ export default function Header() {
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         scrolled
-          ? 'bg-white/85 backdrop-blur-md border-b border-slate-200 py-3 shadow-xl'
+          ? 'bg-white/95 border-b border-slate-200 py-3 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.25)]'
           : 'bg-gradient-to-b from-white/90 to-transparent py-5'
       }`}
     >

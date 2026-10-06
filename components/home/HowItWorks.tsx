@@ -127,7 +127,7 @@ export default function HowItWorks() {
           <circle key={r} cx="100" cy="100" r={r} stroke="currentColor" strokeWidth="0.35" />
         ))}
       </svg>
-      <div aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 h-[520px] w-[520px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-100/50 blur-[120px]" />
+      <div aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 h-[820px] w-[820px] -translate-x-1/2 -translate-y-1/2 bg-[radial-gradient(closest-side,rgba(207,250,254,0.6),transparent)]" />
 
       <div ref={containerRef} className="relative mx-auto max-w-7xl px-5 pb-28 sm:px-6 md:pb-40 lg:px-8">
         <svg aria-hidden className="pointer-events-none absolute inset-0 h-full w-full overflow-visible">

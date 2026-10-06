@@ -27,8 +27,8 @@ export default function TransformCTA() {
   return (
     <section id="contact" className="relative py-24 bg-white border-t border-slate-200">
       {/* Background Glow */}
-      <div className="absolute top-1/3 left-1/4 w-96 h-96 bg-sky-500/10 rounded-full blur-[160px] pointer-events-none"></div>
-      <div className="absolute bottom-10 right-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-[160px] pointer-events-none"></div>
+      <div className="absolute top-1/3 left-1/4 w-[640px] h-[640px] -translate-x-1/3 -translate-y-1/3 bg-[radial-gradient(closest-side,rgba(14,165,233,0.10),transparent)] pointer-events-none"></div>
+      <div className="absolute bottom-10 right-1/4 w-[640px] h-[640px] translate-x-1/3 translate-y-1/3 bg-[radial-gradient(closest-side,rgba(16,185,129,0.10),transparent)] pointer-events-none"></div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight, Sparkles, Shield, Star, CheckCircle, ArrowRight } from 'lucide-react';
 
 interface ServiceItem {
@@ -22,7 +22,7 @@ const services: ServiceItem[] = [
     description: 'Comprehensive deep steam sanitation, kitchen degreasing, and detailed room scrubbing for luxury Riyadh villas.',
     badge: 'Popular Choice',
     color: 'from-sky-500 to-blue-600',
-    image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80',
+    image: '/images/services/villa-deep-cleaning.webp',
     features: ['High-temp Steam Sanitization', 'Full Kitchen Degreasing', 'Balcony & Patio Power Wash']
   },
   {
@@ -32,7 +32,7 @@ const services: ServiceItem[] = [
     description: 'Complete removal of plaster dust, grout film, paint splatters, and construction debris for new handovers.',
     badge: 'Heavy Duty',
     color: 'from-cyan-500 to-teal-600',
-    image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=80',
+    image: '/images/services/post-construction.webp',
     features: ['Paint Splatter Removal', 'Industrial HEPA Dust Extraction', 'Window Track Scrubbing']
   },
   {
@@ -42,7 +42,7 @@ const services: ServiceItem[] = [
     description: 'Deep hot-water extraction destroying 99.9% of dust mites, deep-seated stains, and desert dust from sofas & rugs.',
     badge: 'Allergen Free',
     color: 'from-emerald-500 to-teal-700',
-    image: 'https://images.unsplash.com/photo-1558317374-067fb5f30001?auto=format&fit=crop&w=800&q=80',
+    image: '/images/services/upholstery-carpet.webp',
     features: ['Organic Stain Neutralizer', 'Fabric Fiber Protection', 'Rapid 2-Hour Dry Time']
   },
   {
@@ -52,7 +52,7 @@ const services: ServiceItem[] = [
     description: 'Diamond pad honing, crystallization, and high-gloss sealing to restore mirror clarity on Saudi marble floors.',
     badge: 'Mirror Finish',
     color: 'from-amber-500 to-orange-600',
-    image: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=800&q=80',
+    image: '/images/services/marble-polishing.webp',
     features: ['Diamond Disc Grinding', 'Anti-Slip Gloss Crystallization', 'Sealant Stain Guard']
   },
   {
@@ -62,7 +62,7 @@ const services: ServiceItem[] = [
     description: 'High-reach deionized pure water glass washing for spotless streak-free panoramic windows and building exteriors.',
     badge: 'Streak-Free',
     color: 'from-indigo-500 to-sky-600',
-    image: 'https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?auto=format&fit=crop&w=800&q=80',
+    image: '/images/services/facade-windows.webp',
     features: ['Deionized Pure Water', 'High-Reach Water Pole System', 'Solar Panel Cleaning']
   },
   {
@@ -72,13 +72,47 @@ const services: ServiceItem[] = [
     description: 'Hospital-grade electrostatic fogging and anti-viral misting for safe, germ-free homes, offices, and schools.',
     badge: 'Certified Safe',
     color: 'from-purple-500 to-indigo-600',
-    image: 'https://images.unsplash.com/photo-1584634731339-252c581abfc5?auto=format&fit=crop&w=800&q=80',
+    image: '/images/services/disinfection.webp',
     features: ['Non-Toxic Eco Misting', 'Hospital-Grade Disinfectant', 'Safe for Children & Pets']
   }
 ];
 
 // Ring geometry: each card sits on a circle around a point behind the active one.
 const STEP_DEG = 34;
+
+/**
+ * Bottom panel of a card. The details below the title are always laid out; on the side cards the
+ * panel simply slides down by their height (a transform, so moving it costs no layout or paint).
+ */
+function SlidePanel({ active, header, children }: { active: boolean; header: React.ReactNode; children: React.ReactNode }) {
+  const panel = useRef<HTMLDivElement>(null);
+  const details = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const p = panel.current;
+    const d = details.current;
+    if (!p || !d) return;
+    const set = () => p.style.setProperty('--dh', `${d.offsetHeight}px`);
+    set();
+    const ro = new ResizeObserver(set);
+    ro.observe(d);
+    return () => ro.disconnect();
+  }, []);
+  return (
+    <div
+      ref={panel}
+      className="absolute inset-x-3 bottom-3 rounded-[22px] border border-white/60 bg-white/[0.93] p-5 will-change-transform sm:p-6"
+      style={{ transform: active ? 'translateY(0)' : 'translateY(calc(var(--dh, 0px) + 12px))', transition: `transform 900ms ${EASE}` }}
+    >
+      {header}
+      <div
+        ref={details}
+        style={{ opacity: active ? 1 : 0, transition: `opacity ${active ? '700ms 200ms' : '300ms'} ${EASE}` }}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
 const EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
 
 export default function ServicesCarousel() {
@@ -88,7 +122,7 @@ export default function ServicesCarousel() {
   const prevActive = useRef(0);
 
   useEffect(() => {
-    const fit = () => setRadius(window.innerWidth < 640 ? 360 : 560);
+    const fit = () => setRadius(window.innerWidth < 640 ? 380 : 700);
     fit();
     window.addEventListener('resize', fit);
     return () => window.removeEventListener('resize', fit);
@@ -146,7 +180,7 @@ export default function ServicesCarousel() {
   return (
     <section id="services" className="relative py-24 md:py-32 bg-white overflow-hidden border-t border-slate-100">
       {/* Background Lighting Gradients */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-sky-500/10 rounded-full blur-[140px] pointer-events-none"></div>
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] bg-[radial-gradient(closest-side,rgba(14,165,233,0.10),transparent)] pointer-events-none"></div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Section Header Matching Video Reference */}
@@ -168,7 +202,7 @@ export default function ServicesCarousel() {
 
         {/* 3D Spinning Carousel (3D Coverflow Container) */}
         <div
-          className="relative min-h-[520px] sm:min-h-[560px] flex items-center justify-center perspective-1000 my-8 select-none"
+          className="relative min-h-[470px] sm:min-h-[690px] flex items-center justify-center perspective-1000 my-8 select-none"
           style={{ touchAction: 'pan-y' }}
           onMouseEnter={() => setIsAutoSpin(false)}
           onMouseLeave={() => setIsAutoSpin(true)}
@@ -177,7 +211,7 @@ export default function ServicesCarousel() {
           onPointerCancel={() => (drag.current = null)}
         >
           {/* the orbit the cards travel on, and a pool of light under the card in front */}
-          <svg aria-hidden className="pointer-events-none absolute left-1/2 top-[74%] h-[200px] w-[1180px] -translate-x-1/2" viewBox="0 0 1180 200" fill="none">
+          <svg aria-hidden className="pointer-events-none absolute left-1/2 top-[80%] h-[200px] w-[1180px] -translate-x-1/2" viewBox="0 0 1180 200" fill="none">
             <defs>
               <linearGradient id="svc-orbit" x1="0" y1="0" x2="1" y2="0">
                 <stop offset="0" stopColor="#38bdf8" stopOpacity="0" />
@@ -188,7 +222,7 @@ export default function ServicesCarousel() {
             <ellipse cx="590" cy="100" rx="560" ry="70" stroke="url(#svc-orbit)" strokeWidth="1.2" />
             <ellipse cx="590" cy="100" rx="470" ry="52" stroke="#cbd5e1" strokeOpacity="0.5" strokeWidth="1" strokeDasharray="2 8" />
           </svg>
-          <div aria-hidden className="pointer-events-none absolute left-1/2 top-[82%] h-16 w-[340px] -translate-x-1/2 rounded-[50%] bg-sky-500/25 blur-2xl" />
+          <div aria-hidden className="pointer-events-none absolute left-1/2 top-[90%] h-24 w-[520px] -translate-x-1/2 bg-[radial-gradient(closest-side,rgba(14,165,233,0.22),transparent)]" />
           <div aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 h-[420px] w-[420px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(56,189,248,0.18),transparent_65%)]" />
           {services.map((service, index) => {
             // position on the ring relative to the active card
@@ -217,7 +251,7 @@ export default function ServicesCarousel() {
               <div
                 key={service.id}
                 onClick={() => setActiveIndex(index)}
-                className="group/card absolute w-[300px] sm:w-[360px] cursor-pointer will-change-transform"
+                className="group/card absolute w-[290px] sm:w-[440px] cursor-pointer will-change-transform"
                 style={{
                   transform: `translate3d(${translateX.toFixed(1)}px, ${isActive ? -8 : 0}px, ${translateZ.toFixed(1)}px) rotateY(${rotateY}deg) scale(${scale})`,
                   opacity: absOffset > 2 ? 0 : 1,
@@ -236,81 +270,83 @@ export default function ServicesCarousel() {
                 {/* living gradient edge on the active card */}
                 <div
                   aria-hidden
-                  className="svc-edge absolute -inset-[1.5px] rounded-[25.5px] transition-opacity duration-700"
+                  className="svc-edge absolute -inset-[1.5px] rounded-[31.5px] transition-opacity duration-700"
                   style={{ opacity: isActive ? 1 : 0 }}
                 />
-                {/* Service Card */}
+                {/* Service Card: a tall, image-led portrait with a frosted panel */}
                 <div
-                  className={`relative rounded-3xl overflow-hidden glass-panel border transition-[border-color,box-shadow] duration-700 ${
+                  className={`relative aspect-[3/4] overflow-hidden rounded-[30px] bg-slate-200 [contain:layout_paint] ${
                     isActive
-                      ? 'border-transparent shadow-[0_40px_80px_-30px_rgba(2,132,199,0.45),0_12px_30px_-12px_rgba(15,23,42,0.18)]'
-                      : 'border-slate-200 group-hover/card:border-slate-300'
+                      ? 'shadow-[0_50px_90px_-35px_rgba(2,132,199,0.5),0_18px_40px_-18px_rgba(15,23,42,0.35)]'
+                      : 'shadow-[0_20px_40px_-24px_rgba(15,23,42,0.35)]'
                   }`}
                 >
+                  <img
+                    src={service.image}
+                    alt={service.title}
+                    width={720}
+                    height={960}
+                    decoding="async"
+                    draggable={false}
+                    className={`absolute inset-0 h-full w-full object-cover transition-transform duration-[1600ms] ease-out ${
+                      isActive ? 'scale-[1.06] group-hover/card:scale-[1.1]' : 'scale-100'
+                    }`}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/55 via-slate-950/5 to-slate-950/25" />
+
                   {/* soft light following the pointer */}
                   <div
                     aria-hidden
                     className="pointer-events-none absolute inset-0 z-20 opacity-0 transition-opacity duration-500 group-hover/card:opacity-100"
-                    style={{ background: isActive ? 'radial-gradient(420px circle at var(--gx,50%) var(--gy,30%), rgba(255,255,255,0.35), transparent 60%)' : 'none' }}
+                    style={{ background: isActive ? 'radial-gradient(460px circle at var(--gx,50%) var(--gy,30%), rgba(255,255,255,0.28), transparent 60%)' : 'none' }}
                   />
-                  {/* Image Banner */}
-                  <div className="relative h-48 sm:h-56 w-full overflow-hidden">
-                    <img
-                      src={service.image}
-                      alt={service.title}
-                      className={`w-full h-full object-cover transition-transform duration-[1400ms] ease-out ${
-                        isActive ? 'scale-105 group-hover/card:scale-110' : 'scale-100'
-                      }`}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-white via-white/40 to-transparent"></div>
 
-                    {/* Badge */}
-                    <div className="absolute top-4 right-4">
-                      <span className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider bg-white/85 text-sky-700 border border-sky-400/30 rounded-full backdrop-blur-md">
-                        {service.badge}
-                      </span>
-                    </div>
-
-                    <div className="absolute bottom-4 left-4 right-4">
-                      <span className="text-xs font-semibold text-sky-600 uppercase tracking-wider">
-                        {service.category}
-                      </span>
-                      <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mt-1">{service.title}</h3>
-                    </div>
+                  {/* index and badge */}
+                  <div className="absolute inset-x-5 top-5 flex items-center justify-between text-white">
+                    <span className="text-[11px] font-medium tabular-nums tracking-[0.3em]">
+                      {String(index + 1).padStart(2, '0')}
+                      <span className="text-white/55"> / {String(count).padStart(2, '0')}</span>
+                    </span>
+                    <span className="rounded-full border border-white/30 bg-slate-900/30 px-3 py-1 text-[10px] font-medium uppercase tracking-[0.22em]">
+                      {service.badge}
+                    </span>
                   </div>
 
-                  {/* Card Content */}
-                  <div
-                    className="p-6 transition-[opacity,transform] duration-700"
-                    style={{ opacity: isActive ? 1 : 0.7, transform: isActive ? 'none' : 'translateY(6px)', transitionDelay: isActive ? '150ms' : '0ms' }}
+                  {/* frosted panel: title always, details slide up on the card in front */}
+                  <SlidePanel
+                    active={isActive}
+                    header={
+                      <>
+                        <p className="text-[10px] font-medium uppercase tracking-[0.28em] text-sky-700">{service.category}</p>
+                        <h3 className="mt-1.5 text-[21px] font-semibold leading-tight tracking-[-0.02em] text-slate-900 sm:text-[26px]">
+                          {service.title}
+                        </h3>
+                      </>
+                    }
                   >
-                    <p className="text-slate-600 text-xs sm:text-sm leading-relaxed">{service.description}</p>
-
-                    {/* Features List */}
-                    <ul className="mt-4 space-y-2 border-t border-slate-200 pt-4">
-                      {service.features.map((feat, i) => (
-                        <li key={i} className="flex items-center gap-2 text-xs text-slate-600">
-                          <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                          <span>{feat}</span>
-                        </li>
-                      ))}
-                    </ul>
-
-                    {/* Action Link */}
-                    <div className="mt-6 flex items-center justify-between">
-                      <a
-                        href="#contact"
-                        className="inline-flex items-center gap-2 text-xs font-bold text-sky-600 hover:text-slate-900 transition-colors group"
-                      >
-                        <span>Book Service</span>
-                        <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                      </a>
-                    </div>
-                  </div>
+                        <p className="mt-2.5 line-clamp-1 text-[13px] leading-relaxed text-slate-600">{service.description}</p>
+                        <ul className="mt-3 flex flex-wrap gap-1.5">
+                          {service.features.map((feat) => (
+                            <li key={feat} className="flex items-center gap-1.5 rounded-full bg-slate-900/[0.05] px-2.5 py-1 text-[11px] text-slate-700">
+                              <CheckCircle className="h-3 w-3 shrink-0 text-emerald-600" />
+                              {feat}
+                            </li>
+                          ))}
+                        </ul>
+                        <a
+                          href="#contact"
+                          className="group/cta mt-4 flex items-center justify-between border-t border-slate-900/10 pt-4 text-[13px] font-medium text-slate-900"
+                        >
+                          Book this service
+                          <span className="grid h-10 w-10 place-items-center rounded-full bg-slate-900 text-white transition-all duration-500 group-hover/cta:bg-gradient-to-br group-hover/cta:from-sky-500 group-hover/cta:to-emerald-400 group-hover/cta:rotate-[-35deg]">
+                            <ArrowRight className="h-4 w-4" />
+                          </span>
+                        </a>
+                  </SlidePanel>
 
                   {/* depth haze for the cards turning away; it lifts a little on hover */}
                   <div
-                    className="pointer-events-none absolute inset-0 rounded-3xl bg-gradient-to-b from-white/90 to-white opacity-[var(--haze)] group-hover/card:opacity-[calc(var(--haze)*0.45)]"
+                    className="pointer-events-none absolute inset-0 rounded-[30px] bg-gradient-to-b from-white/90 to-white opacity-[var(--haze)] group-hover/card:opacity-[calc(var(--haze)*0.45)]"
                     style={{ '--haze': haze, transition: `opacity 900ms ${EASE}` } as React.CSSProperties}
                   />
                 </div>
@@ -332,7 +368,7 @@ export default function ServicesCarousel() {
           </button>
 
           {/* Dots Indicator */}
-          <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-slate-50 border border-slate-200 backdrop-blur-md">
+          <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-slate-50 border border-slate-200">
             {services.map((_, i) => (
               <button
                 key={i}

@@ -239,8 +239,8 @@ export default function BeforeAfter() {
       <svg aria-hidden className="absolute inset-x-0 top-0 h-[64px] w-full md:h-[110px]" viewBox="0 0 1440 110" preserveAspectRatio="none">
         <path d="M0 0H1440V30C1210 96 900 112 590 74 370 47 170 52 0 96Z" fill="#ffffff" />
       </svg>
-      <div aria-hidden className="pointer-events-none absolute -right-48 top-48 h-[560px] w-[560px] rounded-full bg-sky-200/40 blur-[130px]" />
-      <div aria-hidden className="pointer-events-none absolute -left-40 bottom-10 h-[420px] w-[420px] rounded-full bg-emerald-100/50 blur-[120px]" />
+      <div aria-hidden className="pointer-events-none absolute -right-72 top-24 h-[860px] w-[860px] bg-[radial-gradient(closest-side,rgba(186,230,253,0.45),transparent)]" />
+      <div aria-hidden className="pointer-events-none absolute -left-60 -bottom-20 h-[680px] w-[680px] bg-[radial-gradient(closest-side,rgba(209,250,229,0.55),transparent)]" />
 
       <div className="relative mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
         {/* heading: the same voice as the Hero headline */}
