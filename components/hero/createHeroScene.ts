@@ -120,7 +120,8 @@ const QUALITY = LOW_POWER
 const MAX_PIXEL_RATIO = typeof window === 'undefined' ? 1 : Math.min(window.devicePixelRatio, QUALITY.maxPixelRatio);
 
 export type HeroScene = {
-  setProgress: (p: number) => void;
+  /** p: scroll progress 0–1; visible: fraction of the viewport the hero still fills (0–1) */
+  setProgress: (p: number, visible?: number) => void;
   resize: () => void;
   setActive: (active: boolean) => void;
   dispose: () => void;
@@ -485,6 +486,8 @@ export function createHeroScene(
   let raf = 0;
   let lastFrame = 0;
   let lastIdle = 0;
+  let lastScrollAt = 0;
+  let visibleFrac = 1;
 
   // Adaptive resolution: if back-to-back frames run slow (heavy GPU / high-DPI screen), render a
   // little softer; recover sharpness when there is headroom. Rate-limited so it never "pumps".
@@ -516,9 +519,14 @@ export function createHeroScene(
     }
   };
 
+  // the loop stops completely while the hero is off screen: a frame request that does nothing
+  // still keeps the whole page producing frames
   const loop = (now: number) => {
+    if (!active) {
+      raf = 0;
+      return;
+    }
     raf = requestAnimationFrame(loop);
-    if (!active) return;
     const dt = Math.min(0.1, (now - lastFrame) / 1000 || 0.016);
     lastFrame = now;
     const follow = (x: number, rate: number) => {
@@ -531,7 +539,10 @@ export function createHeroScene(
 
     const key = `${current.toFixed(5)}|${vanP.toFixed(5)}|${camP.toFixed(5)}`;
     const moved = key !== lastKey;
-    const idleDue = now - lastIdle > 33; // trees keep swaying at ~30 fps when nothing else moves
+    // trees keep swaying at ~30 fps when nothing else moves, but not while the page is being
+    // scrolled past the finished hero or once it is mostly off screen: the last frame simply stays
+    // up, and the GPU is left to the page scrolling in
+    const idleDue = now - lastIdle > 33 && now - lastScrollAt > 250 && visibleFrac > 0.5;
     if (moved || washing || vanSettling || trailActive || needsRender) {
       applyScene(current, camP, vanP, dt);
       lastKey = key;
@@ -606,13 +617,19 @@ export function createHeroScene(
 
 
   return {
-    setProgress: (p) => {
+    setProgress: (p, visible = 1) => {
       target = clamp01(p);
+      visibleFrac = visible;
+      lastScrollAt = performance.now();
     },
     resize,
     setActive: (a) => {
       active = a;
-      if (a) needsRender = true;
+      if (a) {
+        needsRender = true;
+        lastFrame = performance.now();
+        if (!raf && !disposed) raf = requestAnimationFrame(loop);
+      }
     },
     dispose: () => {
       disposed = true;

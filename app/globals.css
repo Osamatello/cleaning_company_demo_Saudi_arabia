@@ -66,6 +66,19 @@
 }
 
 /* --- Homepage sections (Before & After, How It Works, Testimonials) -------------------------- */
+/* sections scrolled out of view pause their animations (set by PauseOffscreen) */
+/* (only the animated elements are named, so toggling the flag restyles a handful of nodes rather
+   than the whole section) */
+[data-offscreen] .hero-in,
+[data-offscreen] .hero-bubble,
+[data-offscreen] .hero-glint,
+[data-offscreen] .svc-progress,
+[data-offscreen] .hiw-blob,
+[data-offscreen] .tm-in,
+[data-offscreen] .tm-ring,
+[data-offscreen] .tm-marquee {
+  animation-play-state: paused !important;
+}
 /* clips decorative shapes that bleed past the edges without becoming a scroll container (a
    hidden-overflow section can still be scrolled sideways by focus or scrollIntoView) */
 .section-clip {
@@ -83,14 +96,16 @@
 }
 
 /* organic, slowly breathing shapes for the How It Works steps */
+/* an organic shape that slowly sways: transform only, so it never repaints (a border-radius
+   morph would repaint the whole section on every frame) */
 @keyframes hiw-morph {
-  0%, 100% { border-radius: 42% 58% 63% 37% / 41% 44% 56% 59%; }
-  33% { border-radius: 63% 37% 41% 59% / 56% 59% 41% 44%; }
-  66% { border-radius: 37% 63% 56% 44% / 63% 41% 59% 37%; }
+  0%, 100% { transform: rotate(-7deg) scale(1); }
+  50% { transform: rotate(9deg) scale(1.035); }
 }
 .hiw-blob {
   border-radius: 42% 58% 63% 37% / 41% 44% 56% 59%;
   animation: hiw-morph 16s ease-in-out infinite;
+  will-change: transform;
 }
 
 /* testimonials: quote entrance, reviewer progress ring, review ribbon */

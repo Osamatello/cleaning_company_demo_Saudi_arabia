@@ -290,7 +290,9 @@ export default function BeforeAfter() {
         <div className="mt-6 grid grid-cols-1 gap-10 md:mt-16 md:grid-cols-12">
           {/* the stage */}
           <div ref={stageWrapRef} className="relative md:col-span-10">
-            <div aria-hidden className="absolute inset-x-10 -bottom-6 top-16 -z-10 rounded-[48px] bg-[#5b4a2f]/20 blur-3xl" />
+            {/* soft shadow under the stage: a radial gradient, not a blur filter (a 64px blur over an
+                area this size is one of the most expensive things a GPU can be asked to draw) */}
+            <div aria-hidden className="pointer-events-none absolute inset-x-4 -bottom-20 top-1/3 -z-10 bg-[radial-gradient(closest-side,rgba(91,74,47,0.22),rgba(91,74,47,0.08)_62%,transparent)]" />
             <div
               ref={stageRef}
               className="ba-stage section-clip relative aspect-[4/3] w-full select-none rounded-[26px] bg-[#e9e4da] md:aspect-[16/10] md:rounded-none"
@@ -342,7 +344,8 @@ export default function BeforeAfter() {
 
               {/* the wet edge: a sheen, the blade line and a few suds riding along it */}
               <svg aria-hidden className="pointer-events-none absolute inset-0 h-full w-full overflow-visible">
-                <path ref={glowRef} fill="none" stroke="rgba(255,255,255,0.55)" strokeWidth="14" style={{ filter: 'blur(6px)' }} />
+                {/* the sheen: wide, faint strokes instead of a blur filter */}
+                <path ref={glowRef} fill="none" stroke="rgba(255,255,255,0.16)" strokeWidth="16" strokeLinejoin="round" />
                 <path ref={lineRef} fill="none" stroke="rgba(255,255,255,0.95)" strokeWidth="2" />
                 {BUBBLES.map((f, i) => (
                   <circle

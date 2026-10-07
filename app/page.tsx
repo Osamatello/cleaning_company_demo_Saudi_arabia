@@ -6,10 +6,13 @@ import BeforeAfter from '@/components/home/BeforeAfter';
 import HowItWorks from '@/components/home/HowItWorks';
 import Testimonials from '@/components/home/Testimonials';
 import Footer from '@/components/Footer';
+import PauseOffscreen from '@/components/PauseOffscreen';
 
 export default function Home() {
   return (
     <main className="min-h-screen bg-white text-slate-900 overflow-x-clip">
+      <PauseOffscreen />
+
       {/* Navigation Header */}
       <Header />
 

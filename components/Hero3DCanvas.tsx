@@ -28,7 +28,9 @@ export default function Hero3DCanvas() {
       const rect = section.getBoundingClientRect();
       const scrollable = rect.height - window.innerHeight;
       const p = scrollable > 0 ? Math.min(1, Math.max(0, -rect.top / scrollable)) : 0;
-      scene?.setProgress(p);
+      // the pinned stage scrolls away with the section's bottom edge
+      const visible = Math.min(1, Math.max(0, rect.bottom / window.innerHeight));
+      scene?.setProgress(p, visible);
     };
     const onResize = () => {
       scene?.resize();
@@ -42,7 +44,7 @@ export default function Hero3DCanvas() {
       onScroll();
     });
 
-    const io = new IntersectionObserver(([entry]) => scene?.setActive(entry.isIntersecting), { rootMargin: '100px' });
+    const io = new IntersectionObserver(([entry]) => scene?.setActive(entry.isIntersecting), { rootMargin: '0px' });
     io.observe(section);
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onResize);

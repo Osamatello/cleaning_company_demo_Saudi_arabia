@@ -85,6 +85,9 @@ export const SELECT_SERVICE = 'services:select';
 // Ring geometry: each card sits on a circle around a point behind the active one.
 const STEP_DEG = 34;
 
+// pager: 8px dots 8px apart, the active one a 40px pill (dots after it shift right to make room)
+const dotX = (i: number, active: number) => i * 16 + (i > active ? 32 : 0);
+
 /**
  * Bottom panel of a card. The details below the title are always laid out; on the side cards the
  * panel simply slides down by their height (a transform, so moving it costs no layout or paint).
@@ -173,14 +176,26 @@ export default function ServicesCarousel() {
     e.currentTarget.style.transform = '';
   };
 
+  // the ring only turns by itself while it is on screen: turning it unseen would still cost frames
+  const sectionRef = useRef<HTMLElement>(null);
+  const [onScreen, setOnScreen] = useState(false);
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(([e]) => setOnScreen(e.isIntersecting), { threshold: 0.25 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  const autoSpin = isAutoSpin && onScreen;
+
   // Auto-rotate carousel every 4 seconds unless hovered
   useEffect(() => {
-    if (!isAutoSpin) return;
+    if (!autoSpin) return;
     const timer = setInterval(() => {
       setActiveIndex((prev) => (prev + 1) % services.length);
     }, 4000);
     return () => clearInterval(timer);
-  }, [isAutoSpin]);
+  }, [autoSpin]);
 
   const handlePrev = () => {
     setActiveIndex((prev) => (prev - 1 + services.length) % services.length);
@@ -191,7 +206,7 @@ export default function ServicesCarousel() {
   };
 
   return (
-    <section id="services" className="relative pt-14 pb-28 md:pt-16 md:pb-32 bg-white overflow-hidden">
+    <section ref={sectionRef} id="services" className="relative pt-14 pb-28 md:pt-16 md:pb-32 bg-white overflow-hidden">
       {/* the hero's grey stage fades softly into the white page */}
       <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-48 bg-gradient-to-b from-[#e1e4e8] to-white" />
       {/* Background Lighting Gradients */}
@@ -265,13 +280,14 @@ export default function ServicesCarousel() {
             return (
               <div
                 key={service.id}
-                onClick={() => setActiveIndex(index)}
+                // the card hidden at the back ignores clicks here rather than through pointer-events,
+                // which is inherited and would restyle the whole card on every change
+                onClick={() => absOffset <= 2 && setActiveIndex(index)}
                 className="group/card absolute w-[290px] sm:w-[440px] cursor-pointer will-change-transform"
                 style={{
                   transform: `translate3d(${translateX.toFixed(1)}px, ${isActive ? -8 : 0}px, ${translateZ.toFixed(1)}px) rotateY(${rotateY}deg) scale(${scale})`,
                   opacity: absOffset > 2 ? 0 : 1,
                   zIndex,
-                  pointerEvents: absOffset > 2 ? 'none' : 'auto',
                   transition: wrapped ? 'none' : `transform 1100ms ${EASE}, opacity 700ms ${EASE}`,
                 }}
               >
@@ -300,11 +316,11 @@ export default function ServicesCarousel() {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/55 via-slate-950/5 to-slate-950/25" />
 
-                  {/* soft light following the pointer */}
+                  {/* soft light under the pointer: always mounted and never restyled, so a change of
+                      card repaints nothing (it only fades in on hover) */}
                   <div
                     aria-hidden
-                    className="pointer-events-none absolute inset-0 z-20 opacity-0 transition-opacity duration-500 will-change-[opacity] group-hover/card:opacity-100"
-                    style={{ background: isActive ? 'radial-gradient(460px circle at var(--gx,50%) var(--gy,30%), rgba(255,255,255,0.28), transparent 60%)' : 'none' }}
+                    className="pointer-events-none absolute inset-0 z-20 bg-[radial-gradient(460px_circle_at_var(--gx,50%)_var(--gy,30%),rgba(255,255,255,0.28),transparent_60%)] opacity-0 transition-opacity duration-500 will-change-[opacity] group-hover/card:opacity-100"
                   />
 
                   {/* index and badge */}
@@ -372,26 +388,31 @@ export default function ServicesCarousel() {
             <ChevronLeft className="w-6 h-6" />
           </button>
 
-          {/* Dots Indicator (fixed size and contained, so the growing dot never relayouts the page) */}
-          <div className="flex h-[26px] w-[154px] items-center gap-2 px-4 py-2 rounded-full bg-slate-50 border border-slate-200 [contain:strict]">
-            {services.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setActiveIndex(i)}
-                className={`relative h-2 shrink-0 overflow-hidden rounded-full transition-[width,background-color] duration-500 ${
-                  i === activeIndex ? 'w-10 bg-sky-100' : 'w-2 bg-slate-300 hover:bg-slate-400'
-                }`}
-                aria-label={`Go to slide ${i + 1}`}
+          {/* Dots Indicator: the dots and the active pill only slide (transforms), so a change of card
+              never relayouts or repaints anything */}
+          <div className="relative h-[26px] w-[154px] rounded-full bg-slate-50 border border-slate-200 [contain:strict]">
+            <div className="absolute left-4 top-[8px] h-2 w-[120px]">
+              {services.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setActiveIndex(i)}
+                  className="absolute left-0 top-0 h-2 w-2 rounded-full bg-slate-300 transition-[transform,opacity] duration-500 hover:bg-slate-400"
+                  style={{ transform: `translateX(${dotX(i, activeIndex)}px)`, opacity: i === activeIndex ? 0 : 1 }}
+                  aria-label={`Go to slide ${i + 1}`}
+                />
+              ))}
+              {/* the active pill, which fills while the ring waits to turn */}
+              <span
+                aria-hidden
+                className="pointer-events-none absolute left-0 top-0 h-2 w-10 overflow-hidden rounded-full bg-sky-100 transition-transform duration-500"
+                style={{ transform: `translateX(${dotX(activeIndex, activeIndex)}px)` }}
               >
-                {/* fills while the ring waits to turn */}
-                {i === activeIndex && (
-                  <span
-                    key={`${activeIndex}-${isAutoSpin}`}
-                    className={`absolute inset-0 origin-left rounded-full bg-gradient-to-r from-sky-500 to-emerald-400 ${isAutoSpin ? 'svc-progress' : ''}`}
-                  />
-                )}
-              </button>
-            ))}
+                <span
+                  key={`${activeIndex}-${autoSpin}`}
+                  className={`absolute inset-0 origin-left rounded-full bg-gradient-to-r from-sky-500 to-emerald-400 ${autoSpin ? 'svc-progress' : ''}`}
+                />
+              </span>
+            </div>
           </div>
 
           <button
