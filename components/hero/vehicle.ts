@@ -48,15 +48,19 @@ export function createDriveProfile() {
 
 function alloyWheel(mats: { alloy: THREE.Material; rubber: THREE.Material; cap: THREE.Material }) {
   const g = new THREE.Group();
-  const R = VAN_WHEELS.tyre + 0.003;
-  // tyre sidewall: a gently bulged ring
+  const R = VAN_WHEELS.tyre;
+  // tyre: a gently bulged sidewall, a rounded shoulder and a full-width tread running in under the
+  // body, so the bottom of the tyre reads as solid rubber on the road (a thin tread edge seen from
+  // above breaks up into a dotted line)
   const profile = [
     new THREE.Vector2(0.088, 0.0),
     new THREE.Vector2(0.095, 0.004),
     new THREE.Vector2(0.115, 0.0065),
     new THREE.Vector2(R - 0.008, 0.005),
-    new THREE.Vector2(R, 0.0),
-    new THREE.Vector2(R + 0.001, -0.01),
+    new THREE.Vector2(R - 0.002, 0.001),
+    new THREE.Vector2(R, -0.006),
+    new THREE.Vector2(R, -0.062),
+    new THREE.Vector2(R - 0.006, -0.07),
   ];
   const tyre = new THREE.Mesh(new THREE.LatheGeometry(profile, 64).rotateX(Math.PI / 2), mats.rubber);
   g.add(tyre);
@@ -88,7 +92,6 @@ function alloyWheel(mats: { alloy: THREE.Material; rubber: THREE.Material; cap: 
     nut.position.set(Math.cos(a) * 0.019, Math.sin(a) * 0.019, 0.011);
     g.add(nut);
   }
-  g.traverse((o) => ((o as THREE.Mesh).castShadow = false));
   return g;
 }
 
@@ -114,7 +117,7 @@ export function rigVan(van: THREE.Object3D, vanScale: number, rideHeight: number
       wheels.push(w);
     }
   }
-  const wheelRadius = (VAN_WHEELS.tyre + 0.003) * vanScale;
+  const wheelRadius = VAN_WHEELS.tyre * vanScale; // the visible (model) tyre rolls on the road
 
   // suspension state (radians / metres), low-passed speed and the body's eased heading
   const s = { pitch: 0, pitchV: 0, roll: 0, rollV: 0, heave: 0, heaveV: 0 };

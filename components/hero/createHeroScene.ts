@@ -29,10 +29,11 @@ import {
   createRoadMaterial,
   createVanMaterial,
 } from './materials';
-import { type GroundUniforms, bakeContactAO, bakeVanFootprint, createGroundUniforms } from './groundShading';
+import { type GroundUniforms, createGroundUniforms } from './groundShading';
 import { buildTree, type WindUniforms } from './tree';
 import { createDriveProfile, rigVan } from './vehicle';
-import { buildStreet, buildStreetGeometry, groundFade, streetS } from './roadExtension';
+import { ROAD_TOP, buildStreet, buildStreetGeometry, groundFade, streetS } from './roadExtension';
+import { VAN_WHEELS } from './assetMaps';
 import { createMeshoptDecoder } from './meshoptDecoder';
 import { createVanTrail } from './vanTrail';
 
@@ -108,13 +109,13 @@ const ROAD_CZ = ROAD_CENTER_MODEL.z * ROAD_SCALE;
 const SUN_DIR = new THREE.Vector3(-0.45, 0.72, 0.53).normalize();
 const BACKDROP = new THREE.Color('#e1e4e8'); // soft light grey stage the scene dissolves into
 // Rendering tier. Desktop keeps the full-quality settings; touch devices and low-core machines get
-// lighter ones (resolution, shadow map, foliage and foam-trail density), ready for mobile tuning.
+// lighter ones (resolution, foliage and foam-trail density), ready for mobile tuning.
 const LOW_POWER =
   typeof window !== 'undefined' &&
   (window.matchMedia?.('(pointer: coarse)').matches || (navigator.hardwareConcurrency || 8) <= 4);
 const QUALITY = LOW_POWER
-  ? { maxPixelRatio: 1.25, shadowMapSize: 1024, foliageDensity: 0.6, trailDetail: 0.5 }
-  : { maxPixelRatio: 1.5, shadowMapSize: 2048, foliageDensity: 1, trailDetail: 1 };
+  ? { maxPixelRatio: 1.25, foliageDensity: 0.6, trailDetail: 0.5 }
+  : { maxPixelRatio: 1.5, foliageDensity: 1, trailDetail: 1 };
 // Pixel-ratio ceiling: sharp on high-DPI screens without tripling the shading cost.
 const MAX_PIXEL_RATIO = typeof window === 'undefined' ? 1 : Math.min(window.devicePixelRatio, QUALITY.maxPixelRatio);
 
@@ -138,9 +139,7 @@ export function createHeroScene(
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.NeutralToneMapping;
   renderer.toneMappingExposure = 0.92;
-  renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.VSMShadowMap; // soft, wide penumbrae like real daylight
-  renderer.shadowMap.autoUpdate = false;
+  // no shadows anywhere: nothing casts one and the ground carries none
 
   const scene = new THREE.Scene();
   scene.background = BACKDROP;
@@ -158,26 +157,7 @@ export function createHeroScene(
   const sunTarget = new THREE.Vector3(1.5, 0, -3);
   sun.position.copy(sunTarget).addScaledVector(SUN_DIR, 45);
   sun.target.position.copy(sunTarget);
-  sun.castShadow = true;
-  sun.shadow.mapSize.set(QUALITY.shadowMapSize, QUALITY.shadowMapSize);
-  sun.shadow.camera.left = -21;
-  sun.shadow.camera.right = 21;
-  sun.shadow.camera.top = 21;
-  sun.shadow.camera.bottom = -21;
-  sun.shadow.camera.near = 10;
-  sun.shadow.camera.far = 90;
-  sun.shadow.bias = -0.0003;
-  sun.shadow.normalBias = 0.02;
-  sun.shadow.radius = 7;
-  sun.shadow.blurSamples = 16;
   scene.add(sun, sun.target);
-
-  // Invisible floor that only catches soft shadow beyond the scenery, on the white backdrop.
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(160, 160), new THREE.ShadowMaterial({ opacity: 0.08 }));
-  floor.rotation.x = -Math.PI / 2;
-  floor.position.y = -0.09;
-  floor.receiveShadow = true;
-  scene.add(floor);
 
   const shared: SharedUniforms = {
     uDissolve: { value: 0 },
@@ -189,7 +169,6 @@ export function createHeroScene(
   };
   const [a0, a1] = ROAD_ANGLE_RANGE;
   const ground = createGroundUniforms(
-    SUN_DIR,
     BACKDROP.clone().convertLinearToSRGB(), // sRGB output colour, compared after colour-space conversion
     new THREE.Vector4(ROAD_CX, ROAD_CZ, THREE.MathUtils.degToRad(a0), THREE.MathUtils.degToRad(a1))
   );
@@ -214,13 +193,9 @@ export function createHeroScene(
 
   // --- environment
   // a clean, light studio floor (no grass terrain) that fades into the white backdrop; it carries
-  // the contact shadows, the van's shadow and the foam / wet effects so nothing floats
+  // the foam / wet effects
   scene.add(buildFloor(ground));
-  for (const st of streets) {
-    const m = new THREE.Mesh(buildStreetGeometry(st), createRoadMaterial(ground, { width: st.width }));
-    m.receiveShadow = true;
-    scene.add(m);
-  }
+  for (const st of streets) scene.add(new THREE.Mesh(buildStreetGeometry(st), createRoadMaterial(ground, { width: st.width })));
   const inwardFrom = (p: THREE.Vector3, d: number) =>
     p.addScaledVector(new THREE.Vector3(ROAD_CX, 0, ROAD_CZ).sub(p).setY(0).normalize(), d);
   const treeR = inwardFrom(roadWorld(a0 + 9, 0), 2.0);
@@ -237,14 +212,11 @@ export function createHeroScene(
   const padDepth = street.point(sPark, 0).z - houseFrontZ + 0.4;
   const pad = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.14, padDepth), createPavingMaterial(ground));
   pad.position.set(doorX, 0.1, houseFrontZ + padDepth / 2 - 0.1);
-  pad.receiveShadow = true;
   scene.add(pad);
 
   const litter = buildLitter(shared, houseFrontZ);
   drawFirst(litter, DRAW_ORDER.litter);
   scene.add(litter);
-  let aoDirty: THREE.Texture | null = null;
-  let aoClean: THREE.Texture | null = null;
 
   // --- van foam trail (its own effect, separate from the house-cleaning foam)
   const trail = createVanTrail(driveLine, QUALITY.trailDetail);
@@ -258,11 +230,9 @@ export function createHeroScene(
   let cleanHouse: THREE.Object3D | null = null;
   let van: THREE.Object3D | null = null;
   let rig: ReturnType<typeof rigVan> | null = null;
-  let placeVanShadow: ((x: number, z: number, yaw: number, visible: boolean) => void) | null = null;
   let ready = false;
   let disposed = false;
   const vanLights = { value: new THREE.Vector2(0, 0) };
-  const aoRect = { cx: 1.4, cz: -6, half: 22 };
 
   // Every house version fills one world-space box: the full dirty house's bounds at its placement
   // (front wall at houseFrontZ, ground line at y = 0). Each model's own bounding box is fitted onto it
@@ -290,8 +260,6 @@ export function createHeroScene(
       const m = c as THREE.Mesh;
       if (!m.isMesh) return;
       m.material = mat;
-      m.castShadow = true;
-      m.receiveShadow = true;
       m.renderOrder = DRAW_ORDER.house;
     });
     return h;
@@ -303,7 +271,6 @@ export function createHeroScene(
   // where the browser supports it): the stand-in's material exists before its geometry does.
   const lodHouseMat = createHouseMaterial(shared, true, HOUSE_REF_BOUNDS.groundY, true, lodMix);
   const warmUp = new THREE.Mesh(new THREE.BoxGeometry(0.01, 0.01, 0.01), lodHouseMat);
-  warmUp.castShadow = warmUp.receiveShadow = true;
   const shadersReady = Promise.all([renderer.compileAsync(scene, camera), renderer.compileAsync(warmUp, camera, scene)])
     .catch(() => undefined)
     .finally(() => warmUp.geometry.dispose());
@@ -320,10 +287,6 @@ export function createHeroScene(
       dirtyHouse = placeHouse(dirtyG, true, true, true, lodHouseMat);
       scene.add(dirtyHouse);
       scene.updateMatrixWorld(true);
-      // soft contact occlusion under the house, trees and litter (re-baked when the clean house lands)
-      aoDirty = bakeContactAO(renderer, ground, [dirtyHouse, litter, treeRight, treeLeft], aoRect);
-      aoClean = aoDirty;
-      ground.uAOTex.value = aoDirty;
       const houseBox = new THREE.Box3().setFromObject(dirtyHouse);
       ground.uWetRect.value.set(houseBox.min.x, houseBox.min.z, houseBox.max.x, houseBox.max.z);
 
@@ -331,7 +294,6 @@ export function createHeroScene(
       if (disposed) return;
       ready = true;
       renderer.compile(scene, camera); // anything not warmed up yet, so the first scroll doesn't hitch
-      bakeShadows();
       applyScene(current, current, current, 0);
       try {
         present(); // a complete first frame is on the canvas now…
@@ -351,18 +313,6 @@ export function createHeroScene(
       loadGLB(ASSETS.van).promise.then(addVan, (err) => console.error('Van failed to load', err));
       loadGLB(ASSETS.cleanHouse).promise.then(addCleanHouse, (err) => console.error('Clean house failed to load', err));
     });
-
-  /** Sun shadows are baked, never re-rendered while scrolling: from both house states together
-   *  once the clean house is in (they share a footprint). */
-  function bakeShadows() {
-    const vis = [dirtyHouse?.visible, cleanHouse?.visible];
-    if (dirtyHouse) dirtyHouse.visible = true;
-    if (cleanHouse) cleanHouse.visible = true;
-    renderer.shadowMap.needsUpdate = true;
-    renderer.render(scene, camera);
-    if (dirtyHouse) dirtyHouse.visible = vis[0] ?? true;
-    if (cleanHouse) cleanHouse.visible = vis[1] ?? false;
-  }
 
   /** Bring in the full-quality dirty house over the stand-in: identical placement and shading, a
    *  0.6 s dithered crossfade, then the stand-in is dropped. It takes over whatever the scroll state is. */
@@ -409,14 +359,15 @@ export function createHeroScene(
       const m = c as THREE.Mesh;
       if (!m.isMesh) return;
       m.material = vanMat;
-      m.receiveShadow = true;
       m.renderOrder = DRAW_ORDER.van;
     });
-    const r = rigVan(v, VAN_SCALE, 0.4 * VAN_SCALE + 0.03);
-    v.position.set(0, 0.4 * VAN_SCALE + 0.03, 0);
+    // ride height: the tyres rest on the road surface instead of sinking into it (a buried tyre
+    // flickers through the asphalt as broken lines)
+    const rideHeight = ROAD_TOP + 0.003 + (VAN_WHEELS.tyre - VAN_WHEELS.centers[0][1]) * VAN_SCALE;
+    const r = rigVan(v, VAN_SCALE, rideHeight);
+    v.position.set(0, rideHeight, 0);
     await renderer.compileAsync(v, camera, scene); // compile off the critical path, no hitch on arrival
     if (disposed) return;
-    placeVanShadow = bakeVanFootprint(renderer, ground, v, 4.4, 2.4);
     scene.add(v);
     van = v;
     rig = r;
@@ -431,12 +382,6 @@ export function createHeroScene(
     await renderer.compileAsync(h, camera, scene);
     if (disposed) return;
     cleanHouse = h;
-    scene.updateMatrixWorld(true);
-    const oldAO = aoDirty;
-    aoDirty = bakeContactAO(renderer, ground, [dirtyHouse, h, litter, treeRight, treeLeft], aoRect);
-    aoClean = bakeContactAO(renderer, ground, [dirtyHouse, h, treeRight, treeLeft], aoRect);
-    oldAO?.dispose();
-    bakeShadows();
     applyScene(current, camP, vanP, 0);
     needsRender = true;
   }
@@ -488,12 +433,11 @@ export function createHeroScene(
     const d = range(TIMELINE.vanDrive, pVan);
     vanT = drive.at(d);
     // parked out of sight behind the house until it sets off, while the camera is still at its start
-    // pose (checked on every screen shape): not drawn then — its ground shadow is drawn separately
+    // pose (checked on every screen shape): not drawn then
     if (van) van.visible = d > 0 || range(TIMELINE.camera, pCam) > 0;
-    if (van && rig && placeVanShadow) {
+    if (van && rig) {
       const line = driveLine.sample(vanT * pathLength, vanPos);
       vanSettling = rig.update(vanPos, line.yaw, vanT * pathLength, dt, drive.accel(d), line.curvature);
-      placeVanShadow(vanPos.x, vanPos.z, van.rotation.y, true);
       // daytime running lights while driving (fading after it stops); brake lights as it pulls in
       const lightsOn = 1 - smooth(0.985, 1.0, d) * 0.9;
       const brake = smooth(0.58, 0.72, d) * (1 - smooth(0.985, 1.0, d));
@@ -526,7 +470,6 @@ export function createHeroScene(
     dirtyHouse.visible = dis < 0.999;
     if (cleanHouse) cleanHouse.visible = dis > 0.001;
     litter.visible = dis < 0.999;
-    ground.uAOTex.value = dis < 0.5 ? aoDirty : aoClean;
   }
 
   // --- render loop
@@ -685,9 +628,6 @@ export function createHeroScene(
       });
       // keep cached GLB scenes reusable by a future mount
       [dirtyHouse, cleanHouse, van].forEach((o) => o && scene.remove(o));
-      aoDirty?.dispose();
-      aoClean?.dispose();
-      ground.uVanTex.value?.dispose();
       envTex.dispose();
       fxaa.dispose();
       fxaaQuad.dispose();
@@ -756,9 +696,7 @@ function buildFloor(u: GroundUniforms) {
   geo.setAttribute('aFade', new THREE.Float32BufferAttribute(fades, 1));
   geo.setIndex(index);
   geo.computeVertexNormals();
-  const mesh = new THREE.Mesh(geo, createStudioFloorMaterial(u));
-  mesh.receiveShadow = true;
-  return mesh;
+  return new THREE.Mesh(geo, createStudioFloorMaterial(u));
 }
 
 /**

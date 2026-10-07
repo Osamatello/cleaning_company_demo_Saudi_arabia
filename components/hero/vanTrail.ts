@@ -144,7 +144,6 @@ export function createVanTrail(line: DriveLine, detail = 1): VanTrail {
   };
 
   const mesh = new THREE.Mesh(geo, mat);
-  mesh.receiveShadow = true;
   mesh.visible = false;
   mesh.renderOrder = 1;
   const quadsPerRow = across * 6;

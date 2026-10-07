@@ -292,8 +292,6 @@ export function buildTree(position: THREE.Vector3, scale: number, seed: number, 
   const barkMat = new THREE.MeshStandardMaterial({ map: getBarkTexture(), bumpMap: getBarkTexture(), bumpScale: 3, roughness: 0.95, color: 0xcfc4b8 });
   windMaterial(barkMat, u, false);
   const bark = new THREE.Mesh(mergeGeometries(barkGeos), barkMat);
-  bark.castShadow = true;
-  bark.receiveShadow = true;
   group.add(bark);
 
   // --- foliage -----------------------------------------------------------------------------------
@@ -319,8 +317,6 @@ export function buildTree(position: THREE.Vector3, scale: number, seed: number, 
   });
   windMaterial(leafMat, u, true);
   const leaves = new THREE.InstancedMesh(card, leafMat, count);
-  leaves.castShadow = true;
-  leaves.receiveShadow = true;
   const bent = new Float32Array(count * 3);
   const ao = new Float32Array(count);
   const wind = new Float32Array(count * 3);
@@ -368,7 +364,6 @@ export function buildTree(position: THREE.Vector3, scale: number, seed: number, 
   const sCount = shrubSpots.length * perShrub;
   const sCard = new THREE.PlaneGeometry(0.42, 0.42);
   const shrubs = new THREE.InstancedMesh(sCard, leafMat, sCount);
-  shrubs.castShadow = true;
   const sBent = new Float32Array(sCount * 3);
   const sAO = new Float32Array(sCount);
   const sWind = new Float32Array(sCount * 3);

@@ -1003,8 +1003,7 @@ export function createGrassMaterial(ground: GroundUniforms, opts: { fadeAttr: bo
 }
 
 /**
- * Studio floor: a clean, light neutral ground that carries the contact shadows, the van's shadow
- * and the foam / wet effects, and dissolves into the white backdrop (`aFade`).
+ * Studio floor: a clean, light neutral ground that carries the foam / wet effects, and dissolves into the white backdrop (`aFade`).
  */
 export function createStudioFloorMaterial(ground: GroundUniforms) {
   // slightly warm, so the cool sky light reads as neutral rather than blue-grey
