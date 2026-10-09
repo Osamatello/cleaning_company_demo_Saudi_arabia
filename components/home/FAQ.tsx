@@ -14,7 +14,7 @@ export default function FAQ() {
   const [ref, shown] = useInView<HTMLDivElement>({ rootMargin: '0px 0px -15% 0px', threshold: 0 });
 
   return (
-    <section id="faq" className="relative border-t border-slate-200 bg-white py-24 md:py-32">
+    <section id="faq" className="relative bg-white pb-24 pt-14 md:pb-32 md:pt-24">
       <div ref={ref} className="mx-auto grid max-w-7xl grid-cols-1 gap-12 px-5 sm:px-6 lg:grid-cols-12 lg:gap-10 lg:px-8">
         <div className="lg:col-span-5">
           <div className="lg:sticky lg:top-32">

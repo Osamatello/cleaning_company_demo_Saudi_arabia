@@ -109,8 +109,8 @@ export default function Testimonials() {
 
   return (
     <section ref={sectionRef} id="reviews" className="relative section-clip bg-white pt-16 md:pt-20">
-      {/* a soft pebble behind the quote */}
-      <svg aria-hidden className="pointer-events-none absolute -left-[12%] top-12 h-[560px] w-[88%] overflow-visible md:top-16 md:h-[560px] md:w-[70%] rtl:left-auto rtl:-right-[12%] rtl:-scale-x-100" viewBox="0 0 900 640" preserveAspectRatio="none">
+      {/* a soft pebble behind the quote (desktop; on a phone a smaller one sits right behind the quote itself) */}
+      <svg aria-hidden className="pointer-events-none absolute -left-[12%] top-16 hidden h-[560px] w-[70%] overflow-visible md:block rtl:left-auto rtl:-right-[12%] rtl:-scale-x-100" viewBox="0 0 900 640" preserveAspectRatio="none">
         <path d="M118 96C214 18 392 -10 560 24c160 32 300 110 330 246 30 138-56 268-214 330-152 60-356 52-492-12C46 528-14 412 4 300 18 206 46 154 118 96Z" fill="#f6f4ef" />
         <path d="M118 96C214 18 392 -10 560 24c160 32 300 110 330 246 30 138-56 268-214 330-152 60-356 52-492-12C46 528-14 412 4 300 18 206 46 154 118 96Z" fill="none" stroke="#e3dccd" strokeWidth="1" vectorEffect="non-scaling-stroke" />
       </svg>
@@ -128,7 +128,17 @@ export default function Testimonials() {
             <p className="reveal text-[13px] font-semibold uppercase tracking-[0.24em] text-neutral-600 md:text-[14px]" data-in={headIn}>
               {tm.eyebrow}
             </p>
-            <figure className="relative mt-14 min-h-[260px] md:mt-[5.5rem] md:min-h-[300px]" aria-live="polite">
+            <figure className="relative isolate mt-14 min-h-[260px] md:mt-[5.5rem] md:min-h-[300px]" aria-live="polite">
+              {/* phone: the pebble wraps the quote, its mark and the reviewer */}
+              <svg
+                aria-hidden
+                className="pointer-events-none absolute -left-9 -top-[46px] -z-10 h-[calc(100%+82px)] w-[calc(100%+52px)] overflow-visible md:hidden rtl:left-auto rtl:-right-9 rtl:-scale-x-100"
+                viewBox="0 0 900 640"
+                preserveAspectRatio="none"
+              >
+                <path d="M118 96C214 18 392 -10 560 24c160 32 300 110 330 246 30 138-56 268-214 330-152 60-356 52-492-12C46 528-14 412 4 300 18 206 46 154 118 96Z" fill="#f6f4ef" />
+                <path d="M118 96C214 18 392 -10 560 24c160 32 300 110 330 246 30 138-56 268-214 330-152 60-356 52-492-12C46 528-14 412 4 300 18 206 46 154 118 96Z" fill="none" stroke="#e3dccd" strokeWidth="1" vectorEffect="non-scaling-stroke" />
+              </svg>
               <span
                 aria-hidden
                 className={`pointer-events-none absolute -start-1 font-[300] -top-[72px] select-none text-[150px] leading-none text-sky-200 md:-start-5 md:-top-[110px] md:text-[220px]`}
@@ -172,7 +182,7 @@ export default function Testimonials() {
               </p>
               <div className="border-s border-neutral-200 ps-6">
                 <Stars size="h-[18px] w-[18px] md:h-5 md:w-5" className="gap-1" />
-                <p className="mt-2.5 whitespace-nowrap text-[13px] leading-tight text-neutral-500 md:text-[14px]">{tm.from}</p>
+                <p className="mt-2.5 text-[13px] leading-tight text-neutral-500 md:whitespace-nowrap md:text-[14px]">{tm.from}</p>
               </div>
             </div>
 
@@ -213,7 +223,7 @@ export default function Testimonials() {
       </div>
 
       {/* a slow ribbon of short reviews, easing the page into the booking section */}
-      <div className="group relative mt-40 border-y border-[#ece7dd] bg-[#fbfaf7] py-5 md:mt-28">
+      <div className="group relative mt-12 border-y border-[#ece7dd] bg-[#fbfaf7] py-5 md:mt-28">
         <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-[#fbfaf7] to-transparent md:w-40" />
         <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-[#fbfaf7] to-transparent md:w-40" />
         <div dir="ltr" className="tm-marquee flex w-max group-hover:[animation-play-state:paused]">

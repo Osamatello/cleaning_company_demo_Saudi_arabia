@@ -237,7 +237,7 @@ export const ar: SiteContent = {
     formTitle: 'احجز تنظيف FreshSpaces',
     formIntro: 'احصل على عرض سعر فوري وأقرب موعد متاح.',
     name: 'الاسم',
-    namePlaceholder: 'مثال: أسامة تلو',
+    namePlaceholder: 'مثال: أحمد محمد',
     phone: 'رقم الجوال',
     district: 'الحي في الرياض',
     districts: ['الملقا، الرياض', 'النخيل، الرياض', 'حطين، الرياض', 'العليا، الرياض', 'الياسمين، الرياض', 'حي آخر في الرياض'],

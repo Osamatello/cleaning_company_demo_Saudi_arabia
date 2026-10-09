@@ -220,7 +220,7 @@ export default function BeforeAfter() {
     <section
       id="results"
       ref={sectionRef}
-      className={`relative -mt-[2px] section-clip bg-[#f6f4ef] pb-28 pt-20 md:pb-40 md:pt-28`}
+      className={`relative -mt-[2px] section-clip bg-[#f6f4ef] pb-12 pt-20 md:pb-40 md:pt-28`}
     >
       {/* the white of the Services section flows down into this one along a soft curve */}
       <svg aria-hidden className="absolute inset-x-0 -top-px h-[41px] w-full md:h-[65px]" viewBox="0 0 1440 110" preserveAspectRatio="none">
@@ -421,8 +421,8 @@ export default function BeforeAfter() {
         </div>
       </div>
 
-      {/* a hairline carries on down into How It Works */}
-      <div aria-hidden className="absolute bottom-0 left-1/2 h-28 w-px -translate-x-1/2 bg-sky-300" />
+      {/* a hairline carries on down into How It Works (desktop only: on a phone it hangs on its own) */}
+      <div aria-hidden className="absolute bottom-0 left-1/2 hidden h-28 w-px -translate-x-1/2 bg-sky-300 md:block" />
     </section>
   );
 }

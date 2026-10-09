@@ -215,7 +215,7 @@ export const en: SiteContent = {
     formTitle: 'Book FreshSpaces Cleaning',
     formIntro: 'Get an instant quote and priority dispatch date.',
     name: 'Your Name',
-    namePlaceholder: 'e.g. Osama Tillo',
+    namePlaceholder: 'e.g. Ahmed Mohammed',
     phone: 'Mobile Number',
     district: 'Riyadh District',
     districts: ['Al Malqa, Riyadh', 'Al Nakheel, Riyadh', 'Hittin, Riyadh', 'Al Olaya, Riyadh', 'Al Yasmin, Riyadh', 'Other Riyadh Location'],
