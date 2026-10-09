@@ -4,14 +4,17 @@ import React, { useState } from 'react';
 import { Phone, Mail, MapPin, Send, CheckCircle2, ShieldCheck, Clock, Award } from 'lucide-react';
 import BrandMark from './BrandMark';
 import confetti from 'canvas-confetti';
+import { useContent } from './ContentProvider';
 
 export default function TransformCTA() {
+  const t = useContent();
+  const b = t.booking;
   const [submitted, setSubmitted] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
-    district: 'Al Malqa, Riyadh',
-    service: 'Villa Deep Cleaning',
+    district: b.districts[0],
+    service: t.services.items[0].title,
     notes: ''
   });
 
@@ -34,16 +37,16 @@ export default function TransformCTA() {
           <div className="lg:col-span-6 space-y-8">
             <div>
               <p className="mb-5 flex items-center gap-3 text-[10px] font-medium uppercase tracking-[0.32em] text-neutral-500 md:text-[11px]">
-                Riyadh premier cleaning specialists
+                {b.eyebrow}
               </p>
               <h2 className="text-[2.4rem] leading-[1.04] tracking-[-0.02em] text-slate-900 sm:text-5xl lg:text-[3rem]">
-                <span className="font-[350]">Transform your space</span>
+                <span className="font-[350]">{b.line1}</span>
                 <br />
-                <span className="font-[300] italic text-neutral-400">in just </span>
-                <span className="font-bold">one hour.</span>
+                <span className="font-[300] italic text-neutral-400">{b.soft}</span>
+                <span className="font-bold">{b.bold}</span>
               </h2>
               <p className="mt-4 text-slate-600 text-base sm:text-lg leading-relaxed">
-                Book Riyadh’s top-rated deep cleaning team. We bring specialized industrial equipment, eco-certified detergents, and 100% satisfaction guarantee to your doorstep.
+                {b.intro}
               </p>
             </div>
 
@@ -54,8 +57,8 @@ export default function TransformCTA() {
                   <Clock className="w-5 h-5 text-sky-600" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-slate-900">Same-Day Dispatch</h4>
-                  <p className="text-xs text-slate-500 mt-0.5">Quick arrival across all Riyadh districts within 90 minutes.</p>
+                  <h4 className="text-sm font-bold text-slate-900">{b.props[0].title}</h4>
+                  <p className="text-xs text-slate-500 mt-0.5">{b.props[0].text}</p>
                 </div>
               </div>
 
@@ -64,8 +67,8 @@ export default function TransformCTA() {
                   <Award className="w-5 h-5 text-sky-600" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-slate-900">100% Satisfaction</h4>
-                  <p className="text-xs text-slate-500 mt-0.5">Free re-clean guarantee if any spot doesn't sparkle.</p>
+                  <h4 className="text-sm font-bold text-slate-900">{b.props[1].title}</h4>
+                  <p className="text-xs text-slate-500 mt-0.5">{b.props[1].text}</p>
                 </div>
               </div>
             </div>
@@ -74,11 +77,11 @@ export default function TransformCTA() {
             <div className="p-6 rounded-3xl glass-panel border border-slate-200 space-y-4">
               <div className="flex items-center gap-4 text-slate-600">
                 <MapPin className="w-5 h-5 text-sky-600 shrink-0" />
-                <span className="text-sm">King Fahd Road, Al Olaya, Riyadh 12211, Saudi Arabia</span>
+                <span className="text-sm">{b.address}</span>
               </div>
               <div className="flex items-center gap-4 text-slate-600">
                 <Phone className="w-5 h-5 text-sky-600 shrink-0" />
-                <span className="text-sm">+966 50 123 4567 / +966 11 800 9000</span>
+                <span className="text-sm" dir="ltr">+966 50 123 4567 / +966 11 800 9000</span>
               </div>
               <div className="flex items-center gap-4 text-slate-600">
                 <Mail className="w-5 h-5 text-sky-600 shrink-0" />
@@ -95,15 +98,19 @@ export default function TransformCTA() {
                   <div className="w-16 h-16 rounded-full bg-sky-500/15 border border-sky-500/30 text-sky-700 flex items-center justify-center mx-auto">
                     <CheckCircle2 className="w-8 h-8" />
                   </div>
-                  <h3 className="text-2xl font-bold text-slate-900">Booking Request Received!</h3>
+                  <h3 className="text-2xl font-bold text-slate-900">{b.doneTitle}</h3>
                   <p className="text-sm text-slate-600 max-w-sm mx-auto">
-                    Thank you, <span className="text-sky-600 font-bold">{formData.name}</span>. Our Riyadh dispatch team will call you at <span className="text-slate-900">{formData.phone}</span> within 15 minutes.
+                    {b.done[0]}
+                    <span className="text-sky-600 font-bold">{formData.name}</span>
+                    {b.done[1]}
+                    <span className="text-slate-900" dir="ltr">{formData.phone}</span>
+                    {b.done[2]}
                   </p>
                   <button
                     onClick={() => setSubmitted(false)}
                     className="mt-4 px-6 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-900 transition-colors"
                   >
-                    Submit Another Request
+                    {b.again}
                   </button>
                 </div>
               ) : (
@@ -111,20 +118,20 @@ export default function TransformCTA() {
                   <div>
                     <h3 className="text-2xl font-bold text-slate-900 flex items-center gap-2.5">
                       <BrandMark size={30} />
-                      Book FreshSpaces Cleaning
+                      {b.formTitle}
                     </h3>
-                    <p className="text-xs text-slate-500 mt-1">Get an instant quote and priority dispatch date.</p>
+                    <p className="text-xs text-slate-500 mt-1">{b.formIntro}</p>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">
-                        Your Name
+                        {b.name}
                       </label>
                       <input
                         type="text"
                         required
-                        placeholder="e.g. Osama Tillo"
+                        placeholder={b.namePlaceholder}
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                         className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:border-sky-400 transition-colors"
@@ -133,10 +140,11 @@ export default function TransformCTA() {
 
                     <div>
                       <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">
-                        Mobile Number
+                        {b.phone}
                       </label>
                       <input
                         type="tel"
+                        dir="ltr"
                         required
                         placeholder="+966 5X XXX XXXX"
                         value={formData.phone}
@@ -149,48 +157,46 @@ export default function TransformCTA() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">
-                        Riyadh District
+                        {b.district}
                       </label>
                       <select
                         value={formData.district}
                         onChange={(e) => setFormData({ ...formData, district: e.target.value })}
                         className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:border-sky-400 transition-colors"
                       >
-                        <option value="Al Malqa, Riyadh">Al Malqa, Riyadh</option>
-                        <option value="Al Nakheel, Riyadh">Al Nakheel, Riyadh</option>
-                        <option value="Hittin, Riyadh">Hittin, Riyadh</option>
-                        <option value="Al Olaya, Riyadh">Al Olaya, Riyadh</option>
-                        <option value="Al Yasmin, Riyadh">Al Yasmin, Riyadh</option>
-                        <option value="Other District">Other Riyadh Location</option>
+                        {b.districts.map((d) => (
+                          <option key={d} value={d}>
+                            {d}
+                          </option>
+                        ))}
                       </select>
                     </div>
 
                     <div>
                       <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">
-                        Service Type
+                        {b.service}
                       </label>
                       <select
                         value={formData.service}
                         onChange={(e) => setFormData({ ...formData, service: e.target.value })}
                         className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:border-sky-400 transition-colors"
                       >
-                        <option value="Villa Deep Cleaning">Villa Deep Cleaning</option>
-                        <option value="Post-Construction Restoration">Post-Construction Restoration</option>
-                        <option value="Upholstery & Carpet Steam Care">Upholstery & Carpet Steam Care</option>
-                        <option value="Marble & Stone Floor Polishing">Marble & Stone Floor Polishing</option>
-                        <option value="Facade & Window Cleaning">Facade & Window Cleaning</option>
-                        <option value="Disinfection & Sanitization">Disinfection & Sanitization</option>
+                        {t.services.items.map((sv) => (
+                          <option key={sv.title} value={sv.title}>
+                            {sv.title}
+                          </option>
+                        ))}
                       </select>
                     </div>
                   </div>
 
                   <div>
                     <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">
-                      Special Requests (Optional)
+                      {b.notes}
                     </label>
                     <textarea
                       rows={3}
-                      placeholder="Specify size of property, number of bedrooms, or specific requirements..."
+                      placeholder={b.notesPlaceholder}
                       value={formData.notes}
                       onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                       className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:border-sky-400 transition-colors resize-none"
@@ -201,8 +207,8 @@ export default function TransformCTA() {
                     type="submit"
                     className="w-full py-4 rounded-xl bg-sky-900 text-white font-bold uppercase tracking-wider text-xs transition-colors hover:bg-sky-700 active:scale-[0.99] flex items-center justify-center gap-2"
                   >
-                    <Send className="w-4 h-4" />
-                    Confirm Cleaning Booking
+                    <Send className="w-4 h-4 rtl:-scale-x-100" />
+                    {b.submit}
                   </button>
                 </form>
               )}

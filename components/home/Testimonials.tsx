@@ -2,69 +2,22 @@
 
 import React, { useEffect, useState } from 'react';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
-import { inter } from './fonts';
 import { useInView, useOnScreen } from './hooks';
-
-type Review = { name: string; photo: string; rating: number; place: string; service: string; quote: string; shape: string };
+import { useContent } from '../ContentProvider';
+import { fill } from '@/content/types';
 
 // PLACEHOLDER reviews, ratings and AI-generated portraits for the demo: replace with real, verifiable
 // customer reviews (with their permission for any photo) and the real rating / count before going live.
-const REVIEWS: Review[] = [
-  {
-    name: 'Noura A.',
-    photo: '/images/reviews/noura.webp',
-    rating: 5,
-    place: 'Villa · Hittin',
-    service: 'Villa deep clean',
-    quote: 'They gave us back the house we moved into. Every corner, every grout line, even the majlis carpets look new again.',
-    shape: '58% 42% 55% 45% / 46% 56% 44% 54%',
-  },
-  {
-    name: 'Faisal M.',
-    photo: '/images/reviews/faisal.webp',
-    rating: 5,
-    place: 'Apartment · Al Olaya',
-    service: 'Move-out clean',
-    quote: 'Booked at nine, the team was at my door before eleven. My landlord asked who I’d hired and kept the number.',
-    shape: '44% 56% 40% 60% / 58% 44% 56% 42%',
-  },
-  {
-    name: 'Sarah K.',
-    photo: '/images/reviews/sarah.webp',
-    rating: 5,
-    place: 'Villa · Al Malqa',
-    service: 'Post-construction',
-    quote: 'After six months of renovation dust I had honestly given up. Two days later the whole villa was spotless, and quiet.',
-    shape: '62% 38% 48% 52% / 42% 58% 42% 58%',
-  },
-  {
-    name: 'Abdullah R.',
-    photo: '/images/reviews/abdullah.webp',
-    rating: 4,
-    place: 'Office · King Fahd Road',
-    service: 'Weekly office care',
-    quote: 'Our office has never felt this fresh. Discreet, always on time, and the same trusted crew every single week.',
-    shape: '50% 50% 62% 38% / 55% 45% 55% 45%',
-  },
-  {
-    name: 'Lina H.',
-    photo: '/images/reviews/lina.webp',
-    rating: 5,
-    place: 'Villa · Al Yasmin',
-    service: 'Marble & upholstery',
-    quote: 'The marble floors gleam like a hotel lobby. The sofa my kids live on? You would never know.',
-    shape: '40% 60% 52% 48% / 50% 40% 60% 50%',
-  },
+// Photos, ratings and pebble shapes, in the same order as the reviews in the content (content/*.ts).
+const REVIEW_MEDIA = [
+  { photo: '/images/reviews/noura.webp', rating: 5, shape: '58% 42% 55% 45% / 46% 56% 44% 54%' },
+  { photo: '/images/reviews/faisal.webp', rating: 5, shape: '44% 56% 40% 60% / 58% 44% 56% 42%' },
+  { photo: '/images/reviews/sarah.webp', rating: 5, shape: '62% 38% 48% 52% / 42% 58% 42% 58%' },
+  { photo: '/images/reviews/abdullah.webp', rating: 4, shape: '50% 50% 62% 38% / 55% 45% 55% 45%' },
+  { photo: '/images/reviews/lina.webp', rating: 5, shape: '40% 60% 52% 48% / 50% 40% 60% 50%' },
 ];
 
-const SNIPPETS = [
-  ['Like moving into a new villa.', 'Noura · Hittin'],
-  ['On time, every time.', 'Abdullah · Olaya'],
-  ['The majlis smells like the first day.', 'Reem · Al Narjis'],
-  ['Worth every riyal.', 'Faisal · Al Olaya'],
-  ['My mother noticed the windows first.', 'Omar · Al Rabwah'],
-  ['Spotless and genuinely kind people.', 'Sarah · Al Malqa'],
-];
+type Review = { name: string; place: string; service: string; quote: string } & (typeof REVIEW_MEDIA)[number];
 
 // reviewer selector (desktop): equal pebbles on a gentle, symmetric arch
 const CLUSTER = [
@@ -78,8 +31,9 @@ const CLUSTER = [
 const INTERVAL = 7000;
 
 function Stars({ rating = 5, className = '', size = 'h-3.5 w-3.5' }: { rating?: number; className?: string; size?: string }) {
+  const label = useContent().testimonials.starsAria;
   return (
-    <span className={`inline-flex gap-0.5 ${className}`} role="img" aria-label={`${rating} out of 5 stars`}>
+    <span className={`inline-flex gap-0.5 ${className}`} role="img" aria-label={fill(label, { n: rating })}>
       {Array.from({ length: 5 }).map((_, i) => (
         <svg key={i} viewBox="0 0 20 20" className={`${size} ${i < rating ? 'fill-amber-400' : 'fill-neutral-200'}`} aria-hidden>
           <path d="M10 1.6l2.5 5.4 5.9.7-4.4 4 1.2 5.8L10 14.6l-5.2 2.9 1.2-5.8-4.4-4 5.9-.7z" />
@@ -90,6 +44,11 @@ function Stars({ rating = 5, className = '', size = 'h-3.5 w-3.5' }: { rating?: 
 }
 
 export default function Testimonials() {
+  const content = useContent();
+  const tm = content.testimonials;
+  const rtl = content.dir === 'rtl';
+  const REVIEWS: Review[] = tm.reviews.map((rv, i) => ({ ...rv, ...REVIEW_MEDIA[i] }));
+  const [qOpen, qClose] = rtl ? ['\u00AB', '\u00BB'] : ['\u201C', '\u201D'];
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
   const [headRef, headIn] = useInView<HTMLDivElement>({ rootMargin: '0px 0px -20% 0px', threshold: 0 });
@@ -109,7 +68,7 @@ export default function Testimonials() {
     <button
       key={rv.name}
       onClick={() => setActive(i)}
-      aria-label={`Show review from ${rv.name}`}
+      aria-label={fill(tm.showReview, { name: rv.name })}
       aria-pressed={i === active}
       className={`group/av relative grid shrink-0 place-items-center outline-none transition-transform duration-500 focus-visible:scale-110 ${
         i === active ? 'scale-[1.12]' : 'hover:scale-105'
@@ -149,9 +108,9 @@ export default function Testimonials() {
   );
 
   return (
-    <section ref={sectionRef} id="reviews" className={`${inter.className} relative section-clip bg-white pt-8 md:pt-10`}>
+    <section ref={sectionRef} id="reviews" className="relative section-clip bg-white pt-8 md:pt-10">
       {/* a soft pebble behind the quote */}
-      <svg aria-hidden className="pointer-events-none absolute -left-[12%] top-4 h-[560px] w-[88%] overflow-visible md:top-6 md:h-[560px] md:w-[70%]" viewBox="0 0 900 640" preserveAspectRatio="none">
+      <svg aria-hidden className="pointer-events-none absolute -left-[12%] top-4 h-[560px] w-[88%] overflow-visible md:top-6 md:h-[560px] md:w-[70%] rtl:left-auto rtl:-right-[12%] rtl:-scale-x-100" viewBox="0 0 900 640" preserveAspectRatio="none">
         <path d="M118 96C214 18 392 -10 560 24c160 32 300 110 330 246 30 138-56 268-214 330-152 60-356 52-492-12C46 528-14 412 4 300 18 206 46 154 118 96Z" fill="#f6f4ef" />
         <path d="M118 96C214 18 392 -10 560 24c160 32 300 110 330 246 30 138-56 268-214 330-152 60-356 52-492-12C46 528-14 412 4 300 18 206 46 154 118 96Z" fill="none" stroke="#e3dccd" strokeWidth="1" vectorEffect="non-scaling-stroke" />
       </svg>
@@ -160,24 +119,24 @@ export default function Testimonials() {
         <div ref={headRef} className="grid grid-cols-1 gap-14 md:min-h-[545px] md:grid-cols-12 md:gap-8">
           {/* the quote */}
           <div
-            className="relative md:col-span-7 md:-ml-6 md:pt-14"
+            className="relative md:col-span-7 md:-ms-6 md:pt-14"
             onMouseEnter={() => setPaused(true)}
             onMouseLeave={() => setPaused(false)}
             onFocusCapture={() => setPaused(true)}
             onBlurCapture={() => setPaused(false)}
           >
             <p className="reveal text-[10px] font-medium uppercase tracking-[0.32em] text-neutral-500 md:text-[11px]" data-in={headIn}>
-              Kind words
+              {tm.eyebrow}
             </p>
             <figure className="relative mt-14 min-h-[260px] md:mt-[5.5rem] md:min-h-[300px]" aria-live="polite">
               <span
                 aria-hidden
-                className={`pointer-events-none absolute -left-1 font-[300] -top-[72px] select-none text-[150px] leading-none text-sky-200 md:-left-5 md:-top-[110px] md:text-[220px]`}
+                className={`pointer-events-none absolute -start-1 font-[300] -top-[72px] select-none text-[150px] leading-none text-sky-200 md:-start-5 md:-top-[110px] md:text-[220px]`}
               >
-                “
+                {tm.quoteMark}
               </span>
               <blockquote key={active} className="tm-in">
-                <p className={`text-[1.55rem] font-[300] leading-[1.28] tracking-[-0.02em] text-neutral-900 sm:text-[2rem] md:text-[clamp(2.1rem,2.9vw,2.85rem)]`}>
+                <p className={`text-[1.55rem] font-[300] leading-[1.28] tracking-[-0.02em] text-neutral-900 sm:text-[2rem] md:text-[clamp(2.1rem,2.9vw,2.85rem)] rtl:leading-[1.6]`}>
                   {r.quote}
                 </p>
               </blockquote>
@@ -203,13 +162,13 @@ export default function Testimonials() {
           </div>
 
           {/* the rating and the reviewers */}
-          <div className="md:col-span-5 md:self-center md:pl-6">
+          <div className="md:col-span-5 md:self-center md:ps-6">
             <div className="reveal flex items-center gap-6" data-in={headIn} style={{ transitionDelay: '120ms' }}>
               <p className="text-[64px] font-[200] leading-none tracking-[-0.04em] text-neutral-900 md:text-[92px]">4.9</p>
-              <div className="border-l border-neutral-200 pl-6">
+              <div className="border-s border-neutral-200 ps-6">
                 <Stars size="h-[18px] w-[18px] md:h-5 md:w-5" className="gap-1" />
-                <p className="mt-3 text-[15px] font-medium leading-tight text-neutral-900 md:text-[17px]">out of 5</p>
-                <p className="mt-1 whitespace-nowrap text-[13px] leading-tight text-neutral-500 md:text-[14px]">from 1,200+ homes in Riyadh</p>
+                <p className="mt-3 text-[15px] font-medium leading-tight text-neutral-900 md:text-[17px]">{tm.outOf}</p>
+                <p className="mt-1 whitespace-nowrap text-[13px] leading-tight text-neutral-500 md:text-[14px]">{tm.from}</p>
               </div>
             </div>
 
@@ -218,9 +177,9 @@ export default function Testimonials() {
               {REVIEWS.map((rv, i) => avatar(rv, i, 52))}
             </div>
             {/* desktop: a loose cluster of pebbles */}
-            <div className="relative ml-10 mt-10 hidden h-[96px] w-[400px] md:block">
+            <div className="relative ms-10 mt-10 hidden h-[96px] w-[400px] md:block">
               {REVIEWS.map((rv, i) => (
-                <div key={rv.name} className="absolute" style={{ left: CLUSTER[i].x, top: CLUSTER[i].y }}>
+                <div key={rv.name} className="absolute" style={{ insetInlineStart: CLUSTER[i].x, top: CLUSTER[i].y }}>
                   {avatar(rv, i, CLUSTER[i].s)}
                 </div>
               ))}
@@ -229,19 +188,19 @@ export default function Testimonials() {
             <div className="mt-6 flex items-center gap-3">
               <button
                 onClick={() => go(-1)}
-                aria-label="Previous review"
+                aria-label={tm.prev}
                 className="grid h-11 w-11 place-items-center rounded-full border border-neutral-300 text-neutral-700 transition-colors hover:border-neutral-900 hover:bg-neutral-900 hover:text-white"
               >
-                <ArrowLeft className="h-4 w-4" />
+                <ArrowLeft className="h-4 w-4 rtl:-scale-x-100" />
               </button>
               <button
                 onClick={() => go(1)}
-                aria-label="Next review"
+                aria-label={tm.next}
                 className="grid h-11 w-11 place-items-center rounded-full border border-neutral-300 text-neutral-700 transition-colors hover:border-neutral-900 hover:bg-neutral-900 hover:text-white"
               >
-                <ArrowRight className="h-4 w-4" />
+                <ArrowRight className="h-4 w-4 rtl:-scale-x-100" />
               </button>
-              <span className={`ml-2 text-[14px] tabular-nums text-neutral-400`}>
+              <span dir="ltr" className={`ms-2 text-[14px] tabular-nums text-neutral-400`}>
                 <span className="text-neutral-900">0{active + 1}</span> / 0{REVIEWS.length}
               </span>
             </div>
@@ -253,14 +212,18 @@ export default function Testimonials() {
       <div className="group relative mt-36 border-y border-[#ece7dd] bg-[#fbfaf7] py-5 md:mt-16">
         <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-[#fbfaf7] to-transparent md:w-40" />
         <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-[#fbfaf7] to-transparent md:w-40" />
-        <div className="tm-marquee flex w-max group-hover:[animation-play-state:paused]">
+        <div dir="ltr" className="tm-marquee flex w-max group-hover:[animation-play-state:paused]">
           {[0, 1].map((copy) => (
             <ul key={copy} className="flex shrink-0 items-center" aria-hidden={copy === 1}>
-              {SNIPPETS.map(([q, who]) => (
-                <li key={q} className="flex items-center gap-4 px-8 md:px-10">
-                  <span className={`whitespace-nowrap text-[15px] font-[300] text-neutral-700 md:text-[17px]`}>“{q}”</span>
+              {tm.snippets.map(([q, who]) => (
+                <li key={q} dir={content.dir} className="flex items-center gap-4 px-8 md:px-10">
+                  <span className={`whitespace-nowrap text-[15px] font-[300] text-neutral-700 md:text-[17px]`}>
+                    {qOpen}
+                    {q}
+                    {qClose}
+                  </span>
                   <span className="whitespace-nowrap text-[10px] uppercase tracking-[0.2em] text-neutral-400">{who}</span>
-                  <span aria-hidden className="ml-6 h-1.5 w-1.5 shrink-0 rounded-full bg-sky-400 md:ml-8" />
+                  <span aria-hidden className="ms-6 h-1.5 w-1.5 shrink-0 rounded-full bg-sky-400 md:ms-8" />
                 </li>
               ))}
             </ul>

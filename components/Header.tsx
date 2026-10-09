@@ -3,24 +3,51 @@
 import React, { useState, useEffect } from 'react';
 import { PhoneCall, Menu, X, MapPin, ShieldCheck } from 'lucide-react';
 import BrandMark from './BrandMark';
+import { useContent } from './ContentProvider';
+import type { SiteContent } from '@/content/types';
 
 // Header links, in the order the sections appear on the homepage
-const NAV = [
-  { id: 'services', label: 'Services' },
-  { id: 'results', label: 'Before & After' },
-  { id: 'how-it-works', label: 'How It Works' },
-  { id: 'reviews', label: 'Reviews' },
-  { id: 'contact', label: 'Contact' },
+const NAV_IDS: [string, keyof SiteContent['nav']][] = [
+  ['services', 'services'],
+  ['results', 'results'],
+  ['how-it-works', 'howItWorks'],
+  ['reviews', 'reviews'],
+  ['contact', 'contact'],
 ];
 
+/** The other language, at the same place on the page (keeps the #section). */
+function LangLink({ className, onClick }: { className: string; onClick?: () => void }) {
+  const t = useContent();
+  return (
+    <a
+      href={t.lang.href}
+      hrefLang={t.locale === 'ar' ? 'en' : 'ar'}
+      lang={t.locale === 'ar' ? 'en' : 'ar'}
+      aria-label={t.lang.aria}
+      onClick={(e) => {
+        onClick?.();
+        if (window.location.hash) {
+          e.preventDefault();
+          window.location.href = t.lang.href + window.location.hash;
+        }
+      }}
+      className={className}
+    >
+      {t.lang.label}
+    </a>
+  );
+}
+
 export default function Header() {
+  const t = useContent();
+  const NAV = NAV_IDS.map(([id, key]) => ({ id, label: t.nav[key] }));
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [current, setCurrent] = useState<string | null>(null);
 
   // highlight the section that is in the middle of the screen
   useEffect(() => {
-    const els = NAV.map((n) => document.getElementById(n.id)).filter((e): e is HTMLElement => !!e);
+    const els = NAV_IDS.map(([id]) => document.getElementById(id)).filter((e): e is HTMLElement => !!e);
     const io = new IntersectionObserver(
       (entries) => {
         for (const e of entries) if (e.isIntersecting) setCurrent(e.target.id);
@@ -79,30 +106,30 @@ export default function Header() {
                   light ? 'bg-white/10 text-white border-white/30' : 'bg-sky-500/10 text-sky-600 border-sky-500/20'
                 }`}
               >
-                Riyadh
+                {t.header.city}
               </span>
             </div>
-            <div className={`flex items-center gap-1.5 text-[11px] font-medium ${fade} ${light ? 'text-white/75' : 'text-slate-500'}`}>
+            <div className={`flex items-center gap-1.5 whitespace-nowrap text-[11px] font-medium ${fade} ${light ? 'text-white/75' : 'text-slate-500'}`}>
               <MapPin className={`w-3 h-3 ${fade} ${light ? 'text-sky-300' : 'text-sky-600'}`} />
-              <span>Riyadh, Saudi Arabia</span>
+              <span>{t.header.tagline}</span>
             </div>
           </div>
         </a>
 
         {/* Desktop Navigation: one link per homepage section, the one in view highlighted */}
-        <nav className={`hidden lg:flex items-center gap-7 text-sm font-medium ${fade} ${light ? 'text-white/85' : 'text-slate-600'}`}>
+        <nav className={`hidden lg:flex items-center gap-5 xl:gap-7 text-sm font-medium ${fade} ${light ? 'text-white/85' : 'text-slate-600'}`}>
           {NAV.map((item) => (
             <a
               key={item.id}
               href={`#${item.id}`}
               aria-current={current === item.id ? 'true' : undefined}
-              className={`relative py-1 transition-colors ${light ? 'hover:text-white' : 'hover:text-sky-600'} ${
+              className={`relative whitespace-nowrap py-1 transition-colors ${light ? 'hover:text-white' : 'hover:text-sky-600'} ${
                 current === item.id ? (light ? 'text-white' : 'text-slate-900') : ''
               }`}
             >
               {item.label}
               <span
-                className={`absolute -bottom-0.5 left-0 h-[2px] w-full origin-left rounded-full transition-transform duration-500 ${light ? 'bg-white' : 'bg-sky-600'} ${
+                className={`absolute -bottom-0.5 left-0 h-[2px] w-full origin-left rtl:origin-right rounded-full transition-transform duration-500 ${light ? 'bg-white' : 'bg-sky-600'} ${
                   current === item.id ? 'scale-x-100' : 'scale-x-0'
                 }`}
               />
@@ -112,26 +139,19 @@ export default function Header() {
 
         {/* Right CTA */}
         <div className="hidden sm:flex items-center gap-4">
-          <a
-            href="tel:+966500000000"
-            className={`flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-lg border ${fade} ${
-              light
-                ? 'text-white border-white/30 bg-white/10 hover:bg-white/20'
-                : 'text-slate-600 hover:text-slate-900 border-slate-200 hover:border-slate-300 bg-slate-50'
+          <LangLink
+            className={`whitespace-nowrap text-[13px] font-semibold px-3 py-2 rounded-lg ${fade} ${
+              light ? 'text-white hover:bg-white/10' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
-          >
-            <PhoneCall className={`w-3.5 h-3.5 ${fade} ${light ? 'text-white' : 'text-sky-600'}`} />
-            <span>+966 50 123 4567</span>
-          </a>
-
+          />
           <a
             href="#contact"
-            className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs font-bold uppercase tracking-wider ${fade} focus:outline-none focus:ring-2 focus:ring-sky-400 ${
+            className={`flex items-center gap-2 whitespace-nowrap rounded-xl px-5 py-2.5 text-xs font-bold uppercase tracking-wider ${fade} focus:outline-none focus:ring-2 focus:ring-sky-400 ${
               light ? 'bg-white text-sky-900 hover:bg-sky-50' : 'bg-sky-900 text-white hover:bg-sky-700'
             }`}
           >
             <ShieldCheck className="h-4 w-4" />
-            Book Cleaning
+            {t.header.book}
           </a>
         </div>
 
@@ -139,7 +159,7 @@ export default function Header() {
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           className={`lg:hidden p-2 ${fade} ${light ? 'text-white' : 'text-slate-600 hover:text-slate-900'}`}
-          aria-label="Toggle menu"
+          aria-label={t.header.menu}
         >
           {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </button>
@@ -164,8 +184,12 @@ export default function Header() {
               className="flex items-center justify-center gap-2 text-sm font-semibold text-sky-600 py-2 rounded-lg bg-sky-500/10 border border-sky-500/20"
             >
               <PhoneCall className="w-4 h-4" />
-              Call +966 50 123 4567
+              {t.header.call} <span dir="ltr">+966 50 123 4567</span>
             </a>
+            <LangLink
+              onClick={() => setMobileMenuOpen(false)}
+              className="text-center text-sm font-semibold text-slate-700 py-2 rounded-lg border border-slate-200 hover:bg-slate-50"
+            />
           </div>
         </div>
       )}

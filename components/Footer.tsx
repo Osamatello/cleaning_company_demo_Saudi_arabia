@@ -3,18 +3,22 @@
 import React from 'react';
 import { MapPin, Phone, Mail, Globe, ShieldCheck, ArrowUp } from 'lucide-react';
 import BrandMark from './BrandMark';
-import { SERVICE_TITLES, SELECT_SERVICE } from './ServicesCarousel';
-
-// Same links, in the same order, as the header
-const NAV = [
-  { id: 'services', label: 'Services' },
-  { id: 'results', label: 'Before & After' },
-  { id: 'how-it-works', label: 'How It Works' },
-  { id: 'reviews', label: 'Reviews' },
-  { id: 'contact', label: 'Contact' },
-];
+import { SELECT_SERVICE } from './ServicesCarousel';
+import { useContent } from './ContentProvider';
 
 export default function Footer() {
+  const t = useContent();
+  const f = t.footer;
+  // Same links, in the same order, as the header
+  const NAV = [
+    { id: 'services', label: t.nav.services },
+    { id: 'results', label: t.nav.results },
+    { id: 'how-it-works', label: t.nav.howItWorks },
+    { id: 'reviews', label: t.nav.reviews },
+    { id: 'contact', label: t.nav.contact },
+  ];
+  // service names, the same as the cards (clicking one brings that card to the front)
+  const SERVICE_TITLES = t.services.items.map((s) => s.title);
   return (
     <footer className="border-t border-[#e4dfd4] bg-[#f2efe9] text-slate-600">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -26,7 +30,7 @@ export default function Footer() {
               Fresh<span className="text-sky-600">Spaces</span>
             </span>
             <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-sky-600">
-              Riyadh
+              {t.header.city}
             </span>
           </a>
 
@@ -42,7 +46,7 @@ export default function Footer() {
         {/* services (same names as the cards; clicking one brings it to the front) and the dispatch HQ */}
         <div className="grid grid-cols-1 gap-8 border-t border-[#e4dfd4] py-7 text-[13px] lg:grid-cols-12">
           <div className="lg:col-span-7">
-            <h4 className="mb-4 text-[13px] font-bold uppercase tracking-wider text-slate-900">Services</h4>
+            <h4 className="mb-4 text-[13px] font-bold uppercase tracking-wider text-slate-900">{f.servicesTitle}</h4>
             <ul className="grid grid-cols-1 gap-x-8 gap-y-2.5 sm:grid-cols-2">
               {SERVICE_TITLES.map((title, i) => (
                 <li key={title}>
@@ -59,16 +63,16 @@ export default function Footer() {
           </div>
 
           <div className="lg:col-span-5">
-            <h4 className="mb-4 text-[13px] font-bold uppercase tracking-wider text-slate-900">Riyadh Dispatch HQ</h4>
+            <h4 className="mb-4 text-[13px] font-bold uppercase tracking-wider text-slate-900">{f.hqTitle}</h4>
             <ul className="space-y-3">
               <li className="flex items-start gap-3">
                 <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-sky-600" />
-                King Fahd Road, Al Olaya District, Riyadh, Kingdom of Saudi Arabia
+                {f.address}
               </li>
               <li>
                 <a href="tel:+966501234567" className="flex items-center gap-3 text-slate-900 transition-colors hover:text-sky-600">
                   <Phone className="h-4 w-4 shrink-0 text-sky-600" />
-                  +966 50 123 4567
+                  <span dir="ltr">+966 50 123 4567</span>
                 </a>
               </li>
               <li>
@@ -80,7 +84,7 @@ export default function Footer() {
               <li>
                 <a href="tel:+966501234567" className="flex items-center gap-3 font-medium text-sky-700 transition-colors hover:text-sky-900">
                   <Globe className="h-4 w-4 shrink-0" />
-                  24/7 Emergency Cleaning Hotline
+                  {f.hotline}
                 </a>
               </li>
             </ul>
@@ -93,11 +97,11 @@ export default function Footer() {
             <span className="text-slate-300">·</span>
             <span className="flex items-center gap-1.5 text-sky-700">
               <ShieldCheck className="h-3.5 w-3.5" />
-              Licensed Saudi Commercial CR #101089201
+              {f.licensed}
             </span>
           </p>
           <a href="#" className="group inline-flex items-center gap-2 font-medium text-slate-600 transition-colors hover:text-sky-600">
-            Back to top
+            {f.backToTop}
             <ArrowUp className="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5" />
           </a>
         </div>

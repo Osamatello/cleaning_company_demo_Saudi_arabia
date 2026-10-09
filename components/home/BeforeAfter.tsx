@@ -1,18 +1,14 @@
 'use client';
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { inter } from './fonts';
 import { prefersReducedMotion, useInView } from './hooks';
-
-type Room = { id: string; label: string; place: string; time: string; team: string; work: string };
+import { useContent } from '../ContentProvider';
+import { fill } from '@/content/types';
 
 // Demo imagery: each "before" is its "after" photo with AI-generated clutter composited in, so the pair lines up
 // exactly. Replace with real before/after photos from jobs (same framing) when available.
-const ROOMS: Room[] = [
-  { id: 'living', label: 'Living room', place: 'Villa · Al Nakheel', time: '3h 20m', team: '2 specialists', work: 'Rug shampoo, upholstery steam, glass & skirting detail' },
-  { id: 'kitchen', label: 'Kitchen', place: 'Apartment · Al Olaya', time: '2h 45m', team: '2 specialists', work: 'Degreasing, appliance detail, counter & floor restoration' },
-  { id: 'bathroom', label: 'Bathroom', place: 'Villa · Hittin', time: '1h 50m', team: '1 specialist', work: 'Limescale & mildew removal, grout and glass polish' },
-];
+// Photo names, in the same order as the rooms in the content (their words are in content/*.ts).
+const ROOM_IDS = ['living', 'kitchen', 'bathroom'];
 
 const img = (room: string, kind: 'before' | 'after', w: number) => `/images/before-after/${room}-${kind}-${w}.webp`;
 const srcSet = (room: string, kind: 'before' | 'after') => `${img(room, kind, 900)} 900w, ${img(room, kind, 1600)} 1600w`;
@@ -22,6 +18,10 @@ const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
 const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 
 export default function BeforeAfter() {
+  const copy = useContent();
+  const ba = copy.beforeAfter;
+  const rtl = copy.dir === 'rtl';
+  const ROOMS = ba.rooms.map((r, i) => ({ ...r, id: ROOM_IDS[i] }));
   const [active, setActive] = useState(0);
   const [mounted, setMounted] = useState<Set<number>>(() => new Set([0]));
   const [interacted, setInteracted] = useState(false);
@@ -118,7 +118,8 @@ export default function BeforeAfter() {
         const r = 22;
         const nw = Math.round(clamp(w * 0.36, 300, 440));
         const nh = 96;
-        el.style.clipPath = `path('M${R} 0H${w - R}Q${w} 0 ${w} ${R}V${h - R}Q${w} ${h} ${w - R} ${h}H${nw + r}Q${nw} ${h} ${nw} ${h - r}V${h - nh + r}Q${nw} ${h - nh} ${nw - r} ${h - nh}H${r}Q0 ${h - nh} 0 ${h - nh - r}V${R}Q0 0 ${R} 0Z')`;
+        const X = (x: number) => (rtl ? w - x : x);
+        el.style.clipPath = `path('M${X(R)} 0H${X(w - R)}Q${X(w)} 0 ${X(w)} ${R}V${h - R}Q${X(w)} ${h} ${X(w - R)} ${h}H${X(nw + r)}Q${X(nw)} ${h} ${X(nw)} ${h - r}V${h - nh + r}Q${X(nw)} ${h - nh} ${X(nw - r)} ${h - nh}H${X(r)}Q${X(0)} ${h - nh} ${X(0)} ${h - nh - r}V${R}Q${X(0)} 0 ${X(R)} 0Z')`;
       } else {
         el.style.clipPath = '';
       }
@@ -126,7 +127,7 @@ export default function BeforeAfter() {
     });
     ro.observe(el);
     return () => ro.disconnect();
-  }, [draw]);
+  }, [draw, rtl]);
 
   // first time on screen: one squeegee pass across the room, then load the other rooms quietly
   useEffect(() => {
@@ -203,7 +204,7 @@ export default function BeforeAfter() {
     <section
       id="results"
       ref={sectionRef}
-      className={`${inter.className} relative -mt-[2px] section-clip bg-[#f6f4ef] pb-28 pt-20 md:pb-40 md:pt-28`}
+      className={`relative -mt-[2px] section-clip bg-[#f6f4ef] pb-28 pt-20 md:pb-40 md:pt-28`}
     >
       {/* the white of the Services section flows down into this one along a soft curve */}
       <svg aria-hidden className="absolute inset-x-0 -top-px h-[41px] w-full md:h-[65px]" viewBox="0 0 1440 110" preserveAspectRatio="none">
@@ -215,17 +216,17 @@ export default function BeforeAfter() {
         <div className="grid grid-cols-1 gap-8 md:grid-cols-12 md:items-end">
           <div className="md:col-span-7">
             <p className="reveal text-[10px] font-medium uppercase tracking-[0.32em] text-neutral-500 md:text-[11px]" data-in={inView}>
-              The difference
+              {ba.eyebrow}
             </p>
             <h2
               className="reveal mt-4 text-[2.7rem] leading-[1.02] tracking-[-0.02em] text-neutral-900 sm:text-6xl md:text-[clamp(3.4rem,5vw,5.25rem)]"
               data-in={inView}
               style={{ transitionDelay: '80ms' }}
             >
-              <span className="font-[350]">Same room.</span>
+              <span className="font-[350]">{ba.line1}</span>
               <br />
-              <span className="font-[300] italic text-neutral-400">two hours </span>
-              <span className="font-bold">apart.</span>
+              <span className="font-[300] italic text-neutral-400">{ba.soft}</span>
+              <span className="font-bold">{ba.bold}</span>
             </h2>
           </div>
           <p
@@ -233,12 +234,12 @@ export default function BeforeAfter() {
             data-in={inView}
             style={{ transitionDelay: '160ms' }}
           >
-            Drag across the room to wipe away the before. Every job ends with a walkthrough, and nothing is signed off until it looks like this.
+            {ba.intro}
           </p>
         </div>
 
         {/* room index: pills on mobile */}
-        <div className="-mx-5 mt-10 flex gap-2 overflow-x-auto px-5 pb-1 md:hidden" role="tablist" aria-label="Rooms">
+        <div className="-mx-5 mt-10 flex gap-2 overflow-x-auto px-5 pb-1 md:hidden" role="tablist" aria-label={ba.roomsLabel}>
           {ROOMS.map((r, i) => (
             <button
               key={r.id}
@@ -249,7 +250,7 @@ export default function BeforeAfter() {
                 i === active ? 'border-neutral-900 bg-neutral-900 text-white' : 'border-neutral-300 text-neutral-600'
               }`}
             >
-              <span className={`mr-1.5 text-[12px] font-medium tabular-nums opacity-60`}>0{i + 1}</span>
+              <span className={`me-1.5 text-[12px] font-medium tabular-nums opacity-60`}>0{i + 1}</span>
               {r.label}
             </button>
           ))}
@@ -263,6 +264,7 @@ export default function BeforeAfter() {
             <div aria-hidden className="pointer-events-none absolute inset-x-4 -bottom-20 top-1/3 -z-10 bg-[radial-gradient(closest-side,rgba(91,74,47,0.22),rgba(91,74,47,0.08)_62%,transparent)]" />
             <div
               ref={stageRef}
+              dir="ltr"
               className="ba-stage section-clip relative aspect-[4/3] w-full select-none rounded-[26px] bg-[#e9e4da] md:aspect-[16/10] md:rounded-none"
               style={{ touchAction: 'pan-y', cursor: 'ew-resize' }}
               onPointerDown={onPointerDown}
@@ -279,7 +281,7 @@ export default function BeforeAfter() {
                     src={img(r.id, 'before', 1600)}
                     srcSet={srcSet(r.id, 'before')}
                     sizes={SIZES}
-                    alt={i === active ? `${r.label} before cleaning` : ''}
+                    alt={i === active ? fill(ba.beforeAlt, { room: r.label }) : ''}
                     width={1600}
                     height={1000}
                     decoding="async"
@@ -298,7 +300,7 @@ export default function BeforeAfter() {
                       src={img(r.id, 'after', 1600)}
                       srcSet={srcSet(r.id, 'after')}
                       sizes={SIZES}
-                      alt={i === active ? `${r.label} after cleaning` : ''}
+                      alt={i === active ? fill(ba.afterAlt, { room: r.label }) : ''}
                       width={1600}
                       height={1000}
                       decoding="async"
@@ -317,13 +319,13 @@ export default function BeforeAfter() {
                 ref={afterTagRef}
                 className="pointer-events-none absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-neutral-900 shadow-sm md:left-6 md:top-6"
               >
-                After
+                {ba.after}
               </span>
               <span
                 ref={beforeTagRef}
                 className="pointer-events-none absolute right-4 top-4 rounded-full bg-neutral-900/70 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-white md:right-6 md:top-6"
               >
-                Before
+                {ba.before}
               </span>
 
               {/* handle */}
@@ -331,7 +333,7 @@ export default function BeforeAfter() {
                 ref={handleRef}
                 role="slider"
                 tabIndex={0}
-                aria-label="Before and after comparison: move left or right"
+                aria-label={ba.sliderAria}
                 aria-valuemin={0}
                 aria-valuemax={100}
                 aria-valuenow={8}
@@ -348,13 +350,13 @@ export default function BeforeAfter() {
                   // shown once the opening wipe has come to rest
                   style={{ transitionDelay: stageIn && !interacted ? '1.7s' : '0s' }}
                 >
-                  Drag to clean
+                  {ba.drag}
                 </span>
               </div>
             </div>
 
             {/* caption: sits in the frame's notch on desktop, below it on mobile */}
-            <div className="mt-5 md:absolute md:bottom-0 md:left-0 md:mt-0 md:w-[clamp(280px,32%,410px)] md:pr-6">
+            <div className="mt-5 md:absolute md:bottom-0 md:start-0 md:mt-0 md:w-[clamp(280px,32%,410px)] md:pe-6">
               <p className="text-[10px] font-medium uppercase tracking-[0.28em] text-neutral-500">{room.place}</p>
               <p className="mt-1.5 text-[15px] text-neutral-900">
                 <span className={`text-[20px] font-[350] leading-none tracking-[-0.01em]`}>{room.time}</span>
@@ -367,7 +369,7 @@ export default function BeforeAfter() {
 
           {/* room index: an editorial rail on desktop */}
           <div className="hidden md:col-span-2 md:block">
-            <ol className="sticky top-32 space-y-1 border-l border-neutral-300/70" role="tablist" aria-label="Rooms">
+            <ol className="sticky top-32 space-y-1 border-s border-neutral-300/70" role="tablist" aria-label={ba.roomsLabel}>
               {ROOMS.map((r, i) => (
                 <li key={r.id}>
                   <button
@@ -376,10 +378,10 @@ export default function BeforeAfter() {
                     onClick={() => choose(i)}
                     onMouseEnter={() => warm(i)}
                     onFocus={() => warm(i)}
-                    className="group relative block w-full py-3 pl-5 text-left"
+                    className="group relative block w-full py-3 ps-5 text-start"
                   >
                     <span
-                      className={`absolute -left-px top-3 bottom-3 w-[2px] bg-sky-600 ${i === active ? 'block' : 'hidden'}`}
+                      className={`absolute -start-px top-3 bottom-3 w-[2px] bg-sky-600 ${i === active ? 'block' : 'hidden'}`}
                     />
                     <span className={`block text-[12px] font-medium tabular-nums ${i === active ? 'text-sky-600' : 'text-neutral-400'}`}>0{i + 1}</span>
                     <span

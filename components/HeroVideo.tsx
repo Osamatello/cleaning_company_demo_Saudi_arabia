@@ -2,15 +2,10 @@
 
 import React, { useEffect, useRef } from 'react';
 import { BadgeCheck, Leaf, ShieldCheck, UserCheck } from 'lucide-react';
-import { inter } from './home/fonts';
+import { useContent } from './ContentProvider';
 
-// the guarantees along the foot of the hero
-const PROMISES = [
-  { icon: ShieldCheck, label: 'Licensed CR #101089201' },
-  { icon: UserCheck, label: 'Vetted & insured team' },
-  { icon: Leaf, label: 'Eco-certified products' },
-  { icon: BadgeCheck, label: '100% satisfaction guarantee' },
-];
+// icons for the guarantees along the foot of the hero (their wording is in the content)
+const PROMISE_ICONS = [ShieldCheck, UserCheck, Leaf, BadgeCheck];
 
 /**
  * Hero: a muted, looping film of the team at work (cleaning scenes only), with the headline over it.
@@ -18,6 +13,8 @@ const PROMISES = [
  * visitors who prefer reduced motion.
  */
 export default function HeroVideo() {
+  const t = useContent();
+  const h = t.hero;
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -36,7 +33,7 @@ export default function HeroVideo() {
   }, []);
 
   return (
-    <section id="hero" className={`${inter.className} relative h-[100svh] min-h-[620px] w-full overflow-hidden bg-neutral-900`}>
+    <section id="hero" className={`relative h-[100svh] min-h-[620px] w-full overflow-hidden bg-neutral-900`}>
       <video
         ref={videoRef}
         className="absolute inset-0 h-full w-full object-cover"
@@ -52,27 +49,27 @@ export default function HeroVideo() {
       </video>
 
       {/* shade for legibility: darker behind the copy, clear over the rest of the film */}
-      <div aria-hidden className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-black/5" />
+      <div aria-hidden className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-black/5 rtl:bg-gradient-to-l" />
       <div aria-hidden className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/45 to-transparent" />
 
       {/* the copy sits in the middle of the film, below the header (it takes the top ~88px) */}
       <div className="relative mx-auto flex h-full max-w-7xl flex-col justify-center px-5 pb-[112px] pt-[88px] sm:px-6 md:pb-[64px] lg:px-8">
         <p className="hero-in flex items-center gap-3 text-[10px] font-medium uppercase tracking-[0.32em] text-white/75 md:text-[11px]">
-          Home &amp; villa cleaning in Riyadh
+          {h.eyebrow}
         </p>
         <h1
           className="hero-in mt-5 text-[2.9rem] leading-[0.98] tracking-[-0.035em] text-white sm:text-[3.6rem] md:mt-6 md:text-[clamp(3.6rem,5.6vw,6.5rem)]"
           style={{ animationDelay: '90ms' }}
         >
-          <span className="font-[300]">From chaos</span>
+          <span className="font-[300]">{h.line1}</span>
           <br />
-          <span className="font-[250] italic text-white/70">to </span>
+          <span className="font-[250] italic text-white/70">{h.to}</span>
           <span className="relative inline-block font-bold">
-            spotless.
+            {h.word}
             {/* one swipe of the squeegee under the word, drawn once as the page opens */}
             <svg
               aria-hidden
-              className="hero-swipe pointer-events-none absolute -bottom-[0.14em] left-[0.02em] h-[0.24em] w-[92%] overflow-visible"
+              className="hero-swipe pointer-events-none absolute -bottom-[0.14em] start-[0.02em] h-[0.24em] w-[92%] overflow-visible rtl:-scale-x-100 rtl:-bottom-[0.05em]"
               viewBox="0 0 320 24"
               preserveAspectRatio="none"
             >
@@ -84,12 +81,11 @@ export default function HeroVideo() {
           className="hero-in mt-5 max-w-[23rem] text-[15px] leading-relaxed text-white/85 md:mt-6 md:max-w-[28rem] md:text-[17px]"
           style={{ animationDelay: '180ms' }}
         >
-          Deep cleaning for villas and apartments across Riyadh: vetted specialists, eco-certified products and a
-          spotless result, guaranteed.
+          {h.description}
         </p>
         <div className="hero-in mt-7 flex flex-wrap items-center gap-x-4 gap-y-2 text-[12px] font-medium text-white/80 md:text-[13px]" style={{ animationDelay: '300ms' }}>
           <span className="flex items-center gap-2">
-            <span className="flex gap-0.5" role="img" aria-label="4.9 out of 5 stars">
+            <span className="flex gap-0.5" role="img" aria-label={h.ratingAria}>
               {Array.from({ length: 5 }).map((_, i) => (
                 <svg key={i} viewBox="0 0 20 20" className="h-4 w-4 fill-amber-400" aria-hidden>
                   <path d="M10 1.6l2.5 5.4 5.9.7-4.4 4 1.2 5.8L10 14.6l-5.2 2.9 1.2-5.8-4.4-4 5.9-.7z" />
@@ -99,21 +95,24 @@ export default function HeroVideo() {
             <span className="text-[14px] font-semibold text-white">4.9</span>
           </span>
           <span className="h-3 w-px bg-white/40" />
-          <span>1,200+ homes cleaned</span>
+          <span>{h.homes}</span>
           <span className="hidden h-3 w-px bg-white/40 sm:block" />
-          <span className="hidden sm:inline">Same-day service</span>
+          <span className="hidden sm:inline">{h.sameDay}</span>
         </div>
       </div>
 
       {/* guarantees, in a quiet bar along the bottom of the film */}
       <div className="absolute inset-x-0 bottom-0 border-t border-white/15 bg-black/25">
         <ul className="mx-auto grid max-w-7xl grid-cols-2 gap-x-4 gap-y-3 px-5 py-4 text-[11px] font-medium text-white/85 sm:px-6 md:flex md:items-center md:justify-between md:py-5 md:text-[13px] lg:px-8">
-          {PROMISES.map(({ icon: Icon, label }) => (
+          {h.promises.map((label, i) => {
+            const Icon = PROMISE_ICONS[i];
+            return (
             <li key={label} className="flex items-center gap-2.5">
               <Icon className="h-4 w-4 shrink-0 text-sky-300" strokeWidth={1.75} />
               {label}
             </li>
-          ))}
+            );
+          })}
         </ul>
       </div>
     </section>

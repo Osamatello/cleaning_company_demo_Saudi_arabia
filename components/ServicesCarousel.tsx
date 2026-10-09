@@ -2,76 +2,19 @@
 
 import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight, CheckCircle, ArrowRight } from 'lucide-react';
+import { useContent } from './ContentProvider';
+import { fill } from '@/content/types';
 
-interface ServiceItem {
-  id: number;
-  title: string;
-  category: string;
-  description: string;
-  badge: string;
-  image: string;
-  features: string[];
-}
-
-const services: ServiceItem[] = [
-  {
-    id: 1,
-    title: 'Villa Deep Cleaning',
-    category: 'Residential',
-    description: 'Comprehensive deep steam sanitation, kitchen degreasing, and detailed room scrubbing for luxury Riyadh villas.',
-    badge: 'Popular Choice',
-    image: '/images/services/villa-deep-cleaning.webp',
-    features: ['High-temp Steam Sanitization', 'Full Kitchen Degreasing', 'Balcony & Patio Power Wash']
-  },
-  {
-    id: 2,
-    title: 'Post-Construction Restoration',
-    category: 'Commercial & Residential',
-    description: 'Complete removal of plaster dust, grout film, paint splatters, and construction debris for new handovers.',
-    badge: 'Heavy Duty',
-    image: '/images/services/post-construction.webp',
-    features: ['Paint Splatter Removal', 'Industrial HEPA Dust Extraction', 'Window Track Scrubbing']
-  },
-  {
-    id: 3,
-    title: 'Upholstery & Carpet Steam Care',
-    category: 'Specialized',
-    description: 'Deep hot-water extraction destroying 99.9% of dust mites, deep-seated stains, and desert dust from sofas & rugs.',
-    badge: 'Allergen Free',
-    image: '/images/services/upholstery-carpet.webp',
-    features: ['Organic Stain Neutralizer', 'Fabric Fiber Protection', 'Rapid 2-Hour Dry Time']
-  },
-  {
-    id: 4,
-    title: 'Marble & Stone Floor Polishing',
-    category: 'Restoration',
-    description: 'Diamond pad honing, crystallization, and high-gloss sealing to restore mirror clarity on Saudi marble floors.',
-    badge: 'Mirror Finish',
-    image: '/images/services/marble-polishing.webp',
-    features: ['Diamond Disc Grinding', 'Anti-Slip Gloss Crystallization', 'Sealant Stain Guard']
-  },
-  {
-    id: 5,
-    title: 'Facade & Window Cleaning',
-    category: 'Exterior',
-    description: 'High-reach deionized pure water glass washing for spotless streak-free panoramic windows and building exteriors.',
-    badge: 'Streak-Free',
-    image: '/images/services/facade-windows.webp',
-    features: ['Deionized Pure Water', 'High-Reach Water Pole System', 'Solar Panel Cleaning']
-  },
-  {
-    id: 6,
-    title: 'Disinfection & Sanitization',
-    category: 'Health & Safety',
-    description: 'Hospital-grade electrostatic fogging and anti-viral misting for safe, germ-free homes, offices, and schools.',
-    badge: 'Certified Safe',
-    image: '/images/services/disinfection.webp',
-    features: ['Non-Toxic Eco Misting', 'Hospital-Grade Disinfectant', 'Safe for Children & Pets']
-  }
+// Card photos, in the same order as the services in the content (their words are in content/*.ts)
+const SERVICE_IMAGES = [
+  '/images/services/villa-deep-cleaning.webp',
+  '/images/services/post-construction.webp',
+  '/images/services/upholstery-carpet.webp',
+  '/images/services/marble-polishing.webp',
+  '/images/services/facade-windows.webp',
+  '/images/services/disinfection.webp',
 ];
 
-// Card titles, shared with the footer so its service links always match the cards
-export const SERVICE_TITLES = services.map((s) => s.title);
 // other parts of the page can bring a card to the front: dispatchEvent(new CustomEvent(SELECT_SERVICE, { detail: index }))
 export const SELECT_SERVICE = 'services:select';
 
@@ -117,6 +60,11 @@ function SlidePanel({ active, header, children }: { active: boolean; header: Rea
 const EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
 
 export default function ServicesCarousel() {
+  const t = useContent();
+  const copy = t.services;
+  const services = copy.items.map((item, i) => ({ ...item, id: i + 1, image: SERVICE_IMAGES[i] }));
+  // right to left, the track runs the other way: the next card waits on the left
+  const dirSign = t.dir === 'rtl' ? -1 : 1;
   const [activeIndex, setActiveIndex] = useState(0);
   const [isAutoSpin, setIsAutoSpin] = useState(true);
   const [step, setStep] = useState(stepFor(1440));
@@ -150,7 +98,7 @@ export default function ServicesCarousel() {
     drag.current = null;
     if (!d || d.id !== e.pointerId) return;
     const dx = e.clientX - d.x;
-    if (Math.abs(dx) > 50) (dx < 0 ? handleNext : handlePrev)();
+    if (Math.abs(dx) > 50) (dx * dirSign < 0 ? handleNext : handlePrev)();
   };
 
   // the track only advances by itself while it is on screen: moving it unseen would still cost frames
@@ -190,15 +138,15 @@ export default function ServicesCarousel() {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 md:mb-10">
           <div>
             <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-sky-600 mb-3">
-              <span>WHAT WE DO</span>
+              <span>{copy.eyebrow}</span>
             </div>
             <h2 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-slate-900 tracking-tight font-sans">
-              Services
+              {copy.title}
             </h2>
           </div>
 
           <p className="text-slate-500 text-sm sm:text-base max-w-md font-normal leading-relaxed">
-            30+ years of professional cleaning expertise tailored to luxury homes, villas, and corporate offices across every corner of Riyadh.
+            {copy.intro}
           </p>
         </div>
 
@@ -237,7 +185,7 @@ export default function ServicesCarousel() {
                 onClick={() => absOffset <= 2 && setActiveIndex(index)}
                 className="group/card absolute w-[290px] sm:w-[440px] cursor-pointer will-change-transform"
                 style={{
-                  transform: `translate3d(${offset * step}px, 0, 0) scale(${scale})`,
+                  transform: `translate3d(${offset * step * dirSign}px, 0, 0) scale(${scale})`,
                   opacity: absOffset > 2 ? 0 : 1,
                   transition: wrapped ? 'none' : `transform 900ms ${EASE}, opacity 600ms ${EASE}`,
                 }}
@@ -257,7 +205,7 @@ export default function ServicesCarousel() {
 
                   {/* index and badge */}
                   <div className="absolute inset-x-5 top-5 flex items-center justify-between text-white">
-                    <span className="text-[11px] font-medium tabular-nums tracking-[0.3em]">
+                    <span dir="ltr" className="text-[11px] font-medium tabular-nums tracking-[0.3em]">
                       {String(index + 1).padStart(2, '0')}
                       <span className="text-white/55"> / {String(count).padStart(2, '0')}</span>
                     </span>
@@ -291,9 +239,9 @@ export default function ServicesCarousel() {
                           href="#contact"
                           className="group/cta mt-4 flex items-center justify-between border-t border-slate-900/10 pt-4 text-[13px] font-medium text-slate-900"
                         >
-                          Book this service
+                          {copy.book}
                           <span className="grid h-10 w-10 place-items-center rounded-full bg-slate-900 text-white transition-all duration-500 group-hover/cta:bg-sky-600 group-hover/cta:rotate-[-35deg]">
-                            <ArrowRight className="h-4 w-4" />
+                            <ArrowRight className="h-4 w-4 rtl:-scale-x-100" />
                           </span>
                         </a>
                   </SlidePanel>
@@ -314,22 +262,22 @@ export default function ServicesCarousel() {
           <button
             onClick={handlePrev}
             className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-sky-500/20 hover:border-sky-500/40 transition-all active:scale-95"
-            aria-label="Previous Service"
+            aria-label={copy.prev}
           >
-            <ChevronLeft className="w-6 h-6" />
+            <ChevronLeft className="w-6 h-6 rtl:-scale-x-100" />
           </button>
 
           {/* Dots Indicator: the dots and the active pill only slide (transforms), so a change of card
               never relayouts or repaints anything */}
           <div className="relative h-[26px] w-[154px] rounded-full bg-slate-50 border border-slate-200 [contain:strict]">
-            <div className="absolute left-4 top-[8px] h-2 w-[120px]">
+            <div className="absolute left-4 top-[8px] h-2 w-[120px] rtl:-scale-x-100">
               {services.map((_, i) => (
                 <button
                   key={i}
                   onClick={() => setActiveIndex(i)}
                   className="absolute left-0 top-0 h-2 w-2 rounded-full bg-slate-300 transition-[transform,opacity] duration-500 hover:bg-slate-400"
                   style={{ transform: `translateX(${dotX(i, activeIndex)}px)`, opacity: i === activeIndex ? 0 : 1 }}
-                  aria-label={`Go to slide ${i + 1}`}
+                  aria-label={fill(copy.goTo, { n: i + 1 })}
                 />
               ))}
               {/* the active pill, which fills while the ring waits to turn */}
@@ -349,9 +297,9 @@ export default function ServicesCarousel() {
           <button
             onClick={handleNext}
             className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-sky-500/20 hover:border-sky-500/40 transition-all active:scale-95"
-            aria-label="Next Service"
+            aria-label={copy.next}
           >
-            <ChevronRight className="w-6 h-6" />
+            <ChevronRight className="w-6 h-6 rtl:-scale-x-100" />
           </button>
         </div>
       </div>

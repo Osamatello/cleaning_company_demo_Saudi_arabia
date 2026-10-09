@@ -3,35 +3,17 @@
 import React, { useEffect, useRef } from 'react';
 import { CalendarCheck2, KeyRound, type LucideIcon } from 'lucide-react';
 import BrandMark from '../BrandMark';
-import { inter } from './fonts';
 import { useInView, useScrollFrame } from './hooks';
+import { useContent } from '../ContentProvider';
 
-type Step = { title: string; text: string; points: string[]; icon: LucideIcon | 'logo' };
-
-const STEPS: Step[] = [
-  {
-    title: 'Book in two minutes',
-    text: 'Choose the service, your district and a time that suits you. You get a fixed price up front. No calls, no surprises.',
-    points: ['Same-day slots across Riyadh', 'Fixed, transparent pricing'],
-    icon: CalendarCheck2,
-  },
-  {
-    title: 'We arrive and transform',
-    text: 'A vetted, insured team arrives fully equipped: industrial steam, HEPA extraction and eco-certified products.',
-    points: ['Background-checked specialists', 'Safe for children and pets'],
-    icon: 'logo',
-  },
-  {
-    title: 'Walk into spotless',
-    text: 'We finish with a walkthrough together. If anything is less than perfect, we come back and re-clean it free within 24 hours.',
-    points: ['Room-by-room inspection', '100% satisfaction guarantee'],
-    icon: KeyRound,
-  },
-];
+// one icon per step, in the same order as the steps in the content (their words are in content/*.ts)
+const STEP_ICONS: (LucideIcon | 'logo')[] = [CalendarCheck2, 'logo', KeyRound];
 
 const SAMPLES = 180;
 
 export default function HowItWorks() {
+  const hw = useContent().howItWorks;
+  const STEPS = hw.steps.map((st, i) => ({ ...st, icon: STEP_ICONS[i] }));
   const [headRef, headIn] = useInView<HTMLDivElement>({ rootMargin: '0px 0px -20% 0px', threshold: 0 });
   const trackRef = useRef<SVGPathElement>(null);
   const flowRef = useRef<SVGPathElement>(null);
@@ -121,9 +103,9 @@ export default function HowItWorks() {
   }, [containerRef]);
 
   return (
-    <section id="how-it-works" className={`${inter.className} relative section-clip bg-gradient-to-b from-[#f6f4ef] via-[#faf8f5] to-white`}>
+    <section id="how-it-works" className={`relative section-clip bg-gradient-to-b from-[#f6f4ef] via-[#faf8f5] to-white`}>
       {/* faint contour rings, like ripples on water */}
-      <svg aria-hidden className="pointer-events-none absolute -right-64 top-10 h-[760px] w-[760px] text-[#e7e1d5]" viewBox="0 0 200 200" fill="none">
+      <svg aria-hidden className="pointer-events-none absolute -right-64 top-10 h-[760px] w-[760px] text-[#e7e1d5] rtl:-left-64 rtl:right-auto" viewBox="0 0 200 200" fill="none">
         {[96, 80, 64, 48].map((r) => (
           <circle key={r} cx="100" cy="100" r={r} stroke="currentColor" strokeWidth="0.35" />
         ))}
@@ -153,20 +135,20 @@ export default function HowItWorks() {
         <div ref={headRef} className="relative grid grid-cols-1 pt-20 md:grid-cols-12 md:pt-28">
           <div className="md:col-span-5 md:col-start-8">
             <p className="reveal text-[10px] font-medium uppercase tracking-[0.32em] text-neutral-500 md:text-[11px]" data-in={headIn}>
-              How it works
+              {hw.eyebrow}
             </p>
             <h2
               className="reveal mt-4 text-[2.7rem] leading-[1.02] tracking-[-0.02em] text-neutral-900 sm:text-6xl md:text-[clamp(3.2rem,4.6vw,4.9rem)]"
               data-in={headIn}
               style={{ transitionDelay: '80ms' }}
             >
-              <span className="font-[350]">Three steps.</span>
+              <span className="font-[350]">{hw.line1}</span>
               <br />
-              <span className="font-[300] italic text-neutral-400">zero </span>
-              <span className="font-bold">effort.</span>
+              <span className="font-[300] italic text-neutral-400">{hw.soft}</span>
+              <span className="font-bold">{hw.bold}</span>
             </h2>
             <p className="reveal mt-6 max-w-sm text-[15px] leading-relaxed text-neutral-500" data-in={headIn} style={{ transitionDelay: '160ms' }}>
-              Booking takes two minutes. Everything after that is on us.
+              {hw.intro}
             </p>
           </div>
         </div>
@@ -213,7 +195,7 @@ export default function HowItWorks() {
                     right ? 'md:order-1 md:col-start-4' : 'md:col-start-6'
                   }`}
                 >
-                  <p className="mb-1 text-[13px] font-medium tabular-nums tracking-[0.2em] text-sky-600 md:mb-2 md:text-[15px]">0{i + 1} <span className="text-neutral-400">/ 03</span></p>
+                  <p className="mb-1 text-[13px] font-medium tabular-nums tracking-[0.2em] text-sky-600 md:mb-2 md:text-[15px]"><span dir="ltr">0{i + 1} <span className="text-neutral-400">/ 03</span></span></p>
                   <h3 className="text-[1.6rem] font-semibold leading-tight tracking-[-0.01em] text-neutral-900 md:text-[2rem]">{step.title}</h3>
                   <p className="mt-3 max-w-md text-[15px] leading-relaxed text-neutral-500">{step.text}</p>
                   <ul className="mt-5 flex flex-wrap gap-x-6 gap-y-2">
