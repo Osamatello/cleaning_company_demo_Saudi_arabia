@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Sparkles, Phone, Mail, MapPin, Send, CheckCircle2, ShieldCheck, Clock, Award } from 'lucide-react';
+import { Phone, Mail, MapPin, Send, CheckCircle2, ShieldCheck, Clock, Award } from 'lucide-react';
+import BrandMark from './BrandMark';
 import confetti from 'canvas-confetti';
 
 export default function TransformCTA() {
@@ -33,7 +34,6 @@ export default function TransformCTA() {
           <div className="lg:col-span-6 space-y-8">
             <div>
               <p className="mb-5 flex items-center gap-3 text-[10px] font-medium uppercase tracking-[0.32em] text-neutral-500 md:text-[11px]">
-                <span className="h-px w-8 bg-sky-600" />
                 Riyadh premier cleaning specialists
               </p>
               <h2 className="text-[2.4rem] leading-[1.04] tracking-[-0.02em] text-slate-900 sm:text-5xl lg:text-[3rem]">
@@ -109,8 +109,8 @@ export default function TransformCTA() {
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-5">
                   <div>
-                    <h3 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-                      <Sparkles className="w-5 h-5 text-sky-600" />
+                    <h3 className="text-2xl font-bold text-slate-900 flex items-center gap-2.5">
+                      <BrandMark size={30} />
                       Book FreshSpaces Cleaning
                     </h3>
                     <p className="text-xs text-slate-500 mt-1">Get an instant quote and priority dispatch date.</p>

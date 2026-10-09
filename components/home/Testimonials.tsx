@@ -260,9 +260,7 @@ export default function Testimonials() {
                 <li key={q} className="flex items-center gap-4 px-8 md:px-10">
                   <span className={`whitespace-nowrap text-[15px] font-[300] text-neutral-700 md:text-[17px]`}>“{q}”</span>
                   <span className="whitespace-nowrap text-[10px] uppercase tracking-[0.2em] text-neutral-400">{who}</span>
-                  <svg viewBox="0 0 20 20" className="ml-6 h-3.5 w-3.5 text-sky-400 md:ml-8" aria-hidden>
-                    <path d="M10 0c.6 5.6 4.4 9.4 10 10-5.6.6-9.4 4.4-10 10-.6-5.6-4.4-9.4-10-10C5.6 9.4 9.4 5.6 10 0z" fill="currentColor" />
-                  </svg>
+                  <span aria-hidden className="ml-6 h-1.5 w-1.5 shrink-0 rounded-full bg-sky-400 md:ml-8" />
                 </li>
               ))}
             </ul>

@@ -1,7 +1,16 @@
 'use client';
 
 import React, { useEffect, useRef } from 'react';
+import { BadgeCheck, Leaf, ShieldCheck, UserCheck } from 'lucide-react';
 import { inter } from './home/fonts';
+
+// the guarantees along the foot of the hero
+const PROMISES = [
+  { icon: ShieldCheck, label: 'Licensed CR #101089201' },
+  { icon: UserCheck, label: 'Vetted & insured team' },
+  { icon: Leaf, label: 'Eco-certified products' },
+  { icon: BadgeCheck, label: '100% satisfaction guarantee' },
+];
 
 /**
  * Hero: a muted, looping film of the team at work (cleaning scenes only), with the headline over it.
@@ -47,9 +56,8 @@ export default function HeroVideo() {
       <div aria-hidden className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/45 to-transparent" />
 
       {/* the copy sits in the middle of the film, below the header (it takes the top ~88px) */}
-      <div className="relative mx-auto flex h-full max-w-7xl flex-col justify-center px-5 pt-[88px] sm:px-6 lg:px-8">
+      <div className="relative mx-auto flex h-full max-w-7xl flex-col justify-center px-5 pb-[112px] pt-[88px] sm:px-6 md:pb-[64px] lg:px-8">
         <p className="hero-in flex items-center gap-3 text-[10px] font-medium uppercase tracking-[0.32em] text-white/75 md:text-[11px]">
-          <span className="h-px w-8 bg-sky-400" />
           Home &amp; villa cleaning in Riyadh
         </p>
         <h1
@@ -59,7 +67,18 @@ export default function HeroVideo() {
           <span className="font-[300]">From chaos</span>
           <br />
           <span className="font-[250] italic text-white/70">to </span>
-          <span className="font-bold">spotless.</span>
+          <span className="relative inline-block font-bold">
+            spotless.
+            {/* one swipe of the squeegee under the word, drawn once as the page opens */}
+            <svg
+              aria-hidden
+              className="hero-swipe pointer-events-none absolute -bottom-[0.14em] left-[0.02em] h-[0.24em] w-[92%] overflow-visible"
+              viewBox="0 0 320 24"
+              preserveAspectRatio="none"
+            >
+              <path d="M4 17C80 9 190 5 316 8C196 11 86 16 8 22C4 22.5 2 18 4 17Z" fill="#38bdf8" />
+            </svg>
+          </span>
         </h1>
         <p
           className="hero-in mt-5 max-w-[23rem] text-[15px] leading-relaxed text-white/85 md:mt-6 md:max-w-[28rem] md:text-[17px]"
@@ -84,6 +103,18 @@ export default function HeroVideo() {
           <span className="hidden h-3 w-px bg-white/40 sm:block" />
           <span className="hidden sm:inline">Same-day service</span>
         </div>
+      </div>
+
+      {/* guarantees, in a quiet bar along the bottom of the film */}
+      <div className="absolute inset-x-0 bottom-0 border-t border-white/15 bg-black/25">
+        <ul className="mx-auto grid max-w-7xl grid-cols-2 gap-x-4 gap-y-3 px-5 py-4 text-[11px] font-medium text-white/85 sm:px-6 md:flex md:items-center md:justify-between md:py-5 md:text-[13px] lg:px-8">
+          {PROMISES.map(({ icon: Icon, label }) => (
+            <li key={label} className="flex items-center gap-2.5">
+              <Icon className="h-4 w-4 shrink-0 text-sky-300" strokeWidth={1.75} />
+              {label}
+            </li>
+          ))}
+        </ul>
       </div>
     </section>
   );

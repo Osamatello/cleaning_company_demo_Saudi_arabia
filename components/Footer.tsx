@@ -16,7 +16,7 @@ const NAV = [
 
 export default function Footer() {
   return (
-    <footer className="border-t border-slate-200 bg-white text-slate-500">
+    <footer className="border-t border-[#e4dfd4] bg-[#f2efe9] text-slate-600">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* brand + section links, mirroring the header */}
         <div className="flex flex-col gap-5 py-7 lg:flex-row lg:items-center lg:justify-between">
@@ -40,7 +40,7 @@ export default function Footer() {
         </div>
 
         {/* services (same names as the cards; clicking one brings it to the front) and the dispatch HQ */}
-        <div className="grid grid-cols-1 gap-8 border-t border-slate-200 py-7 text-[13px] lg:grid-cols-12">
+        <div className="grid grid-cols-1 gap-8 border-t border-[#e4dfd4] py-7 text-[13px] lg:grid-cols-12">
           <div className="lg:col-span-7">
             <h4 className="mb-4 text-[13px] font-bold uppercase tracking-wider text-slate-900">Services</h4>
             <ul className="grid grid-cols-1 gap-x-8 gap-y-2.5 sm:grid-cols-2">
@@ -87,7 +87,7 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="flex flex-col items-center justify-between gap-3 border-t border-slate-200 py-4 text-xs sm:flex-row">
+        <div className="flex flex-col items-center justify-between gap-3 border-t border-[#e4dfd4] py-4 text-xs sm:flex-row">
           <p className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
             <span>© {new Date().getFullYear()} FreshSpaces</span>
             <span className="text-slate-300">·</span>

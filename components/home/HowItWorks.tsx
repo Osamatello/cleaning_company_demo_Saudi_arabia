@@ -1,11 +1,12 @@
 'use client';
 
 import React, { useEffect, useRef } from 'react';
-import { CalendarCheck2, Sparkles, KeyRound, type LucideIcon } from 'lucide-react';
+import { CalendarCheck2, KeyRound, type LucideIcon } from 'lucide-react';
+import BrandMark from '../BrandMark';
 import { inter } from './fonts';
 import { useInView, useScrollFrame } from './hooks';
 
-type Step = { title: string; text: string; points: string[]; icon: LucideIcon };
+type Step = { title: string; text: string; points: string[]; icon: LucideIcon | 'logo' };
 
 const STEPS: Step[] = [
   {
@@ -18,7 +19,7 @@ const STEPS: Step[] = [
     title: 'We arrive and transform',
     text: 'A vetted, insured team arrives fully equipped: industrial steam, HEPA extraction and eco-certified products.',
     points: ['Background-checked specialists', 'Safe for children and pets'],
-    icon: Sparkles,
+    icon: 'logo',
   },
   {
     title: 'Walk into spotless',
@@ -195,7 +196,15 @@ export default function HowItWorks() {
                       className="hiw-blob absolute inset-0 border border-[#e2dccf] bg-white shadow-[0_20px_50px_-24px_rgba(15,23,42,0.25)] transition-all duration-700 group-data-[active=true]:border-transparent group-data-[active=true]:bg-sky-600 group-data-[active=true]:shadow-[0_20px_50px_-24px_rgba(15,23,42,0.35)]"
                       style={{ animationDelay: `${-i * 4}s` }}
                     />
-                    <Icon className="relative h-7 w-7 text-neutral-400 transition-colors duration-700 group-data-[active=true]:text-white md:h-10 md:w-10" strokeWidth={1.4} />
+                    {Icon === 'logo' ? (
+                      <>
+                        {/* the company mark: in colour on white, in white once the step fills with blue */}
+                        <BrandMark size={44} className="relative h-10 w-10 group-data-[active=true]:hidden md:h-[60px] md:w-[60px]" />
+                        <BrandMark size={44} variant="white" className="relative hidden h-10 w-10 group-data-[active=true]:block md:h-[60px] md:w-[60px]" />
+                      </>
+                    ) : (
+                      <Icon className="relative h-7 w-7 text-neutral-400 transition-colors duration-700 group-data-[active=true]:text-white md:h-10 md:w-10" strokeWidth={1.4} />
+                    )}
                   </div>
                 </div>
 

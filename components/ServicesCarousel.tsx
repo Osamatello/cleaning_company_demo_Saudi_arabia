@@ -190,7 +190,6 @@ export default function ServicesCarousel() {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 md:mb-10">
           <div>
             <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-sky-600 mb-3">
-              <span className="w-4 h-[2px] bg-sky-400"></span>
               <span>WHAT WE DO</span>
             </div>
             <h2 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-slate-900 tracking-tight font-sans">
