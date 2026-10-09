@@ -8,7 +8,8 @@ import { useContent } from './ContentProvider';
 const PROMISE_ICONS = [ShieldCheck, UserCheck, Leaf, BadgeCheck];
 
 /**
- * Hero: a muted, looping film of the team at work (cleaning scenes only), with the headline over it.
+ * Hero: a muted, looping film of the team at work (cleaning and maintenance, graded warm and soft to sit
+ * with the site's white, sand and blue), with the headline over it.
  * The poster frame shows at once; the video only plays while it is on screen, and not at all for
  * visitors who prefer reduced motion.
  */
@@ -37,7 +38,7 @@ export default function HeroVideo() {
       <video
         ref={videoRef}
         className="absolute inset-0 h-full w-full object-cover"
-        poster="/videos/hero-poster.webp"
+        poster="/videos/hero-film-poster.webp"
         autoPlay
         muted
         loop
@@ -45,7 +46,7 @@ export default function HeroVideo() {
         preload="auto"
         aria-hidden
       >
-        <source src="/videos/hero-cleaning.mp4" type="video/mp4" />
+        <source src="/videos/hero-film.mp4" type="video/mp4" />
       </video>
 
       {/* shade for legibility: darker behind the copy, clear over the rest of the film */}
