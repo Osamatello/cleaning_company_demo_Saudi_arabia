@@ -12,7 +12,7 @@ export const ar: SiteContent = {
     ogLocale: 'ar_SA',
   },
   lang: { label: 'English', href: '/', aria: 'عرض الموقع باللغة الإنجليزية' },
-  header: { tagline: 'الرياض، المملكة العربية السعودية', city: 'الرياض', book: 'احجز التنظيف', call: 'اتصل', menu: 'فتح القائمة' },
+  header: { tagline: 'الرياض، المملكة العربية السعودية', book: 'احجز التنظيف', call: 'اتصل', menu: 'فتح القائمة' },
   nav: { services: 'الخدمات', results: 'قبل وبعد', howItWorks: 'كيف نعمل', reviews: 'آراء العملاء', contact: 'تواصل معنا' },
   hero: {
     eyebrow: 'التنظيف والصيانة في الرياض',

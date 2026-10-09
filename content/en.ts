@@ -12,7 +12,7 @@ export const en: SiteContent = {
     ogLocale: 'en_SA',
   },
   lang: { label: 'العربية', href: '/ar', aria: 'View this site in Arabic' },
-  header: { tagline: 'Riyadh, Saudi Arabia', city: 'Riyadh', book: 'Book Cleaning', call: 'Call', menu: 'Toggle menu' },
+  header: { tagline: 'Riyadh, Saudi Arabia', book: 'Book Cleaning', call: 'Call', menu: 'Toggle menu' },
   nav: { services: 'Services', results: 'Before & After', howItWorks: 'How It Works', reviews: 'Reviews', contact: 'Contact' },
   hero: {
     eyebrow: 'Cleaning & maintenance in Riyadh',

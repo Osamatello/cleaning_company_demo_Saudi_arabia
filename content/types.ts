@@ -15,7 +15,7 @@ export type SiteContent = {
   dir: 'ltr' | 'rtl';
   meta: { title: string; description: string; shareTitle: string; shareAlt: string; ogLocale: string };
   lang: { label: string; href: string; aria: string };
-  header: { tagline: string; city: string; book: string; call: string; menu: string };
+  header: { tagline: string; book: string; call: string; menu: string };
   nav: { services: string; results: string; howItWorks: string; reviews: string; contact: string };
   hero: {
     eyebrow: string;

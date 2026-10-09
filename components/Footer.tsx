@@ -32,9 +32,6 @@ export default function Footer({ page = 'home' }: { page?: Page }) {
             <span className="text-lg font-extrabold tracking-tight text-slate-900">
               Fresh<span className="text-sky-600">Spaces</span>
             </span>
-            <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-sky-600">
-              {t.header.city}
-            </span>
           </a>
 
           <nav className="flex flex-wrap gap-x-6 gap-y-2 text-sm font-medium text-slate-600">
