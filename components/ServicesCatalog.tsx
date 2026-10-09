@@ -154,7 +154,7 @@ export default function ServicesCatalog() {
               >
                 <span className="font-[350]">{p.cta.line1}</span>
                 <br />
-                <span className="font-[300] italic text-[#a3957f]">{p.cta.soft}</span>
+                <span className="font-[350] italic text-[#7a6850]">{p.cta.soft}</span>
                 <span className="font-bold">{p.cta.bold}</span>
               </h2>
               <p
@@ -171,18 +171,19 @@ export default function ServicesCatalog() {
               >
                 <a
                   href={`${home}#contact`}
-                  className="group/cta inline-flex items-center gap-4 text-[16px] font-semibold text-neutral-900 transition-colors duration-300 hover:text-sky-700 md:text-[17px]"
+                  className="group/cta inline-flex items-center gap-4 text-[16px] font-semibold text-neutral-900 md:text-[17px]"
                 >
                   {p.cta.book}
-                  <span className="grid h-12 w-12 place-items-center rounded-full bg-sky-600 text-white transition-[transform,background-color] duration-500 group-hover/cta:translate-x-1 group-hover/cta:bg-sky-700 rtl:group-hover/cta:-translate-x-1">
+                  {/* sand circles with black icons, in the panel's own colours */}
+                  <span className="grid h-12 w-12 place-items-center rounded-full bg-[#ddd0bb] text-neutral-900 transition-[transform,background-color] duration-500 group-hover/cta:translate-x-1 group-hover/cta:bg-[#d2c3aa] rtl:group-hover/cta:-translate-x-1">
                     <ArrowRight className="h-5 w-5 rtl:-scale-x-100" />
                   </span>
                 </a>
                 <a
                   href="tel:+966501234567"
-                  className="group/call inline-flex items-center gap-4 text-[16px] font-semibold text-neutral-900 transition-colors duration-300 hover:text-sky-700 md:text-[17px]"
+                  className="group/call inline-flex items-center gap-4 text-[16px] font-semibold text-neutral-900 md:text-[17px]"
                 >
-                  <span className="grid h-12 w-12 place-items-center rounded-full border border-neutral-900/20 text-sky-700 transition-colors duration-300 group-hover/call:border-sky-600 group-hover/call:bg-white">
+                  <span className="grid h-12 w-12 place-items-center rounded-full bg-[#ddd0bb] text-neutral-900 transition-colors duration-300 group-hover/call:bg-[#d2c3aa]">
                     <Phone className="h-5 w-5" />
                   </span>
                   <span>
