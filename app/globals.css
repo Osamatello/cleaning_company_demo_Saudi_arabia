@@ -59,11 +59,10 @@
 /* 3D Perspective Container */
 
 /* --- Arabic (/ar, dir=rtl) ------------------------------------------------------------------ */
-/* IBM Plex Sans Arabic first: Inter's metric fallback is Arial, which has Arabic letters of its own
-   and would otherwise draw them; Plex also carries a matching Latin for numbers and the brand name */
+/* one family on Arabic pages: IBM Plex Sans Arabic, Latin included (numbers, the brand name) */
 :lang(ar) body,
 :lang(ar) .font-sans {
-  font-family: var(--font-arabic), var(--font-inter), system-ui, sans-serif;
+  font-family: var(--font-arabic), system-ui, sans-serif;
 }
 /* letter-spacing pulls Arabic letters apart and breaks how they join, so it is off everywhere;
    Arabic has no italics, so the soft words keep their lighter colour and weight instead */
@@ -108,7 +107,6 @@
 /* (only the animated elements are named, so toggling the flag restyles a handful of nodes rather
    than the whole section) */
 [data-offscreen] .hero-in,
-[data-offscreen] .svc-progress,
 [data-offscreen] .hiw-blob,
 [data-offscreen] .tm-in,
 [data-offscreen] .tm-ring,
@@ -169,12 +167,6 @@
 }
 .tm-marquee { animation: tm-marquee 60s linear infinite; }
 
-/* services: autoplay progress */
-@keyframes svc-progress {
-  from { transform: scaleX(0); }
-  to { transform: scaleX(1); }
-}
-.svc-progress { animation: svc-progress 4s linear forwards; }
 
 /* hero copy: a quick staggered entrance on load */
 @keyframes hero-in {

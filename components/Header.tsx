@@ -15,12 +15,16 @@ const NAV_IDS: [string, keyof SiteContent['nav']][] = [
   ['contact', 'contact'],
 ];
 
+/** The page the header sits on: the homepage, or the full services list */
+export type Page = 'home' | 'services';
+
 /** The other language, at the same place on the page (keeps the #section). */
-function LangLink({ className, onClick }: { className: string; onClick?: () => void }) {
+function LangLink({ className, onClick, page }: { className: string; onClick?: () => void; page: Page }) {
   const t = useContent();
+  const href = page === 'services' ? `${t.lang.href === '/' ? '' : t.lang.href}/services` : t.lang.href;
   return (
     <a
-      href={t.lang.href}
+      href={href}
       hrefLang={t.locale === 'ar' ? 'en' : 'ar'}
       lang={t.locale === 'ar' ? 'en' : 'ar'}
       aria-label={t.lang.aria}
@@ -28,7 +32,7 @@ function LangLink({ className, onClick }: { className: string; onClick?: () => v
         onClick?.();
         if (window.location.hash) {
           e.preventDefault();
-          window.location.href = t.lang.href + window.location.hash;
+          window.location.href = href + window.location.hash;
         }
       }}
       className={className}
@@ -38,15 +42,20 @@ function LangLink({ className, onClick }: { className: string; onClick?: () => v
   );
 }
 
-export default function Header() {
+export default function Header({ page = 'home' }: { page?: Page }) {
   const t = useContent();
-  const NAV = NAV_IDS.map(([id, key]) => ({ id, label: t.nav[key] }));
+  // Services opens the full services page (on that page it stays put); on the services page the other
+  // links lead back to the homepage sections
+  const home = page === 'home' ? '' : t.locale === 'ar' ? '/ar' : '/';
+  const servicesHref = page === 'services' ? '#cleaning' : t.locale === 'ar' ? '/ar/services' : '/services';
+  const NAV = NAV_IDS.map(([id, key]) => ({ id, label: t.nav[key], href: id === 'services' ? servicesHref : `${home}#${id}` }));
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [current, setCurrent] = useState<string | null>(null);
+  const [current, setCurrent] = useState<string | null>(page === 'services' ? 'services' : null);
 
   // highlight the section that is in the middle of the screen
   useEffect(() => {
+    if (page !== 'home') return;
     const els = NAV_IDS.map(([id]) => document.getElementById(id)).filter((e): e is HTMLElement => !!e);
     const io = new IntersectionObserver(
       (entries) => {
@@ -63,7 +72,7 @@ export default function Header() {
       io.disconnect();
       window.removeEventListener('scroll', top);
     };
-  }, []);
+  }, [page]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -74,7 +83,8 @@ export default function Header() {
   }, []);
 
   // over the hero film the bar is clear with white type; once the page scrolls it fades to white
-  const light = !scrolled && !mobileMenuOpen;
+  // (pages without the film start white)
+  const light = page === 'home' && !scrolled && !mobileMenuOpen;
   const fade = 'transition-colors duration-500';
 
   return (
@@ -94,19 +104,12 @@ export default function Header() {
       />
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
         {/* Brand Logo */}
-        <a href="#" className="flex items-center gap-3 group">
+        <a href={home || '#'} className="flex items-center gap-3 group">
           <BrandMark size={48} className="transition-transform duration-500 group-hover:-rotate-6 group-hover:scale-105" />
           <div>
             <div className="flex items-center gap-2">
               <span className={`text-xl font-extrabold tracking-tight font-sans ${fade} ${light ? 'text-white' : 'text-slate-900'}`}>
                 Fresh<span className={`${fade} ${light ? 'text-sky-300' : 'text-sky-600'}`}>Spaces</span>
-              </span>
-              <span
-                className={`px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider border rounded-full ${fade} ${
-                  light ? 'bg-white/10 text-white border-white/30' : 'bg-sky-500/10 text-sky-600 border-sky-500/20'
-                }`}
-              >
-                {t.header.city}
               </span>
             </div>
             <div className={`flex items-center gap-1.5 whitespace-nowrap text-[11px] font-medium ${fade} ${light ? 'text-white/75' : 'text-slate-500'}`}>
@@ -121,7 +124,7 @@ export default function Header() {
           {NAV.map((item) => (
             <a
               key={item.id}
-              href={`#${item.id}`}
+              href={item.href}
               aria-current={current === item.id ? 'true' : undefined}
               className={`relative whitespace-nowrap py-1 transition-colors ${light ? 'hover:text-white' : 'hover:text-sky-600'} ${
                 current === item.id ? (light ? 'text-white' : 'text-slate-900') : ''
@@ -140,14 +143,15 @@ export default function Header() {
         {/* Right CTA */}
         <div className="hidden sm:flex items-center gap-4">
           <LangLink
+            page={page}
             className={`whitespace-nowrap text-[13px] font-semibold px-3 py-2 rounded-lg ${fade} ${
               light ? 'text-white hover:bg-white/10' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
           />
           <a
-            href="#contact"
+            href={`${home}#contact`}
             className={`flex items-center gap-2 whitespace-nowrap rounded-xl px-5 py-2.5 text-xs font-bold uppercase tracking-wider ${fade} focus:outline-none focus:ring-2 focus:ring-sky-400 ${
-              light ? 'bg-white text-sky-900 hover:bg-sky-50' : 'bg-sky-900 text-white hover:bg-sky-700'
+              light ? 'bg-sky-600 text-white hover:bg-sky-500' : 'bg-sky-600 text-white hover:bg-sky-700'
             }`}
           >
             <ShieldCheck className="h-4 w-4" />
@@ -171,7 +175,7 @@ export default function Header() {
           {NAV.map((item) => (
             <a
               key={item.id}
-              href={`#${item.id}`}
+              href={item.href}
               onClick={() => setMobileMenuOpen(false)}
               className={`text-base font-medium hover:text-sky-600 py-1 ${current === item.id ? 'text-sky-600' : ''}`}
             >
@@ -187,6 +191,7 @@ export default function Header() {
               {t.header.call} <span dir="ltr">+966 50 123 4567</span>
             </a>
             <LangLink
+              page={page}
               onClick={() => setMobileMenuOpen(false)}
               className="text-center text-sm font-semibold text-slate-700 py-2 rounded-lg border border-slate-200 hover:bg-slate-50"
             />

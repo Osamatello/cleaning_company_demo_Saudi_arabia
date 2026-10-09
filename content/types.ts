@@ -4,7 +4,11 @@
 
 export type Locale = 'en' | 'ar';
 
-type Pair = { title: string; text: string };
+type Service = { title: string; description: string };
+/** one service type on the homepage: three cards and a link to the full list */
+export type ServiceGroup = { eyebrow: string; title: string; intro: string; cta: string; items: Service[] };
+/** a section heading in the site's voice: a plain line, then a soft word and a bold one */
+export type Heading = { eyebrow: string; line1: string; soft: string; bold: string; intro: string };
 
 export type SiteContent = {
   locale: Locale;
@@ -24,16 +28,16 @@ export type SiteContent = {
     sameDay: string;
     promises: [string, string, string, string];
   };
-  services: {
-    eyebrow: string;
-    title: string;
-    intro: string;
-    book: string;
-    prev: string;
-    next: string;
-    goTo: string;
-    items: { title: string; category: string; description: string; badge: string; features: [string, string, string] }[];
+  services: { cleaning: ServiceGroup; maintenance: ServiceGroup };
+  /** the full list at /services: each group's homepage three, then these */
+  servicesPage: Heading & {
+    meta: { title: string; description: string };
+    cleaningMore: Service[];
+    maintenanceMore: Service[];
+    cta: Heading & { book: string; call: string };
   };
+  about: Heading & { points: { label: string; title: string; text: string }[]; alts: [string, string, string] };
+  faq: Heading & { items: { q: string; a: string }[] };
   beforeAfter: {
     eyebrow: string;
     line1: string;
@@ -59,7 +63,6 @@ export type SiteContent = {
   };
   testimonials: {
     eyebrow: string;
-    outOf: string;
     from: string;
     quoteMark: string;
     showReview: string;
@@ -75,7 +78,11 @@ export type SiteContent = {
     soft: string;
     bold: string;
     intro: string;
-    props: [Pair, Pair];
+    /** the figures beside the form */
+    stats: { value: string; label: string }[];
+    contactTitle: string;
+    /** under the submit button */
+    reassure: string;
     address: string;
     formTitle: string;
     formIntro: string;

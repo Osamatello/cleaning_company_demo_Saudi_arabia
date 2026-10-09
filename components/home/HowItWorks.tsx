@@ -134,7 +134,7 @@ export default function HowItWorks() {
         {/* heading sits to the right, clear of the line coming down the middle */}
         <div ref={headRef} className="relative grid grid-cols-1 pt-20 md:grid-cols-12 md:pt-28">
           <div className="md:col-span-5 md:col-start-8">
-            <p className="reveal text-[10px] font-medium uppercase tracking-[0.32em] text-neutral-500 md:text-[11px]" data-in={headIn}>
+            <p className="reveal text-[13px] font-semibold uppercase tracking-[0.24em] text-neutral-600 md:text-[14px]" data-in={headIn}>
               {hw.eyebrow}
             </p>
             <h2

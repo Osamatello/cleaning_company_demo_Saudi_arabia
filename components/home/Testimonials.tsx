@@ -108,9 +108,9 @@ export default function Testimonials() {
   );
 
   return (
-    <section ref={sectionRef} id="reviews" className="relative section-clip bg-white pt-8 md:pt-10">
+    <section ref={sectionRef} id="reviews" className="relative section-clip bg-white pt-16 md:pt-20">
       {/* a soft pebble behind the quote */}
-      <svg aria-hidden className="pointer-events-none absolute -left-[12%] top-4 h-[560px] w-[88%] overflow-visible md:top-6 md:h-[560px] md:w-[70%] rtl:left-auto rtl:-right-[12%] rtl:-scale-x-100" viewBox="0 0 900 640" preserveAspectRatio="none">
+      <svg aria-hidden className="pointer-events-none absolute -left-[12%] top-12 h-[560px] w-[88%] overflow-visible md:top-16 md:h-[560px] md:w-[70%] rtl:left-auto rtl:-right-[12%] rtl:-scale-x-100" viewBox="0 0 900 640" preserveAspectRatio="none">
         <path d="M118 96C214 18 392 -10 560 24c160 32 300 110 330 246 30 138-56 268-214 330-152 60-356 52-492-12C46 528-14 412 4 300 18 206 46 154 118 96Z" fill="#f6f4ef" />
         <path d="M118 96C214 18 392 -10 560 24c160 32 300 110 330 246 30 138-56 268-214 330-152 60-356 52-492-12C46 528-14 412 4 300 18 206 46 154 118 96Z" fill="none" stroke="#e3dccd" strokeWidth="1" vectorEffect="non-scaling-stroke" />
       </svg>
@@ -125,7 +125,7 @@ export default function Testimonials() {
             onFocusCapture={() => setPaused(true)}
             onBlurCapture={() => setPaused(false)}
           >
-            <p className="reveal text-[10px] font-medium uppercase tracking-[0.32em] text-neutral-500 md:text-[11px]" data-in={headIn}>
+            <p className="reveal text-[13px] font-semibold uppercase tracking-[0.24em] text-neutral-600 md:text-[14px]" data-in={headIn}>
               {tm.eyebrow}
             </p>
             <figure className="relative mt-14 min-h-[260px] md:mt-[5.5rem] md:min-h-[300px]" aria-live="polite">
@@ -164,11 +164,15 @@ export default function Testimonials() {
           {/* the rating and the reviewers */}
           <div className="md:col-span-5 md:self-center md:ps-6">
             <div className="reveal flex items-center gap-6" data-in={headIn} style={{ transitionDelay: '120ms' }}>
-              <p className="text-[64px] font-[200] leading-none tracking-[-0.04em] text-neutral-900 md:text-[92px]">4.9</p>
+              {/* one size for the score and the scale, told apart by weight and tone */}
+              <p dir="ltr" className="flex items-baseline gap-2 whitespace-nowrap leading-none tracking-[-0.03em] text-[52px] md:text-[64px]">
+                <span className="font-[300] text-neutral-900">4.9</span>
+                <span className="font-[200] text-neutral-300">/</span>
+                <span className="font-[200] text-neutral-400">5</span>
+              </p>
               <div className="border-s border-neutral-200 ps-6">
                 <Stars size="h-[18px] w-[18px] md:h-5 md:w-5" className="gap-1" />
-                <p className="mt-3 text-[15px] font-medium leading-tight text-neutral-900 md:text-[17px]">{tm.outOf}</p>
-                <p className="mt-1 whitespace-nowrap text-[13px] leading-tight text-neutral-500 md:text-[14px]">{tm.from}</p>
+                <p className="mt-2.5 whitespace-nowrap text-[13px] leading-tight text-neutral-500 md:text-[14px]">{tm.from}</p>
               </div>
             </div>
 
@@ -177,7 +181,7 @@ export default function Testimonials() {
               {REVIEWS.map((rv, i) => avatar(rv, i, 52))}
             </div>
             {/* desktop: a loose cluster of pebbles */}
-            <div className="relative ms-10 mt-10 hidden h-[96px] w-[400px] md:block">
+            <div className="relative ms-16 mt-10 hidden h-[96px] w-[400px] md:block">
               {REVIEWS.map((rv, i) => (
                 <div key={rv.name} className="absolute" style={{ insetInlineStart: CLUSTER[i].x, top: CLUSTER[i].y }}>
                   {avatar(rv, i, CLUSTER[i].s)}
@@ -209,7 +213,7 @@ export default function Testimonials() {
       </div>
 
       {/* a slow ribbon of short reviews, easing the page into the booking section */}
-      <div className="group relative mt-36 border-y border-[#ece7dd] bg-[#fbfaf7] py-5 md:mt-16">
+      <div className="group relative mt-40 border-y border-[#ece7dd] bg-[#fbfaf7] py-5 md:mt-28">
         <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-[#fbfaf7] to-transparent md:w-40" />
         <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-[#fbfaf7] to-transparent md:w-40" />
         <div dir="ltr" className="tm-marquee flex w-max group-hover:[animation-play-state:paused]">

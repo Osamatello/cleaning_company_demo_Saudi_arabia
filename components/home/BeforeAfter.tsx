@@ -36,6 +36,7 @@ export default function BeforeAfter() {
   const handleRef = useRef<HTMLDivElement>(null);
   const beforeTagRef = useRef<HTMLSpanElement>(null);
   const afterTagRef = useRef<HTMLSpanElement>(null);
+  const captionRef = useRef<HTMLDivElement>(null);
 
   // slider state lives outside React: it changes every frame while dragging
   const s = useRef({
@@ -117,7 +118,8 @@ export default function BeforeAfter() {
         const R = 30;
         const r = 22;
         const nw = Math.round(clamp(w * 0.36, 300, 440));
-        const nh = 96;
+        // the notch is as tall as the caption plus some air, so longer (Arabic) captions never touch the photo
+        const nh = Math.max(96, (captionRef.current?.offsetHeight ?? 0) + 26);
         const X = (x: number) => (rtl ? w - x : x);
         el.style.clipPath = `path('M${X(R)} 0H${X(w - R)}Q${X(w)} 0 ${X(w)} ${R}V${h - R}Q${X(w)} ${h} ${X(w - R)} ${h}H${X(nw + r)}Q${X(nw)} ${h} ${X(nw)} ${h - r}V${h - nh + r}Q${X(nw)} ${h - nh} ${X(nw - r)} ${h - nh}H${X(r)}Q${X(0)} ${h - nh} ${X(0)} ${h - nh - r}V${R}Q${X(0)} 0 ${X(R)} 0Z')`;
       } else {
@@ -126,8 +128,21 @@ export default function BeforeAfter() {
       draw();
     });
     ro.observe(el);
+    if (captionRef.current) ro.observe(captionRef.current);
     return () => ro.disconnect();
   }, [draw, rtl]);
+
+  // phones: once a sideways drag has begun, the page must not scroll under the finger, or the browser takes
+  // the gesture over and the drag stops dead (React's touch listeners are passive, so this one is added by hand)
+  useEffect(() => {
+    const el = stageRef.current;
+    if (!el) return;
+    const hold = (e: TouchEvent) => {
+      if (s.current.drag && e.cancelable) e.preventDefault();
+    };
+    el.addEventListener('touchmove', hold, { passive: false });
+    return () => el.removeEventListener('touchmove', hold);
+  }, []);
 
   // first time on screen: one squeegee pass across the room, then load the other rooms quietly
   useEffect(() => {
@@ -155,8 +170,9 @@ export default function BeforeAfter() {
   };
   const onPointerDown = (e: React.PointerEvent) => {
     if (e.button !== 0) return;
-    // touch: wait to see whether this is a sideways drag or a page scroll
-    if (e.pointerType === 'mouse') beginDrag(e);
+    // mouse, or a finger on the handle itself: drag at once; elsewhere on the photo a finger may be
+    // scrolling the page, so wait to see whether it moves sideways
+    if (e.pointerType === 'mouse' || handleRef.current?.contains(e.target as Node)) beginDrag(e);
     else s.current.pending = { x: e.clientX, y: e.clientY, id: e.pointerId };
   };
   const onPointerMove = (e: React.PointerEvent) => {
@@ -215,7 +231,7 @@ export default function BeforeAfter() {
         {/* heading: the same voice as the Hero headline */}
         <div className="grid grid-cols-1 gap-8 md:grid-cols-12 md:items-end">
           <div className="md:col-span-7">
-            <p className="reveal text-[10px] font-medium uppercase tracking-[0.32em] text-neutral-500 md:text-[11px]" data-in={inView}>
+            <p className="reveal text-[13px] font-semibold uppercase tracking-[0.24em] text-neutral-600 md:text-[14px]" data-in={inView}>
               {ba.eyebrow}
             </p>
             <h2
@@ -271,7 +287,11 @@ export default function BeforeAfter() {
               onPointerMove={onPointerMove}
               onPointerUp={endDrag}
               onPointerCancel={endDrag}
-              onLostPointerCapture={endDrag}
+              // a finger is captured by the photo it lands on; taking the capture over for the stage makes the
+              // photo lose it, and that event bubbles up here, so only the stage's own loss ends the drag
+              onLostPointerCapture={(e) => {
+                if (e.target === e.currentTarget) endDrag();
+              }}
             >
               {/* before: the full room underneath */}
               {ROOMS.map((r, i) =>
@@ -338,6 +358,7 @@ export default function BeforeAfter() {
                 aria-valuemax={100}
                 aria-valuenow={8}
                 onKeyDown={onKeyDown}
+                style={{ touchAction: 'none' }}
                 className="ba-handle absolute left-0 top-0 grid h-14 w-14 place-items-center rounded-full bg-white text-neutral-900 shadow-[0_10px_30px_-8px_rgba(15,23,42,0.45)] outline-none ring-sky-400/60 focus-visible:ring-4 md:h-16 md:w-16"
               >
                 <svg width="26" height="26" viewBox="0 0 26 26" fill="none" aria-hidden>
@@ -356,7 +377,7 @@ export default function BeforeAfter() {
             </div>
 
             {/* caption: sits in the frame's notch on desktop, below it on mobile */}
-            <div className="mt-5 md:absolute md:bottom-0 md:start-0 md:mt-0 md:w-[clamp(280px,32%,410px)] md:pe-6">
+            <div ref={captionRef} className="mt-5 md:absolute md:bottom-0 md:start-0 md:mt-0 md:w-[clamp(280px,32%,410px)] md:pe-6">
               <p className="text-[10px] font-medium uppercase tracking-[0.28em] text-neutral-500">{room.place}</p>
               <p className="mt-1.5 text-[15px] text-neutral-900">
                 <span className={`text-[20px] font-[350] leading-none tracking-[-0.01em]`}>{room.time}</span>

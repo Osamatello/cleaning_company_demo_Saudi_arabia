@@ -26,3 +26,24 @@ export function metadataFor(t: SiteContent): Metadata {
     twitter: { card: 'summary_large_image', title: t.meta.shareTitle, description: t.meta.description },
   };
 }
+
+/** The same for the services page (/services and /ar/services). */
+export function servicesMetadataFor(t: SiteContent): Metadata {
+  const { title, description } = t.servicesPage.meta;
+  const url = t.locale === 'ar' ? '/ar/services' : '/services';
+  return {
+    title,
+    description,
+    alternates: { canonical: url, languages: { en: '/services', ar: '/ar/services', 'x-default': '/services' } },
+    openGraph: {
+      type: 'website',
+      siteName: 'FreshSpaces',
+      title,
+      description,
+      locale: t.meta.ogLocale,
+      alternateLocale: t.locale === 'ar' ? ['en_SA'] : ['ar_SA'],
+      url,
+    },
+    twitter: { card: 'summary_large_image', title, description },
+  };
+}

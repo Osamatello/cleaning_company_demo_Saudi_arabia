@@ -1,9 +1,9 @@
 import { IBM_Plex_Sans_Arabic } from 'next/font/google';
 
 // Arabic type for the /ar pages only (a separate module, so the English page never loads it).
-// globals.css puts it first in the font stack on Arabic pages.
+// It is the only family on Arabic pages (its Latin set covers numbers and the brand name).
 export const plexArabic = IBM_Plex_Sans_Arabic({
-  subsets: ['arabic'],
+  subsets: ['arabic', 'latin'],
   weight: ['300', '400', '500', '600', '700'],
   display: 'swap',
   variable: '--font-arabic',

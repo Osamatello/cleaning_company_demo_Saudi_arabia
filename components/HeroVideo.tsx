@@ -54,7 +54,7 @@ export default function HeroVideo() {
 
       {/* the copy sits in the middle of the film, below the header (it takes the top ~88px) */}
       <div className="relative mx-auto flex h-full max-w-7xl flex-col justify-center px-5 pb-[112px] pt-[88px] sm:px-6 md:pb-[64px] lg:px-8">
-        <p className="hero-in flex items-center gap-3 text-[10px] font-medium uppercase tracking-[0.32em] text-white/75 md:text-[11px]">
+        <p className="hero-in flex items-center gap-3 text-[13px] font-semibold uppercase tracking-[0.24em] text-white/85 md:text-[14px]">
           {h.eyebrow}
         </p>
         <h1

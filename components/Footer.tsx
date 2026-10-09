@@ -3,12 +3,15 @@
 import React from 'react';
 import { MapPin, Phone, Mail, Globe, ShieldCheck, ArrowUp } from 'lucide-react';
 import BrandMark from './BrandMark';
-import { SELECT_SERVICE } from './ServicesCarousel';
 import { useContent } from './ContentProvider';
+import type { Page } from './Header';
 
-export default function Footer() {
+export default function Footer({ page = 'home' }: { page?: Page }) {
   const t = useContent();
   const f = t.footer;
+  // on the services page, section links lead back to the homepage and service names to this page's lists
+  const home = page === 'home' ? '' : t.locale === 'ar' ? '/ar' : '/';
+  const [cleaningAt, maintenanceAt] = page === 'services' ? ['#cleaning', '#maintenance'] : ['#services', '#maintenance'];
   // Same links, in the same order, as the header
   const NAV = [
     { id: 'services', label: t.nav.services },
@@ -17,14 +20,14 @@ export default function Footer() {
     { id: 'reviews', label: t.nav.reviews },
     { id: 'contact', label: t.nav.contact },
   ];
-  // service names, the same as the cards (clicking one brings that card to the front)
-  const SERVICE_TITLES = t.services.items.map((s) => s.title);
+  // service names, the same as the homepage cards
+  const SERVICE_TITLES = [...t.services.cleaning.items, ...t.services.maintenance.items].map((s) => s.title);
   return (
     <footer className="border-t border-[#e4dfd4] bg-[#f2efe9] text-slate-600">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* brand + section links, mirroring the header */}
         <div className="flex flex-col gap-5 py-7 lg:flex-row lg:items-center lg:justify-between">
-          <a href="#" className="group flex items-center gap-3">
+          <a href={home || '#'} className="group flex items-center gap-3">
             <BrandMark size={40} className="transition-transform duration-500 group-hover:-rotate-6" />
             <span className="text-lg font-extrabold tracking-tight text-slate-900">
               Fresh<span className="text-sky-600">Spaces</span>
@@ -36,7 +39,7 @@ export default function Footer() {
 
           <nav className="flex flex-wrap gap-x-6 gap-y-2 text-sm font-medium text-slate-600">
             {NAV.map((item) => (
-              <a key={item.id} href={`#${item.id}`} className="transition-colors hover:text-sky-600">
+              <a key={item.id} href={`${home}#${item.id}`} className="transition-colors hover:text-sky-600">
                 {item.label}
               </a>
             ))}
@@ -50,11 +53,7 @@ export default function Footer() {
             <ul className="grid grid-cols-1 gap-x-8 gap-y-2.5 sm:grid-cols-2">
               {SERVICE_TITLES.map((title, i) => (
                 <li key={title}>
-                  <a
-                    href="#services"
-                    onClick={() => window.dispatchEvent(new CustomEvent(SELECT_SERVICE, { detail: i }))}
-                    className="transition-colors hover:text-sky-600"
-                  >
+                  <a href={i < 3 ? cleaningAt : maintenanceAt} className="transition-colors hover:text-sky-600">
                     {title}
                   </a>
                 </li>

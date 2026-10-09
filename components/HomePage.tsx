@@ -1,7 +1,9 @@
 import Header from '@/components/Header';
 import HeroVideo from '@/components/HeroVideo';
-import ServicesCarousel from '@/components/ServicesCarousel';
+import ServicesPreview from '@/components/ServicesPreview';
 import TransformCTA from '@/components/TransformCTA';
+import About from '@/components/home/About';
+import FAQ from '@/components/home/FAQ';
 import BeforeAfter from '@/components/home/BeforeAfter';
 import HowItWorks from '@/components/home/HowItWorks';
 import Testimonials from '@/components/home/Testimonials';
@@ -23,15 +25,21 @@ export default function HomePage({ locale }: { locale: Locale }) {
         {/* Hero: a film of the team at work, headline over it */}
         <HeroVideo />
 
-        {/* Services carousel */}
-        <ServicesCarousel />
+        {/* Services: cleaning, then home maintenance & repairs */}
+        <ServicesPreview />
 
-        {/* Proof, process and praise: one continuous run into the booking section */}
+        {/* About us: the company, the team and the service */}
+        <About />
+
+        {/* Proof, process and praise */}
         <BeforeAfter />
         <HowItWorks />
         <Testimonials />
 
-        {/* Booking CTA & Value Propositions */}
+        {/* Frequently asked questions */}
+        <FAQ />
+
+        {/* Booking CTA & Value Propositions: the form closes the page */}
         <TransformCTA />
 
         {/* Footer */}
