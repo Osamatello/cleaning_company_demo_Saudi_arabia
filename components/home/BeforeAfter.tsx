@@ -20,7 +20,6 @@ const SIZES = '(min-width: 1024px) 78vw, 100vw';
 
 const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
 const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
-const BUBBLES = [0.07, 0.15, 0.22, 0.31, 0.38, 0.47, 0.58, 0.64, 0.72, 0.81, 0.88, 0.95];
 
 export default function BeforeAfter() {
   const [active, setActive] = useState(0);
@@ -33,9 +32,7 @@ export default function BeforeAfter() {
 
   const stageRef = useRef<HTMLDivElement>(null);
   const afterRef = useRef<HTMLDivElement>(null);
-  const lineRef = useRef<SVGPathElement>(null);
-  const glowRef = useRef<SVGPathElement>(null);
-  const bubbleRefs = useRef<(SVGCircleElement | null)[]>([]);
+  const lineRef = useRef<HTMLDivElement>(null);
   const handleRef = useRef<HTMLDivElement>(null);
   const beforeTagRef = useRef<HTMLSpanElement>(null);
   const afterTagRef = useRef<HTMLSpanElement>(null);
@@ -44,9 +41,6 @@ export default function BeforeAfter() {
   const s = useRef({
     pos: 0.08,
     target: 0.08,
-    vel: 0,
-    amp: 3,
-    phase: 0,
     w: 1,
     h: 1,
     drag: false,
@@ -59,29 +53,10 @@ export default function BeforeAfter() {
   const draw = useCallback(() => {
     const st = s.current;
     const { w, h } = st;
-    const edge = (y: number) =>
-      st.pos * w + st.amp * (0.7 * Math.sin(st.phase + (y / h) * 7.4) + 0.3 * Math.sin(st.phase * 1.6 + (y / h) * 17.9));
-    const N = 40;
-    let poly = '0px 0px';
-    let d = '';
-    for (let i = 0; i <= N; i++) {
-      const y = (h * i) / N;
-      const x = edge(y);
-      poly += `,${x.toFixed(1)}px ${y.toFixed(1)}px`;
-      d += `${i ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`;
-    }
-    poly += `,0px ${h}px`;
-    if (afterRef.current) afterRef.current.style.clipPath = `polygon(${poly})`;
-    lineRef.current?.setAttribute('d', d);
-    glowRef.current?.setAttribute('d', d);
-    BUBBLES.forEach((f, i) => {
-      const c = bubbleRefs.current[i];
-      if (!c) return;
-      const y = f * h;
-      c.setAttribute('cx', (edge(y) + (i % 2 ? 2.5 : -2)).toFixed(1));
-      c.setAttribute('cy', y.toFixed(1));
-    });
-    const hx = edge(h / 2);
+    // a straight divider: the clean side is clipped to everything left of it
+    const hx = st.pos * w;
+    if (afterRef.current) afterRef.current.style.clipPath = `inset(0 ${(w - hx).toFixed(1)}px 0 0)`;
+    if (lineRef.current) lineRef.current.style.transform = `translateX(${hx.toFixed(1)}px)`;
     if (handleRef.current) {
       handleRef.current.style.transform = `translate(${hx.toFixed(1)}px, ${(h / 2).toFixed(1)}px) translate(-50%, -50%)`;
       handleRef.current.setAttribute('aria-valuenow', String(Math.round(st.pos * 100)));
@@ -95,7 +70,6 @@ export default function BeforeAfter() {
       const st = s.current;
       const dt = clamp((t - (st.last || t)) / 1000, 0.001, 0.05);
       st.last = t;
-      const prev = st.pos;
       if (st.intro) {
         const k = clamp((t - st.intro.t0) / st.intro.dur, 0, 1);
         st.pos = st.intro.from + (st.intro.to - st.intro.from) * easeInOut(k);
@@ -105,12 +79,8 @@ export default function BeforeAfter() {
         st.pos += (st.target - st.pos) * (1 - Math.exp(-dt * (st.drag ? 28 : 14)));
         if (Math.abs(st.target - st.pos) < 0.0004) st.pos = st.target;
       }
-      st.vel = (st.pos - prev) / dt;
-      const speed = Math.min(1, Math.abs(st.vel) * 0.8);
-      st.amp += (3 + speed * 15 - st.amp) * (1 - Math.exp(-dt * 6));
-      st.phase += dt * (1 + speed * 10);
       draw();
-      const busy = st.drag || st.intro || st.pos !== st.target || Math.abs(st.amp - 3) > 0.05;
+      const busy = st.drag || st.intro || st.pos !== st.target;
       st.raf = busy ? requestAnimationFrame(step) : 0;
       if (!busy) st.last = 0;
     },
@@ -239,8 +209,6 @@ export default function BeforeAfter() {
       <svg aria-hidden className="absolute inset-x-0 -top-px h-[41px] w-full md:h-[65px]" viewBox="0 0 1440 110" preserveAspectRatio="none">
         <path d="M0 0H1440V30C1210 96 900 112 590 74 370 47 170 52 0 96Z" fill="#ffffff" />
       </svg>
-      <div aria-hidden className="pointer-events-none absolute -right-72 top-24 h-[860px] w-[860px] bg-[radial-gradient(closest-side,rgba(186,230,253,0.45),transparent)]" />
-      <div aria-hidden className="pointer-events-none absolute -left-60 -bottom-20 h-[680px] w-[680px] bg-[radial-gradient(closest-side,rgba(209,250,229,0.55),transparent)]" />
 
       <div className="relative mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
         {/* heading: the same voice as the Hero headline */}
@@ -265,7 +233,7 @@ export default function BeforeAfter() {
             data-in={inView}
             style={{ transitionDelay: '160ms' }}
           >
-            Drag across the room to wipe away the before. Every job ends with a walkthrough — nothing is signed off until it looks like this.
+            Drag across the room to wipe away the before. Every job ends with a walkthrough, and nothing is signed off until it looks like this.
           </p>
         </div>
 
@@ -342,24 +310,8 @@ export default function BeforeAfter() {
                 )}
               </div>
 
-              {/* the wet edge: a sheen, the blade line and a few suds riding along it */}
-              <svg aria-hidden className="pointer-events-none absolute inset-0 h-full w-full overflow-visible">
-                {/* the sheen: wide, faint strokes instead of a blur filter */}
-                <path ref={glowRef} fill="none" stroke="rgba(255,255,255,0.16)" strokeWidth="16" strokeLinejoin="round" />
-                <path ref={lineRef} fill="none" stroke="rgba(255,255,255,0.95)" strokeWidth="2" />
-                {BUBBLES.map((f, i) => (
-                  <circle
-                    key={f}
-                    ref={(c) => {
-                      bubbleRefs.current[i] = c;
-                    }}
-                    r={i % 3 === 0 ? 4.5 : i % 3 === 1 ? 2.5 : 3.4}
-                    fill="rgba(255,255,255,0.35)"
-                    stroke="rgba(255,255,255,0.9)"
-                    strokeWidth="1"
-                  />
-                ))}
-              </svg>
+              {/* the divider: one straight line */}
+              <div ref={lineRef} aria-hidden className="pointer-events-none absolute left-0 top-0 -ml-px h-full w-[2px] bg-white shadow-[0_0_0_1px_rgba(15,23,42,0.08)]" />
 
               <span
                 ref={afterTagRef}
@@ -427,9 +379,7 @@ export default function BeforeAfter() {
                     className="group relative block w-full py-3 pl-5 text-left"
                   >
                     <span
-                      className={`absolute -left-px top-3 bottom-3 w-[2px] origin-top rounded-full bg-gradient-to-b from-sky-500 to-emerald-400 transition-transform duration-500 ${
-                        i === active ? 'scale-y-100' : 'scale-y-0'
-                      }`}
+                      className={`absolute -left-px top-3 bottom-3 w-[2px] bg-sky-600 ${i === active ? 'block' : 'hidden'}`}
                     />
                     <span className={`block text-[12px] font-medium tabular-nums ${i === active ? 'text-sky-600' : 'text-neutral-400'}`}>0{i + 1}</span>
                     <span
@@ -448,8 +398,8 @@ export default function BeforeAfter() {
         </div>
       </div>
 
-      {/* the blade's line carries on down into How It Works */}
-      <div aria-hidden className="absolute bottom-0 left-1/2 h-28 w-px -translate-x-1/2 bg-gradient-to-b from-transparent via-sky-300/60 to-sky-400" />
+      {/* a hairline carries on down into How It Works */}
+      <div aria-hidden className="absolute bottom-0 left-1/2 h-28 w-px -translate-x-1/2 bg-sky-300" />
     </section>
   );
 }

@@ -26,27 +26,24 @@ export default function TransformCTA() {
 
   return (
     <section id="contact" className="relative py-24 bg-white border-t border-slate-200">
-      {/* Background Glow */}
-      <div className="absolute top-1/3 left-1/4 w-[640px] h-[640px] -translate-x-1/3 -translate-y-1/3 bg-[radial-gradient(closest-side,rgba(14,165,233,0.10),transparent)] pointer-events-none"></div>
-      <div className="absolute bottom-10 right-1/4 w-[640px] h-[640px] translate-x-1/3 translate-y-1/3 bg-[radial-gradient(closest-side,rgba(16,185,129,0.10),transparent)] pointer-events-none"></div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           {/* Left Column: Why Choose FreshSpaces */}
           <div className="lg:col-span-6 space-y-8">
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-xs font-bold uppercase tracking-wider mb-4">
-                <ShieldCheck className="w-4 h-4" />
-                <span>Riyadh Premier Cleaning Specialists</span>
-              </div>
-              <h2 className="text-4xl sm:text-5xl font-extrabold text-slate-900 tracking-tight font-sans leading-tight">
-                Transform Your Space <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-600 to-emerald-500">
-                  In Just 1 Hour.
-                </span>
+              <p className="mb-5 flex items-center gap-3 text-[10px] font-medium uppercase tracking-[0.32em] text-neutral-500 md:text-[11px]">
+                <span className="h-px w-8 bg-sky-600" />
+                Riyadh premier cleaning specialists
+              </p>
+              <h2 className="text-[2.4rem] leading-[1.04] tracking-[-0.02em] text-slate-900 sm:text-5xl lg:text-[3rem]">
+                <span className="font-[350]">Transform your space</span>
+                <br />
+                <span className="font-[300] italic text-neutral-400">in just </span>
+                <span className="font-bold">one hour.</span>
               </h2>
               <p className="mt-4 text-slate-600 text-base sm:text-lg leading-relaxed">
-                Book Riyadh’s top-rated 3D deep cleaning team. We bring specialized industrial equipment, eco-certified detergents, and 100% satisfaction guarantee to your doorstep.
+                Book Riyadh’s top-rated deep cleaning team. We bring specialized industrial equipment, eco-certified detergents, and 100% satisfaction guarantee to your doorstep.
               </p>
             </div>
 
@@ -63,8 +60,8 @@ export default function TransformCTA() {
               </div>
 
               <div className="p-4 rounded-2xl glass-panel border border-slate-200 flex items-start gap-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center shrink-0">
-                  <Award className="w-5 h-5 text-emerald-600" />
+                <div className="w-10 h-10 rounded-xl bg-sky-500/20 border border-sky-500/30 flex items-center justify-center shrink-0">
+                  <Award className="w-5 h-5 text-sky-600" />
                 </div>
                 <div>
                   <h4 className="text-sm font-bold text-slate-900">100% Satisfaction</h4>
@@ -80,11 +77,11 @@ export default function TransformCTA() {
                 <span className="text-sm">King Fahd Road, Al Olaya, Riyadh 12211, Saudi Arabia</span>
               </div>
               <div className="flex items-center gap-4 text-slate-600">
-                <Phone className="w-5 h-5 text-emerald-600 shrink-0" />
+                <Phone className="w-5 h-5 text-sky-600 shrink-0" />
                 <span className="text-sm">+966 50 123 4567 / +966 11 800 9000</span>
               </div>
               <div className="flex items-center gap-4 text-slate-600">
-                <Mail className="w-5 h-5 text-cyan-600 shrink-0" />
+                <Mail className="w-5 h-5 text-sky-600 shrink-0" />
                 <span className="text-sm">booking@freshspaces.sa</span>
               </div>
             </div>
@@ -95,7 +92,7 @@ export default function TransformCTA() {
             <div className="p-8 sm:p-10 rounded-3xl glass-panel border border-slate-200 shadow-2xl relative">
               {submitted ? (
                 <div className="py-12 text-center space-y-4">
-                  <div className="w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-600 flex items-center justify-center mx-auto">
+                  <div className="w-16 h-16 rounded-full bg-sky-500/15 border border-sky-500/30 text-sky-700 flex items-center justify-center mx-auto">
                     <CheckCircle2 className="w-8 h-8" />
                   </div>
                   <h3 className="text-2xl font-bold text-slate-900">Booking Request Received!</h3>
@@ -202,9 +199,9 @@ export default function TransformCTA() {
 
                   <button
                     type="submit"
-                    className="w-full py-4 rounded-xl bg-gradient-to-r from-sky-500 via-cyan-400 to-emerald-400 text-slate-950 font-extrabold uppercase tracking-wider text-xs shadow-lg shadow-sky-500/20 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2"
+                    className="w-full py-4 rounded-xl bg-sky-900 text-white font-bold uppercase tracking-wider text-xs transition-colors hover:bg-sky-700 active:scale-[0.99] flex items-center justify-center gap-2"
                   >
-                    <Send className="w-4 h-4 fill-slate-950" />
+                    <Send className="w-4 h-4" />
                     Confirm Cleaning Booking
                   </button>
                 </form>

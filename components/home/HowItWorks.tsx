@@ -10,7 +10,7 @@ type Step = { title: string; text: string; points: string[]; icon: LucideIcon };
 const STEPS: Step[] = [
   {
     title: 'Book in two minutes',
-    text: 'Choose the service, your district and a time that suits you. You get a fixed price up front — no calls, no surprises.',
+    text: 'Choose the service, your district and a time that suits you. You get a fixed price up front. No calls, no surprises.',
     points: ['Same-day slots across Riyadh', 'Fixed, transparent pricing'],
     icon: CalendarCheck2,
   },
@@ -127,17 +127,15 @@ export default function HowItWorks() {
           <circle key={r} cx="100" cy="100" r={r} stroke="currentColor" strokeWidth="0.35" />
         ))}
       </svg>
-      <div aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 h-[820px] w-[820px] -translate-x-1/2 -translate-y-1/2 bg-[radial-gradient(closest-side,rgba(207,250,254,0.6),transparent)]" />
 
       <div ref={containerRef} className="relative mx-auto max-w-7xl px-5 pb-16 sm:px-6 md:pb-20 lg:px-8">
         <svg aria-hidden className="pointer-events-none absolute inset-0 h-full w-full overflow-visible">
           <defs>
             <linearGradient id="hiw-flow" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
-              <stop offset="0" stopColor="#38bdf8" />
-              <stop offset="0.5" stopColor="#22d3ee" />
-              <stop offset="0.88" stopColor="#34d399" />
+              <stop offset="0" stopColor="#0284c7" />
+              <stop offset="0.88" stopColor="#0284c7" />
               {/* the stream thins out as it runs on into the reviews */}
-              <stop offset="1" stopColor="#34d399" stopOpacity="0" />
+              <stop offset="1" stopColor="#0284c7" stopOpacity="0" />
             </linearGradient>
           </defs>
           <path ref={trackRef} fill="none" stroke="#e2dccf" strokeWidth="1.5" strokeDasharray="2 7" strokeLinecap="round" />
@@ -147,7 +145,7 @@ export default function HowItWorks() {
         <div
           ref={dropRef}
           aria-hidden
-          className="pointer-events-none absolute left-0 top-0 h-4 w-4 rounded-full bg-white opacity-0 shadow-[0_0_0_4px_rgba(56,189,248,0.35),0_0_24px_6px_rgba(34,211,238,0.45)] transition-opacity duration-300"
+          className="pointer-events-none absolute left-0 top-0 h-4 w-4 rounded-full border-[3px] border-sky-600 bg-white opacity-0 transition-opacity duration-300"
         />
 
         {/* heading sits to the right, clear of the line coming down the middle */}
@@ -194,7 +192,7 @@ export default function HowItWorks() {
                     className="relative mx-auto grid h-[76px] w-[76px] place-items-center md:h-[148px] md:w-[148px]"
                   >
                     <div
-                      className="hiw-blob absolute inset-0 border border-[#e2dccf] bg-white shadow-[0_20px_50px_-24px_rgba(15,23,42,0.25)] transition-all duration-700 group-data-[active=true]:border-transparent group-data-[active=true]:bg-gradient-to-br group-data-[active=true]:from-sky-400 group-data-[active=true]:via-cyan-300 group-data-[active=true]:to-emerald-300 group-data-[active=true]:shadow-[0_24px_60px_-18px_rgba(14,165,233,0.55)]"
+                      className="hiw-blob absolute inset-0 border border-[#e2dccf] bg-white shadow-[0_20px_50px_-24px_rgba(15,23,42,0.25)] transition-all duration-700 group-data-[active=true]:border-transparent group-data-[active=true]:bg-sky-600 group-data-[active=true]:shadow-[0_20px_50px_-24px_rgba(15,23,42,0.35)]"
                       style={{ animationDelay: `${-i * 4}s` }}
                     />
                     <Icon className="relative h-7 w-7 text-neutral-400 transition-colors duration-700 group-data-[active=true]:text-white md:h-10 md:w-10" strokeWidth={1.4} />
@@ -212,7 +210,7 @@ export default function HowItWorks() {
                   <ul className="mt-5 flex flex-wrap gap-x-6 gap-y-2">
                     {step.points.map((p) => (
                       <li key={p} className="flex items-center gap-2 text-[13px] text-neutral-700">
-                        <span className="h-1.5 w-1.5 rounded-full bg-gradient-to-br from-sky-400 to-emerald-400" />
+                        <span className="h-1.5 w-1.5 rounded-full bg-sky-500" />
                         {p}
                       </li>
                     ))}

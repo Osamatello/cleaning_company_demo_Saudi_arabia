@@ -51,27 +51,18 @@
   background: #0284c7;
 }
 
-/* Glowing Accent Effects */
-.glow-cyan {
-  box-shadow: 0 10px 30px -10px rgba(2, 132, 199, 0.35);
-}
 
 .glow-text {
   text-shadow: none;
 }
 
 /* 3D Perspective Container */
-.perspective-1000 {
-  perspective: 1000px;
-}
 
 /* --- Homepage sections (Before & After, How It Works, Testimonials) -------------------------- */
 /* sections scrolled out of view pause their animations (set by PauseOffscreen) */
 /* (only the animated elements are named, so toggling the flag restyles a handful of nodes rather
    than the whole section) */
 [data-offscreen] .hero-in,
-[data-offscreen] .hero-bubble,
-[data-offscreen] .hero-glint,
 [data-offscreen] .svc-progress,
 [data-offscreen] .hiw-blob,
 [data-offscreen] .tm-in,
@@ -133,37 +124,12 @@
 }
 .tm-marquee { animation: tm-marquee 60s linear infinite; }
 
-/* services ring: living edge and autoplay progress */
-/* static gradient edge, glow and the active card's deep shadow: it only ever fades, so nothing repaints */
-.svc-edge {
-  background: linear-gradient(135deg, #38bdf8, #22d3ee 40%, #34d399 70%, #a5f3fc);
-  box-shadow: 0 0 22px rgba(56, 189, 248, 0.35), 0 50px 90px -35px rgba(2, 132, 199, 0.5), 0 18px 40px -18px rgba(15, 23, 42, 0.3);
-}
+/* services: autoplay progress */
 @keyframes svc-progress {
   from { transform: scaleX(0); }
   to { transform: scaleX(1); }
 }
 .svc-progress { animation: svc-progress 4s linear forwards; }
-
-/* hero label: bobbing soap bubbles and a glint across the text */
-@keyframes hero-bubble {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-3px); }
-}
-.hero-bubble { animation: hero-bubble 3.6s ease-in-out infinite; transform-box: fill-box; }
-.hero-glint {
-  background: linear-gradient(100deg, #262626 0%, #262626 42%, #7dd3fc 48%, #ffffff 50%, #7dd3fc 52%, #262626 58%, #262626 100%);
-  background-size: 260% 100%;
-  background-position: 100% 0;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: hero-glint 6s cubic-bezier(0.45, 0, 0.2, 1) 1.2s infinite;
-}
-@keyframes hero-glint {
-  0% { background-position: 100% 0; }
-  30%, 100% { background-position: 0% 0; }
-}
 
 /* hero copy: a quick staggered entrance on load */
 @keyframes hero-in {
@@ -173,7 +139,7 @@
 .hero-in { animation: hero-in 0.9s cubic-bezier(0.22, 1, 0.36, 1) both; }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero-in, .hero-bubble, .hero-glint { animation: none; }
+  .hero-in { animation: none; }
   .reveal { opacity: 1; transform: none; transition: none; }
   .hiw-blob, .tm-marquee, .tm-in { animation: none; }
 }

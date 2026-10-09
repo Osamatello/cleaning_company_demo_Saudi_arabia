@@ -5,54 +5,54 @@ import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { inter } from './fonts';
 import { useInView, useOnScreen } from './hooks';
 
-type Review = { name: string; initials: string; place: string; service: string; quote: string; tint: string; shape: string };
+type Review = { name: string; photo: string; rating: number; place: string; service: string; quote: string; shape: string };
 
-// PLACEHOLDER reviews and rating for the demo — replace with real, verifiable customer reviews
-// (and the real rating / count) before the site goes live.
+// PLACEHOLDER reviews, ratings and AI-generated portraits for the demo: replace with real, verifiable
+// customer reviews (with their permission for any photo) and the real rating / count before going live.
 const REVIEWS: Review[] = [
   {
     name: 'Noura A.',
-    initials: 'NA',
+    photo: '/images/reviews/noura.webp',
+    rating: 5,
     place: 'Villa · Hittin',
     service: 'Villa deep clean',
-    quote: 'They gave us back the house we moved into. Every corner, every grout line — even the majlis carpets look new again.',
-    tint: 'from-sky-300 to-cyan-200',
+    quote: 'They gave us back the house we moved into. Every corner, every grout line, even the majlis carpets look new again.',
     shape: '58% 42% 55% 45% / 46% 56% 44% 54%',
   },
   {
     name: 'Faisal M.',
-    initials: 'FM',
+    photo: '/images/reviews/faisal.webp',
+    rating: 5,
     place: 'Apartment · Al Olaya',
     service: 'Move-out clean',
-    quote: 'Booked at nine, the team was at my door before eleven. My landlord asked who I’d hired — and kept the number.',
-    tint: 'from-emerald-300 to-teal-200',
+    quote: 'Booked at nine, the team was at my door before eleven. My landlord asked who I’d hired and kept the number.',
     shape: '44% 56% 40% 60% / 58% 44% 56% 42%',
   },
   {
     name: 'Sarah K.',
-    initials: 'SK',
+    photo: '/images/reviews/sarah.webp',
+    rating: 5,
     place: 'Villa · Al Malqa',
     service: 'Post-construction',
-    quote: 'After six months of renovation dust I had honestly given up. Two days later the whole villa was spotless — and quiet.',
-    tint: 'from-amber-200 to-orange-200',
+    quote: 'After six months of renovation dust I had honestly given up. Two days later the whole villa was spotless, and quiet.',
     shape: '62% 38% 48% 52% / 42% 58% 42% 58%',
   },
   {
     name: 'Abdullah R.',
-    initials: 'AR',
+    photo: '/images/reviews/abdullah.webp',
+    rating: 4,
     place: 'Office · King Fahd Road',
     service: 'Weekly office care',
     quote: 'Our office has never felt this fresh. Discreet, always on time, and the same trusted crew every single week.',
-    tint: 'from-indigo-200 to-sky-200',
     shape: '50% 50% 62% 38% / 55% 45% 55% 45%',
   },
   {
     name: 'Lina H.',
-    initials: 'LH',
+    photo: '/images/reviews/lina.webp',
+    rating: 5,
     place: 'Villa · Al Yasmin',
     service: 'Marble & upholstery',
     quote: 'The marble floors gleam like a hotel lobby. The sofa my kids live on? You would never know.',
-    tint: 'from-rose-200 to-amber-200',
     shape: '40% 60% 52% 48% / 50% 40% 60% 50%',
   },
 ];
@@ -77,11 +77,11 @@ const CLUSTER = [
 
 const INTERVAL = 7000;
 
-function Stars({ className = '', size = 'h-3.5 w-3.5' }: { className?: string; size?: string }) {
+function Stars({ rating = 5, className = '', size = 'h-3.5 w-3.5' }: { rating?: number; className?: string; size?: string }) {
   return (
-    <span className={`inline-flex gap-0.5 ${className}`} aria-label="5 out of 5 stars">
+    <span className={`inline-flex gap-0.5 ${className}`} role="img" aria-label={`${rating} out of 5 stars`}>
       {Array.from({ length: 5 }).map((_, i) => (
-        <svg key={i} viewBox="0 0 20 20" className={`${size} fill-amber-400`} aria-hidden>
+        <svg key={i} viewBox="0 0 20 20" className={`${size} ${i < rating ? 'fill-amber-400' : 'fill-neutral-200'}`} aria-hidden>
           <path d="M10 1.6l2.5 5.4 5.9.7-4.4 4 1.2 5.8L10 14.6l-5.2 2.9 1.2-5.8-4.4-4 5.9-.7z" />
         </svg>
       ))}
@@ -116,11 +116,17 @@ export default function Testimonials() {
       }`}
       style={{ width: size, height: size }}
     >
-      <span
-        className={`absolute inset-0 bg-gradient-to-br ${rv.tint} transition-[filter,opacity] duration-500 ${i === active ? '' : 'opacity-90'}`}
+      <img
+        src={rv.photo}
+        alt=""
+        width={size}
+        height={size}
+        loading="lazy"
+        decoding="async"
+        draggable={false}
+        className="absolute inset-0 h-full w-full bg-[#efe9df] object-cover"
         style={{ borderRadius: rv.shape }}
       />
-      <span className={`relative text-[15px] font-medium text-neutral-800`}>{rv.initials}</span>
       {i === active && (
         <svg className="pointer-events-none absolute -inset-[7px] h-[calc(100%+14px)] w-[calc(100%+14px)] -rotate-90" viewBox="0 0 100 100" aria-hidden>
           <circle cx="50" cy="50" r="48" fill="none" stroke="#e7e1d5" strokeWidth="1.5" />
@@ -130,7 +136,7 @@ export default function Testimonials() {
             cy="50"
             r="48"
             fill="none"
-            stroke="url(#tm-ring)"
+            stroke="#0284c7"
             strokeWidth="2"
             strokeLinecap="round"
             pathLength={1}
@@ -144,14 +150,6 @@ export default function Testimonials() {
 
   return (
     <section ref={sectionRef} id="reviews" className={`${inter.className} relative section-clip bg-white pt-8 md:pt-10`}>
-      <svg width="0" height="0" className="absolute" aria-hidden>
-        <defs>
-          <linearGradient id="tm-ring" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stopColor="#0ea5e9" />
-            <stop offset="1" stopColor="#34d399" />
-          </linearGradient>
-        </defs>
-      </svg>
       {/* a soft pebble behind the quote */}
       <svg aria-hidden className="pointer-events-none absolute -left-[12%] top-4 h-[560px] w-[88%] overflow-visible md:top-6 md:h-[560px] md:w-[70%]" viewBox="0 0 900 640" preserveAspectRatio="none">
         <path d="M118 96C214 18 392 -10 560 24c160 32 300 110 330 246 30 138-56 268-214 330-152 60-356 52-492-12C46 528-14 412 4 300 18 206 46 154 118 96Z" fill="#f6f4ef" />
@@ -174,7 +172,7 @@ export default function Testimonials() {
             <figure className="relative mt-14 min-h-[260px] md:mt-[5.5rem] md:min-h-[300px]" aria-live="polite">
               <span
                 aria-hidden
-                className={`pointer-events-none absolute -left-1 font-[300] -top-[72px] select-none bg-gradient-to-br from-sky-400 via-cyan-300 to-emerald-300 bg-clip-text text-[150px] leading-none text-transparent md:-left-5 md:-top-[110px] md:text-[220px]`}
+                className={`pointer-events-none absolute -left-1 font-[300] -top-[72px] select-none text-[150px] leading-none text-sky-200 md:-left-5 md:-top-[110px] md:text-[220px]`}
               >
                 “
               </span>
@@ -184,10 +182,17 @@ export default function Testimonials() {
                 </p>
               </blockquote>
               <figcaption key={`c-${active}`} className="tm-in mt-8 flex items-center gap-4" style={{ animationDelay: '120ms' }}>
-                <span className={`grid h-12 w-12 place-items-center bg-gradient-to-br ${r.tint}`} style={{ borderRadius: r.shape }}>
-                  <span className={`text-[14px] font-medium text-neutral-800`}>{r.initials}</span>
-                </span>
+                <img
+                  src={r.photo}
+                  alt={r.name}
+                  width={56}
+                  height={56}
+                  decoding="async"
+                  className="h-14 w-14 shrink-0 bg-[#efe9df] object-cover"
+                  style={{ borderRadius: r.shape }}
+                />
                 <span>
+                  <Stars rating={r.rating} className="mb-1.5" />
                   <span className="block text-[15px] font-semibold text-neutral-900">{r.name}</span>
                   <span className="block text-[13px] text-neutral-500">
                     {r.place} <span className="text-neutral-300">·</span> {r.service}

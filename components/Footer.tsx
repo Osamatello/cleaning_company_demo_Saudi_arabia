@@ -78,7 +78,7 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <a href="tel:+966501234567" className="flex items-center gap-3 font-medium text-emerald-600 transition-colors hover:text-emerald-700">
+                <a href="tel:+966501234567" className="flex items-center gap-3 font-medium text-sky-700 transition-colors hover:text-sky-900">
                   <Globe className="h-4 w-4 shrink-0" />
                   24/7 Emergency Cleaning Hotline
                 </a>
@@ -91,7 +91,7 @@ export default function Footer() {
           <p className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
             <span>© {new Date().getFullYear()} FreshSpaces</span>
             <span className="text-slate-300">·</span>
-            <span className="flex items-center gap-1.5 text-emerald-600">
+            <span className="flex items-center gap-1.5 text-sky-700">
               <ShieldCheck className="h-3.5 w-3.5" />
               Licensed Saudi Commercial CR #101089201
             </span>

@@ -19,7 +19,7 @@ export default function BrandMark({ size = 40, className = '' }: { size?: number
       {/* the home inside it: roof and walls in one stroke */}
       <path d="M13.5 27.5 20 21.4l6.5 6.1M15.6 25.6v5.2h8.8v-5.2" stroke="#fff" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" />
       {/* a fresh spark */}
-      <path d="M32.5 4.5c.3 1.6 1.1 2.4 2.7 2.7-1.6.3-2.4 1.1-2.7 2.7-.3-1.6-1.1-2.4-2.7-2.7 1.6-.3 2.4-1.1 2.7-2.7Z" fill="#34d399" />
+      <path d="M32.5 4.5c.3 1.6 1.1 2.4 2.7 2.7-1.6.3-2.4 1.1-2.7 2.7-.3-1.6-1.1-2.4-2.7-2.7 1.6-.3 2.4-1.1 2.7-2.7Z" fill="#38bdf8" />
     </svg>
   );
 }

@@ -1,5 +1,5 @@
 import Header from '@/components/Header';
-import Hero3DCanvas from '@/components/Hero3DCanvas';
+import HeroVideo from '@/components/HeroVideo';
 import ServicesCarousel from '@/components/ServicesCarousel';
 import TransformCTA from '@/components/TransformCTA';
 import BeforeAfter from '@/components/home/BeforeAfter';
@@ -16,10 +16,10 @@ export default function Home() {
       {/* Navigation Header */}
       <Header />
 
-      {/* 3D Scroll Hero Scene */}
-      <Hero3DCanvas />
+      {/* Hero: a film of the team at work, headline over it */}
+      <HeroVideo />
 
-      {/* 3D Spinning Services Carousel */}
+      {/* Services carousel */}
       <ServicesCarousel />
 
       {/* Proof, process and praise: one continuous run into the booking section */}

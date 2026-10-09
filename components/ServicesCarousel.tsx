@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
-import { ChevronLeft, ChevronRight, Sparkles, Shield, Star, CheckCircle, ArrowRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CheckCircle, ArrowRight } from 'lucide-react';
 
 interface ServiceItem {
   id: number;
@@ -9,7 +9,6 @@ interface ServiceItem {
   category: string;
   description: string;
   badge: string;
-  color: string;
   image: string;
   features: string[];
 }
@@ -21,7 +20,6 @@ const services: ServiceItem[] = [
     category: 'Residential',
     description: 'Comprehensive deep steam sanitation, kitchen degreasing, and detailed room scrubbing for luxury Riyadh villas.',
     badge: 'Popular Choice',
-    color: 'from-sky-500 to-blue-600',
     image: '/images/services/villa-deep-cleaning.webp',
     features: ['High-temp Steam Sanitization', 'Full Kitchen Degreasing', 'Balcony & Patio Power Wash']
   },
@@ -31,7 +29,6 @@ const services: ServiceItem[] = [
     category: 'Commercial & Residential',
     description: 'Complete removal of plaster dust, grout film, paint splatters, and construction debris for new handovers.',
     badge: 'Heavy Duty',
-    color: 'from-cyan-500 to-teal-600',
     image: '/images/services/post-construction.webp',
     features: ['Paint Splatter Removal', 'Industrial HEPA Dust Extraction', 'Window Track Scrubbing']
   },
@@ -41,7 +38,6 @@ const services: ServiceItem[] = [
     category: 'Specialized',
     description: 'Deep hot-water extraction destroying 99.9% of dust mites, deep-seated stains, and desert dust from sofas & rugs.',
     badge: 'Allergen Free',
-    color: 'from-emerald-500 to-teal-700',
     image: '/images/services/upholstery-carpet.webp',
     features: ['Organic Stain Neutralizer', 'Fabric Fiber Protection', 'Rapid 2-Hour Dry Time']
   },
@@ -51,7 +47,6 @@ const services: ServiceItem[] = [
     category: 'Restoration',
     description: 'Diamond pad honing, crystallization, and high-gloss sealing to restore mirror clarity on Saudi marble floors.',
     badge: 'Mirror Finish',
-    color: 'from-amber-500 to-orange-600',
     image: '/images/services/marble-polishing.webp',
     features: ['Diamond Disc Grinding', 'Anti-Slip Gloss Crystallization', 'Sealant Stain Guard']
   },
@@ -61,7 +56,6 @@ const services: ServiceItem[] = [
     category: 'Exterior',
     description: 'High-reach deionized pure water glass washing for spotless streak-free panoramic windows and building exteriors.',
     badge: 'Streak-Free',
-    color: 'from-indigo-500 to-sky-600',
     image: '/images/services/facade-windows.webp',
     features: ['Deionized Pure Water', 'High-Reach Water Pole System', 'Solar Panel Cleaning']
   },
@@ -71,7 +65,6 @@ const services: ServiceItem[] = [
     category: 'Health & Safety',
     description: 'Hospital-grade electrostatic fogging and anti-viral misting for safe, germ-free homes, offices, and schools.',
     badge: 'Certified Safe',
-    color: 'from-purple-500 to-indigo-600',
     image: '/images/services/disinfection.webp',
     features: ['Non-Toxic Eco Misting', 'Hospital-Grade Disinfectant', 'Safe for Children & Pets']
   }
@@ -82,8 +75,8 @@ export const SERVICE_TITLES = services.map((s) => s.title);
 // other parts of the page can bring a card to the front: dispatchEvent(new CustomEvent(SELECT_SERVICE, { detail: index }))
 export const SELECT_SERVICE = 'services:select';
 
-// Ring geometry: each card sits on a circle around a point behind the active one.
-const STEP_DEG = 34;
+// Flat track: the cards sit side by side, the active one in the centre (card width + gap, px).
+const stepFor = (vw: number) => (vw < 640 ? 290 + 16 : 440 + 28);
 
 // pager: 8px dots 8px apart, the active one a 40px pill (dots after it shift right to make room)
 const dotX = (i: number, active: number) => i * 16 + (i > active ? 32 : 0);
@@ -126,11 +119,11 @@ const EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
 export default function ServicesCarousel() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isAutoSpin, setIsAutoSpin] = useState(true);
-  const [radius, setRadius] = useState(560);
+  const [step, setStep] = useState(stepFor(1440));
   const prevActive = useRef(0);
 
   useEffect(() => {
-    const fit = () => setRadius(window.innerWidth < 640 ? 380 : 700);
+    const fit = () => setStep(stepFor(window.innerWidth));
     fit();
     window.addEventListener('resize', fit);
     return () => window.removeEventListener('resize', fit);
@@ -147,7 +140,7 @@ export default function ServicesCarousel() {
     return () => window.removeEventListener(SELECT_SERVICE, onSelect);
   }, []);
 
-  // swipe / drag the ring
+  // swipe / drag the track
   const drag = useRef<{ x: number; id: number } | null>(null);
   const onPointerDown = (e: React.PointerEvent) => {
     drag.current = { x: e.clientX, id: e.pointerId };
@@ -160,23 +153,7 @@ export default function ServicesCarousel() {
     if (Math.abs(dx) > 50) (dx < 0 ? handleNext : handlePrev)();
   };
 
-  // the active card leans gently towards the pointer
-  const tilt = (e: React.MouseEvent<HTMLDivElement>) => {
-    const el = e.currentTarget;
-    const r = el.getBoundingClientRect();
-    const px = (e.clientX - r.left) / r.width - 0.5;
-    const py = (e.clientY - r.top) / r.height - 0.5;
-    el.style.transition = 'transform 200ms ease-out';
-    el.style.transform = `rotateX(${(-py * 7).toFixed(2)}deg) rotateY(${(px * 9).toFixed(2)}deg)`;
-    el.style.setProperty('--gx', `${((px + 0.5) * 100).toFixed(1)}%`);
-    el.style.setProperty('--gy', `${((py + 0.5) * 100).toFixed(1)}%`);
-  };
-  const untilt = (e: React.MouseEvent<HTMLDivElement>) => {
-    e.currentTarget.style.transition = `transform 900ms ${EASE}`;
-    e.currentTarget.style.transform = '';
-  };
-
-  // the ring only turns by itself while it is on screen: turning it unseen would still cost frames
+  // the track only advances by itself while it is on screen: moving it unseen would still cost frames
   const sectionRef = useRef<HTMLElement>(null);
   const [onScreen, setOnScreen] = useState(false);
   useEffect(() => {
@@ -207,10 +184,6 @@ export default function ServicesCarousel() {
 
   return (
     <section ref={sectionRef} id="services" className="relative pt-14 pb-28 md:pt-16 md:pb-32 bg-white overflow-hidden">
-      {/* the hero's grey stage fades softly into the white page */}
-      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-48 bg-gradient-to-b from-[#e1e4e8] to-white" />
-      {/* Background Lighting Gradients */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] bg-[radial-gradient(closest-side,rgba(14,165,233,0.10),transparent)] pointer-events-none"></div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Section Header Matching Video Reference */}
@@ -230,9 +203,9 @@ export default function ServicesCarousel() {
           </p>
         </div>
 
-        {/* 3D Spinning Carousel (3D Coverflow Container) */}
+        {/* Flat carousel: cards side by side, sliding along one line */}
         <div
-          className="relative min-h-[470px] sm:min-h-[650px] flex items-center justify-center perspective-1000 my-4 select-none"
+          className="relative my-4 flex min-h-[400px] select-none items-center justify-center sm:min-h-[600px]"
           style={{ touchAction: 'pan-y' }}
           onMouseEnter={() => setIsAutoSpin(false)}
           onMouseLeave={() => setIsAutoSpin(true)}
@@ -240,71 +213,38 @@ export default function ServicesCarousel() {
           onPointerUp={onPointerUp}
           onPointerCancel={() => (drag.current = null)}
         >
-          {/* the orbit the cards travel on, and a pool of light under the card in front */}
-          <svg aria-hidden className="pointer-events-none absolute left-1/2 top-[calc(100%+64px)] h-[100px] w-[1180px] -translate-x-1/2" viewBox="0 0 1180 100" fill="none">
-            <defs>
-              <linearGradient id="svc-orbit" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0" stopColor="#38bdf8" stopOpacity="0" />
-                <stop offset="0.5" stopColor="#38bdf8" stopOpacity="0.55" />
-                <stop offset="1" stopColor="#34d399" stopOpacity="0" />
-              </linearGradient>
-            </defs>
-            <ellipse cx="590" cy="50" rx="560" ry="34" stroke="url(#svc-orbit)" strokeWidth="1.2" />
-            <ellipse cx="590" cy="50" rx="470" ry="26" stroke="#cbd5e1" strokeOpacity="0.5" strokeWidth="1" strokeDasharray="2 8" />
-          </svg>
-          <div aria-hidden className="pointer-events-none absolute left-1/2 top-[90%] h-24 w-[520px] -translate-x-1/2 bg-[radial-gradient(closest-side,rgba(14,165,233,0.22),transparent)]" />
-          <div aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 h-[420px] w-[420px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(56,189,248,0.18),transparent_65%)]" />
           {services.map((service, index) => {
-            // position on the ring relative to the active card
+            // position on the track relative to the active card (wrapping round both ends)
             const count = services.length;
             const ringOffset = (from: number) => {
               const o = (index - from + count) % count;
               return o > count / 2 ? o - count : o;
             };
             const offset = ringOffset(activeIndex);
-            // a card crossing the hidden back of the ring jumps there instead of sweeping across the front
+            // a card wrapping from one end to the other jumps there off screen instead of sweeping across
             const wrapped = Math.abs(offset - ringOffset(prevActive.current)) > 1;
 
             const isActive = offset === 0;
             const absOffset = Math.abs(offset);
-            const angle = offset * STEP_DEG;
-            const rad = (angle * Math.PI) / 180;
-            const translateX = Math.sin(rad) * radius;
-            const translateZ = (Math.cos(rad) - 1) * radius;
-            const rotateY = -angle * 0.75; // turned in towards the viewer
-            const scale = isActive ? 1 : 0.94;
-            const zIndex = 20 - absOffset * 5;
-            // side cards stay solid and recede into a soft white haze instead of turning see-through
-            const haze = isActive ? 0 : absOffset === 1 ? 0.38 : 0.62;
+            const scale = isActive ? 1 : 0.92;
+            // side cards step back under a soft white veil, so the one in the centre leads
+            const haze = isActive ? 0 : absOffset === 1 ? 0.32 : 0.55;
 
             return (
               <div
                 key={service.id}
-                // the card hidden at the back ignores clicks here rather than through pointer-events,
+                // the card parked off screen ignores clicks here rather than through pointer-events,
                 // which is inherited and would restyle the whole card on every change
                 onClick={() => absOffset <= 2 && setActiveIndex(index)}
                 className="group/card absolute w-[290px] sm:w-[440px] cursor-pointer will-change-transform"
                 style={{
-                  transform: `translate3d(${translateX.toFixed(1)}px, ${isActive ? -8 : 0}px, ${translateZ.toFixed(1)}px) rotateY(${rotateY}deg) scale(${scale})`,
+                  transform: `translate3d(${offset * step}px, 0, 0) scale(${scale})`,
                   opacity: absOffset > 2 ? 0 : 1,
-                  zIndex,
-                  transition: wrapped ? 'none' : `transform 1100ms ${EASE}, opacity 700ms ${EASE}`,
+                  transition: wrapped ? 'none' : `transform 900ms ${EASE}, opacity 600ms ${EASE}`,
                 }}
               >
-                {/* the pointer tilt; a permanent layer, so neither tilting nor a change of card ever repaints it */}
-                <div
-                  className="relative will-change-transform"
-                  onMouseMove={isActive ? tilt : undefined}
-                  onMouseLeave={isActive ? untilt : undefined}
-                >
-                {/* living gradient edge and deep shadow of the active card, faded in on the compositor */}
-                <div
-                  aria-hidden
-                  className="svc-edge absolute -inset-[1.5px] rounded-[31.5px] transition-opacity duration-700 will-change-[opacity]"
-                  style={{ opacity: isActive ? 1 : 0 }}
-                />
                 {/* Service Card: a tall, image-led portrait with a frosted panel (its paint never changes) */}
-                <div className="relative aspect-[3/4] overflow-hidden rounded-[30px] bg-slate-200 shadow-[0_20px_40px_-24px_rgba(15,23,42,0.35)] [contain:layout_paint]">
+                <div className="relative aspect-[3/4] overflow-hidden rounded-[28px] bg-slate-200 shadow-[0_18px_40px_-26px_rgba(15,23,42,0.4)] [contain:layout_paint]">
                   <img
                     src={service.image}
                     alt={service.title}
@@ -315,13 +255,6 @@ export default function ServicesCarousel() {
                     className="absolute inset-0 h-full w-full object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/55 via-slate-950/5 to-slate-950/25" />
-
-                  {/* soft light under the pointer: always mounted and never restyled, so a change of
-                      card repaints nothing (it only fades in on hover) */}
-                  <div
-                    aria-hidden
-                    className="pointer-events-none absolute inset-0 z-20 bg-[radial-gradient(460px_circle_at_var(--gx,50%)_var(--gy,30%),rgba(255,255,255,0.28),transparent_60%)] opacity-0 transition-opacity duration-500 will-change-[opacity] group-hover/card:opacity-100"
-                  />
 
                   {/* index and badge */}
                   <div className="absolute inset-x-5 top-5 flex items-center justify-between text-white">
@@ -350,7 +283,7 @@ export default function ServicesCarousel() {
                         <ul className="mt-3 flex flex-wrap gap-1.5">
                           {service.features.map((feat) => (
                             <li key={feat} className="flex items-center gap-1.5 rounded-full bg-slate-900/[0.05] px-2.5 py-1 text-[11px] text-slate-700">
-                              <CheckCircle className="h-3 w-3 shrink-0 text-emerald-600" />
+                              <CheckCircle className="h-3 w-3 shrink-0 text-sky-600" />
                               {feat}
                             </li>
                           ))}
@@ -360,18 +293,17 @@ export default function ServicesCarousel() {
                           className="group/cta mt-4 flex items-center justify-between border-t border-slate-900/10 pt-4 text-[13px] font-medium text-slate-900"
                         >
                           Book this service
-                          <span className="grid h-10 w-10 place-items-center rounded-full bg-slate-900 text-white transition-all duration-500 group-hover/cta:bg-gradient-to-br group-hover/cta:from-sky-500 group-hover/cta:to-emerald-400 group-hover/cta:rotate-[-35deg]">
+                          <span className="grid h-10 w-10 place-items-center rounded-full bg-slate-900 text-white transition-all duration-500 group-hover/cta:bg-sky-600 group-hover/cta:rotate-[-35deg]">
                             <ArrowRight className="h-4 w-4" />
                           </span>
                         </a>
                   </SlidePanel>
 
-                  {/* depth haze for the cards turning away; it lifts a little on hover */}
+                  {/* veil over the side cards; it lifts a little on hover */}
                   <div
-                    className="pointer-events-none absolute inset-0 rounded-[30px] bg-gradient-to-b from-white/90 to-white will-change-[opacity] opacity-[var(--haze)] group-hover/card:opacity-[calc(var(--haze)*0.45)]"
+                    className="pointer-events-none absolute inset-0 rounded-[28px] bg-gradient-to-b from-white/90 to-white will-change-[opacity] opacity-[var(--haze)] group-hover/card:opacity-[calc(var(--haze)*0.45)]"
                     style={{ '--haze': haze, transition: `opacity 900ms ${EASE}` } as React.CSSProperties}
                   />
-                </div>
                 </div>
               </div>
             );
@@ -409,7 +341,7 @@ export default function ServicesCarousel() {
               >
                 <span
                   key={`${activeIndex}-${autoSpin}`}
-                  className={`absolute inset-0 origin-left rounded-full bg-gradient-to-r from-sky-500 to-emerald-400 ${autoSpin ? 'svc-progress' : ''}`}
+                  className={`absolute inset-0 origin-left rounded-full bg-sky-600 ${autoSpin ? 'svc-progress' : ''}`}
                 />
               </span>
             </div>
