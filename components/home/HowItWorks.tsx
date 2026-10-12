@@ -138,14 +138,14 @@ export default function HowItWorks() {
               {hw.eyebrow}
             </p>
             <h2
-              className="reveal mt-4 text-[2.7rem] leading-[1.02] tracking-[-0.02em] text-neutral-900 sm:text-6xl md:text-[clamp(3.2rem,4.6vw,4.9rem)]"
+              className="reveal mt-4 text-[2.7rem] font-[350] leading-[1.02] tracking-[-0.02em] text-neutral-900 sm:text-6xl md:text-[clamp(3.2rem,4.6vw,4.9rem)]"
               data-in={headIn}
               style={{ transitionDelay: '80ms' }}
             >
-              <span className="font-[350]">{hw.line1}</span>
+              {hw.line1}
               <br />
-              <span className="font-[300] italic text-neutral-400">{hw.soft}</span>
-              <span className="font-bold">{hw.bold}</span>
+              {hw.soft}
+              <span className="text-sky-600">{hw.bold}</span>
             </h2>
             <p className="reveal mt-6 max-w-sm text-[15px] leading-relaxed text-neutral-500" data-in={headIn} style={{ transitionDelay: '160ms' }}>
               {hw.intro}

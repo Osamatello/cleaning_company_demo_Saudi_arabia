@@ -235,14 +235,14 @@ export default function BeforeAfter() {
               {ba.eyebrow}
             </p>
             <h2
-              className="reveal mt-4 text-[2.7rem] leading-[1.02] tracking-[-0.02em] text-neutral-900 sm:text-6xl md:text-[clamp(3.4rem,5vw,5.25rem)]"
+              className="reveal mt-4 text-[2.7rem] font-[350] leading-[1.02] tracking-[-0.02em] text-neutral-900 sm:text-6xl md:text-[clamp(3.4rem,5vw,5.25rem)]"
               data-in={inView}
               style={{ transitionDelay: '80ms' }}
             >
-              <span className="font-[350]">{ba.line1}</span>
+              {ba.line1}
               <br />
-              <span className="font-[300] italic text-neutral-400">{ba.soft}</span>
-              <span className="font-bold">{ba.bold}</span>
+              {ba.soft}
+              <span className="text-sky-600">{ba.bold}</span>
             </h2>
           </div>
           <p

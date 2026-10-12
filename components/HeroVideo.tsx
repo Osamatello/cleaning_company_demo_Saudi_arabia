@@ -59,13 +59,13 @@ export default function HeroVideo() {
           {h.eyebrow}
         </p>
         <h1
-          className="hero-in mt-5 text-[2.9rem] leading-[0.98] tracking-[-0.035em] text-white sm:text-[3.6rem] md:mt-6 md:text-[clamp(3.6rem,5.6vw,6.5rem)]"
+          className="hero-in mt-5 text-[2.9rem] font-[300] leading-[0.98] tracking-[-0.035em] text-white sm:text-[3.6rem] md:mt-6 md:text-[clamp(3.6rem,5.6vw,6.5rem)]"
           style={{ animationDelay: '90ms' }}
         >
-          <span className="font-[300]">{h.line1}</span>
+          {h.line1}
           <br />
-          <span className="font-[250] italic text-white/70">{h.to}</span>
-          <span className="relative inline-block font-bold">
+          {h.to}
+          <span className="relative inline-block text-sky-300">
             {h.word}
             {/* one swipe of the squeegee under the word, drawn once as the page opens */}
             <svg

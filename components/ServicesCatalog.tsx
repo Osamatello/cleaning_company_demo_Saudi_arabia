@@ -148,14 +148,14 @@ export default function ServicesCatalog() {
                 {p.cta.eyebrow}
               </p>
               <h2
-                className="reveal mt-5 text-[2.5rem] leading-[1.05] tracking-[-0.02em] text-neutral-900 sm:text-5xl md:text-[clamp(3rem,4.4vw,4.25rem)]"
+                className="reveal mt-5 text-[2.5rem] font-[350] leading-[1.05] tracking-[-0.02em] text-neutral-900 sm:text-5xl md:text-[clamp(3rem,4.4vw,4.25rem)]"
                 data-in={ctaIn}
                 style={{ transitionDelay: '80ms' }}
               >
-                <span className="font-[350]">{p.cta.line1}</span>
+                {p.cta.line1}
                 <br />
-                <span className="font-[350] italic text-[#7a6850]">{p.cta.soft}</span>
-                <span className="font-bold">{p.cta.bold}</span>
+                {p.cta.soft}
+                <span className="text-[#7a6850]">{p.cta.bold}</span>
               </h2>
               <p
                 className="reveal mx-auto mt-6 max-w-xl text-[16px] leading-relaxed text-neutral-600 md:text-[17px]"
