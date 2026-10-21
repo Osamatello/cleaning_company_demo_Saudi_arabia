@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import type { SiteContent } from './types';
 
-export const SITE_URL = 'https://cleaning-company-demo-saudi-arabia.vercel.app';
+export const SITE_URL = 'https://deepclean-pestcontrol-alain.vercel.app';
 
 /** Page metadata for one language, with links to the other version for search engines. */
 export function metadataFor(t: SiteContent): Metadata {
