@@ -15,6 +15,8 @@ export type SiteContent = {
   dir: 'ltr' | 'rtl';
   meta: { title: string; description: string; shareTitle: string; shareAlt: string; ogLocale: string };
   lang: { label: string; href: string; aria: string };
+  /** the company name: the wordmark shows `lead` then `accent` in the brand blue; `name` is the full name */
+  brand: { lead: string; accent: string; name: string };
   header: { tagline: string; book: string; call: string; menu: string };
   nav: { services: string; results: string; howItWorks: string; reviews: string; contact: string };
   hero: {
@@ -28,12 +30,12 @@ export type SiteContent = {
     sameDay: string;
     promises: [string, string, string, string];
   };
-  services: { cleaning: ServiceGroup; maintenance: ServiceGroup };
+  services: { cleaning: ServiceGroup; pest: ServiceGroup };
   /** the full list at /services: each group's homepage three, then these */
   servicesPage: Heading & {
     meta: { title: string; description: string };
     cleaningMore: Service[];
-    maintenanceMore: Service[];
+    pestMore: Service[];
     cta: Heading & { book: string; call: string };
   };
   about: Heading & { points: { label: string; title: string; text: string }[]; alts: [string, string, string] };

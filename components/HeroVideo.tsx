@@ -8,7 +8,7 @@ import { useContent } from './ContentProvider';
 const PROMISE_ICONS = [ShieldCheck, UserCheck, Leaf, BadgeCheck];
 
 /**
- * Hero: a muted, looping film of the team at work (cleaning and maintenance, graded warm and soft to sit
+ * Hero: a muted, looping film of the team at work (cleaning and home care, graded warm and soft to sit
  * with the site's white, sand and blue), with the headline over it.
  * The poster frame shows at once; the video only plays while it is on screen, and not at all for
  * visitors who prefer reduced motion.

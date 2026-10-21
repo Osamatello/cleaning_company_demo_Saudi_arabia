@@ -8,7 +8,7 @@ import type { ServiceGroup } from '@/content/types';
 
 // Card photos, in the same order as each group's services in the content (content/*.ts)
 export const CLEANING_IMAGES = ['/images/services/villa-deep-cleaning.webp', '/images/services/upholstery-carpet.webp', '/images/services/post-construction.webp'];
-export const MAINTENANCE_IMAGES = ['/images/services/ac-maintenance.webp', '/images/services/plumbing-repairs.webp', '/images/services/electrical-repairs.webp'];
+export const PEST_IMAGES = ['/images/services/general-pest-control.webp', '/images/services/termite-treatment.webp', '/images/services/bed-bug-treatment.webp'];
 
 /** One service: a photo with one deep, drop-like corner (the logo's shape), then its name and a line. */
 export function ServiceCard({
@@ -134,9 +134,9 @@ export default function ServicesPreview() {
 
   return (
     <>
-      {/* A) cleaning, B) maintenance & repairs: two matching panels, so the two kinds of service never mix */}
+      {/* A) cleaning, B) pest control: two matching panels, so the two kinds of service never mix */}
       <GroupPanel id="services" group={t.services.cleaning} images={CLEANING_IMAGES} href={`${base}#cleaning`} className="pb-6 pt-24 md:pb-8 md:pt-32" />
-      <GroupPanel id="maintenance" group={t.services.maintenance} images={MAINTENANCE_IMAGES} href={`${base}#maintenance`} className="pb-24 md:pb-32" />
+      <GroupPanel id="pest-control" group={t.services.pest} images={PEST_IMAGES} href={`${base}#pest-control`} className="pb-24 md:pb-32" />
     </>
   );
 }

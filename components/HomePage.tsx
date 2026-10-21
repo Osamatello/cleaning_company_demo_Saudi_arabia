@@ -25,7 +25,7 @@ export default function HomePage({ locale }: { locale: Locale }) {
         {/* Hero: a film of the team at work, headline over it */}
         <HeroVideo />
 
-        {/* Services: cleaning, then home maintenance & repairs */}
+        {/* Services: cleaning, then pest control */}
         <ServicesPreview />
 
         {/* About us: the company, the team and the service */}

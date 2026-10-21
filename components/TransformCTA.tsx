@@ -7,6 +7,7 @@ import confetti from 'canvas-confetti';
 import { useContent } from './ContentProvider';
 import { useInView } from './home/hooks';
 import SectionHeading from './home/SectionHeading';
+import { EMAIL, LANDLINE, PHONE } from '@/content/contact';
 
 // one look for every field: a warm off-white well that turns white with a soft blue ring on focus
 const FIELD =
@@ -83,19 +84,19 @@ export default function TransformCTA() {
                   <li className="flex items-center gap-3.5">
                     <Phone className="h-[18px] w-[18px] shrink-0 text-sky-600" />
                     <span dir="ltr" className="flex flex-wrap gap-x-2">
-                      <a href="tel:+966501234567" className="transition-colors hover:text-sky-700">
-                        +966 50 123 4567
+                      <a href={`tel:${PHONE.tel}`} className="transition-colors hover:text-sky-700">
+                        {PHONE.display}
                       </a>
                       <span className="text-neutral-300">/</span>
-                      <a href="tel:+966118009000" className="transition-colors hover:text-sky-700">
-                        +966 11 800 9000
+                      <a href={`tel:${LANDLINE.tel}`} className="transition-colors hover:text-sky-700">
+                        {LANDLINE.display}
                       </a>
                     </span>
                   </li>
                   <li className="flex items-center gap-3.5">
                     <Mail className="h-[18px] w-[18px] shrink-0 text-sky-600" />
-                    <a href="mailto:booking@freshspaces.sa" className="transition-colors hover:text-sky-700">
-                      booking@freshspaces.sa
+                    <a href={`mailto:${EMAIL.booking}`} className="transition-colors hover:text-sky-700">
+                      {EMAIL.booking}
                     </a>
                   </li>
                 </ul>
@@ -178,7 +179,7 @@ export default function TransformCTA() {
                             type="tel"
                             required
                             autoComplete="tel"
-                            placeholder="+966 5X XXX XXXX"
+                            placeholder="+971 5X XXX XXXX"
                             value={formData.phone}
                             onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                             className={`${FIELD} h-12 pe-4 ps-12`}
@@ -224,7 +225,7 @@ export default function TransformCTA() {
                             className={`${FIELD} h-12 cursor-pointer appearance-none truncate pe-10 ps-12 md:text-[15px]`}
                           >
                             {/* the same services, grouped by type as on the rest of the site */}
-                            {[t.services.cleaning, t.services.maintenance].map((g) => (
+                            {[t.services.cleaning, t.services.pest].map((g) => (
                               <optgroup key={g.title} label={g.title}>
                                 {g.items.map((sv) => (
                                   <option key={sv.title} value={sv.title}>

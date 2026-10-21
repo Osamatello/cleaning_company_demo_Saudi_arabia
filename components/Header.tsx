@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { PhoneCall, Menu, X, MapPin, ShieldCheck } from 'lucide-react';
 import BrandMark from './BrandMark';
+import { PHONE } from '@/content/contact';
 import { useContent } from './ContentProvider';
 import type { SiteContent } from '@/content/types';
 
@@ -108,8 +109,8 @@ export default function Header({ page = 'home' }: { page?: Page }) {
           <BrandMark size={48} className="transition-transform duration-500 group-hover:-rotate-6 group-hover:scale-105" />
           <div>
             <div className="flex items-center gap-2">
-              <span className={`text-xl font-extrabold tracking-tight font-sans ${fade} ${light ? 'text-white' : 'text-slate-900'}`}>
-                Fresh<span className={`${fade} ${light ? 'text-sky-300' : 'text-sky-600'}`}>Spaces</span>
+              <span className={`whitespace-nowrap text-[15px] font-extrabold leading-tight tracking-tight font-sans sm:text-[17px] lg:text-[15px] xl:text-[17px] ${fade} ${light ? 'text-white' : 'text-slate-900'}`}>
+                {t.brand.lead} <span className={`${fade} ${light ? 'text-sky-300' : 'text-sky-600'}`}>{t.brand.accent}</span>
               </span>
             </div>
             <div className={`flex items-center gap-1.5 whitespace-nowrap text-[11px] font-medium ${fade} ${light ? 'text-white/75' : 'text-slate-500'}`}>
@@ -184,11 +185,11 @@ export default function Header({ page = 'home' }: { page?: Page }) {
           ))}
           <div className="pt-3 border-t border-slate-200 flex flex-col gap-3">
             <a
-              href="tel:+966500000000"
+              href={`tel:${PHONE.tel}`}
               className="flex items-center justify-center gap-2 text-sm font-semibold text-sky-600 py-2 rounded-lg bg-sky-500/10 border border-sky-500/20"
             >
               <PhoneCall className="w-4 h-4" />
-              {t.header.call} <span dir="ltr">+966 50 123 4567</span>
+              {t.header.call} <span dir="ltr">{PHONE.display}</span>
             </a>
             <LangLink
               page={page}

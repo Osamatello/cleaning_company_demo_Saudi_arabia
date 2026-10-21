@@ -6,7 +6,7 @@ import { useInView } from './hooks';
 import SectionHeading from './SectionHeading';
 
 // The team at work, in the order of about.alts in the content: the large picture, then the two small ones
-const PHOTOS = ['/images/services/marble-polishing.webp', '/images/services/disinfection.webp', '/images/services/appliance-repairs.webp'];
+const PHOTOS = ['/images/services/marble-polishing.webp', '/images/services/disinfection.webp', '/images/services/mosquito-fly-control.webp'];
 
 /** About us: the company, the team and the service, beside three pictures cut with the logo's drop corner. */
 export default function About() {

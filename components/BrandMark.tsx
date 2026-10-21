@@ -1,6 +1,6 @@
 import React from 'react';
 
-/** FreshSpaces mark: a drop of water with a home's roofline inside — clean water, clean home. */
+/** The company mark: a drop of water with a home's roofline inside — clean water, clean home. */
 export default function BrandMark({
   size = 40,
   className = '',

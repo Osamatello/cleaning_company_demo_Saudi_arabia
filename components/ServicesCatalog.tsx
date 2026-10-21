@@ -5,15 +5,16 @@ import { ArrowRight, Phone } from 'lucide-react';
 import { useContent } from './ContentProvider';
 import { useInView } from './home/hooks';
 import SectionHeading from './home/SectionHeading';
-import { CLEANING_IMAGES, MAINTENANCE_IMAGES, ServiceCard } from './ServicesPreview';
+import { CLEANING_IMAGES, PEST_IMAGES, ServiceCard } from './ServicesPreview';
+import { PHONE } from '@/content/contact';
 import type { ServiceGroup } from '@/content/types';
 
 const photo = (name: string) => `/images/services/${name}.webp`;
 // each list starts with the homepage's three, then the rest in the order of servicesPage.*More in the content
 const CLEANING_ALL = [...CLEANING_IMAGES, ...['disinfection', 'facade-windows', 'marble-polishing', 'kitchen-deep-cleaning', 'move-in-out'].map(photo)];
-const MAINTENANCE_ALL = [
-  ...MAINTENANCE_IMAGES,
-  ...['painting-walls', 'carpentry-doors', 'appliance-repairs', 'tiling-grout', 'mounting-installation'].map(photo),
+const PEST_ALL = [
+  ...PEST_IMAGES,
+  ...['cockroach-ant-control', 'rodent-control', 'mosquito-fly-control', 'scorpion-snake-control', 'bird-control'].map(photo),
 ];
 
 /** the logo's drop, drawn large and faint in the corner of a panel */
@@ -37,7 +38,7 @@ function Card({ title, description, image, index }: { title: string; description
 }
 
 /**
- * One service type in its own panel: cleaning in a cool, water-blue tint and maintenance in warm sand,
+ * One service type in its own panel: cleaning in a cool, water-blue tint and pest control in warm sand,
  * each with its own number, so the two never read as one list.
  */
 function Group({
@@ -129,11 +130,11 @@ export default function ServicesCatalog() {
 
       <Group id="cleaning" number="01" group={t.services.cleaning} items={[...t.services.cleaning.items, ...p.cleaningMore]} images={CLEANING_ALL} tone="cool" />
       <Group
-        id="maintenance"
+        id="pest-control"
         number="02"
-        group={t.services.maintenance}
-        items={[...t.services.maintenance.items, ...p.maintenanceMore]}
-        images={MAINTENANCE_ALL}
+        group={t.services.pest}
+        items={[...t.services.pest.items, ...p.pestMore]}
+        images={PEST_ALL}
         tone="warm"
       />
 
@@ -180,14 +181,14 @@ export default function ServicesCatalog() {
                   </span>
                 </a>
                 <a
-                  href="tel:+966501234567"
+                  href={`tel:${PHONE.tel}`}
                   className="group/call inline-flex items-center gap-4 text-[16px] font-semibold text-neutral-900 md:text-[17px]"
                 >
                   <span className="grid h-12 w-12 place-items-center rounded-full bg-[#ddd0bb] text-neutral-900 transition-colors duration-300 group-hover/call:bg-[#d2c3aa]">
                     <Phone className="h-5 w-5" />
                   </span>
                   <span>
-                    {p.cta.call} <span dir="ltr" className="ms-1 font-normal text-neutral-500">+966 50 123 4567</span>
+                    {p.cta.call} <span dir="ltr" className="ms-1 font-normal text-neutral-500">{PHONE.display}</span>
                   </span>
                 </a>
               </div>

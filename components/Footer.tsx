@@ -5,13 +5,14 @@ import { MapPin, Phone, Mail, Globe, ShieldCheck, ArrowUp } from 'lucide-react';
 import BrandMark from './BrandMark';
 import { useContent } from './ContentProvider';
 import type { Page } from './Header';
+import { EMAIL, PHONE } from '@/content/contact';
 
 export default function Footer({ page = 'home' }: { page?: Page }) {
   const t = useContent();
   const f = t.footer;
   // on the services page, section links lead back to the homepage and service names to this page's lists
   const home = page === 'home' ? '' : t.locale === 'ar' ? '/ar' : '/';
-  const [cleaningAt, maintenanceAt] = page === 'services' ? ['#cleaning', '#maintenance'] : ['#services', '#maintenance'];
+  const [cleaningAt, pestAt] = page === 'services' ? ['#cleaning', '#pest-control'] : ['#services', '#pest-control'];
   // Same links, in the same order, as the header
   const NAV = [
     { id: 'services', label: t.nav.services },
@@ -21,7 +22,7 @@ export default function Footer({ page = 'home' }: { page?: Page }) {
     { id: 'contact', label: t.nav.contact },
   ];
   // service names, the same as the homepage cards
-  const SERVICE_TITLES = [...t.services.cleaning.items, ...t.services.maintenance.items].map((s) => s.title);
+  const SERVICE_TITLES = [...t.services.cleaning.items, ...t.services.pest.items].map((s) => s.title);
   return (
     <footer className="border-t border-[#e4dfd4] bg-[#f2efe9] text-slate-600">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -30,7 +31,7 @@ export default function Footer({ page = 'home' }: { page?: Page }) {
           <a href={home || '#'} className="group flex items-center gap-3">
             <BrandMark size={40} className="transition-transform duration-500 group-hover:-rotate-6" />
             <span className="text-lg font-extrabold tracking-tight text-slate-900">
-              Fresh<span className="text-sky-600">Spaces</span>
+              {t.brand.lead} <span className="text-sky-600">{t.brand.accent}</span>
             </span>
           </a>
 
@@ -50,7 +51,7 @@ export default function Footer({ page = 'home' }: { page?: Page }) {
             <ul className="grid grid-cols-1 gap-x-8 gap-y-2.5 sm:grid-cols-2">
               {SERVICE_TITLES.map((title, i) => (
                 <li key={title}>
-                  <a href={i < 3 ? cleaningAt : maintenanceAt} className="transition-colors hover:text-sky-600">
+                  <a href={i < 3 ? cleaningAt : pestAt} className="transition-colors hover:text-sky-600">
                     {title}
                   </a>
                 </li>
@@ -66,19 +67,19 @@ export default function Footer({ page = 'home' }: { page?: Page }) {
                 {f.address}
               </li>
               <li>
-                <a href="tel:+966501234567" className="flex items-center gap-3 text-slate-900 transition-colors hover:text-sky-600">
+                <a href={`tel:${PHONE.tel}`} className="flex items-center gap-3 text-slate-900 transition-colors hover:text-sky-600">
                   <Phone className="h-4 w-4 shrink-0 text-sky-600" />
-                  <span dir="ltr">+966 50 123 4567</span>
+                  <span dir="ltr">{PHONE.display}</span>
                 </a>
               </li>
               <li>
-                <a href="mailto:support@freshspaces.sa" className="flex items-center gap-3 transition-colors hover:text-sky-600">
+                <a href={`mailto:${EMAIL.support}`} className="flex items-center gap-3 transition-colors hover:text-sky-600">
                   <Mail className="h-4 w-4 shrink-0 text-sky-600" />
-                  support@freshspaces.sa
+                  {EMAIL.support}
                 </a>
               </li>
               <li>
-                <a href="tel:+966501234567" className="flex items-center gap-3 font-medium text-sky-700 transition-colors hover:text-sky-900">
+                <a href={`tel:${PHONE.tel}`} className="flex items-center gap-3 font-medium text-sky-700 transition-colors hover:text-sky-900">
                   <Globe className="h-4 w-4 shrink-0" />
                   {f.hotline}
                 </a>
@@ -89,7 +90,7 @@ export default function Footer({ page = 'home' }: { page?: Page }) {
 
         <div className="flex flex-col items-center justify-between gap-3 border-t border-[#e4dfd4] py-4 text-xs sm:flex-row">
           <p className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
-            <span>© {new Date().getFullYear()} FreshSpaces</span>
+            <span>© {new Date().getFullYear()} {t.brand.name}</span>
             <span className="text-slate-300">·</span>
             <span className="flex items-center gap-1.5 text-sky-700">
               <ShieldCheck className="h-3.5 w-3.5" />
